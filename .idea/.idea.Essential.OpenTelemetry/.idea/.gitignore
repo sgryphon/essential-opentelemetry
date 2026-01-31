@@ -1,0 +1,5 @@
+﻿## Custom - exclude all except the plugin settings we want
+*
+!.gitignore
+!CSharpierPlugin.xml
+!externalDependencies.xml
