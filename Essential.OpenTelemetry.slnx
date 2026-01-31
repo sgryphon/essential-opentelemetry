@@ -6,4 +6,8 @@
   <Folder Name="/src/">
     <Project Path="src/Essential.OpenTelemetry.Exporter.ColoredConsole/Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
   </Folder>
+  <Folder Name="/test/" />
+  <Folder Name="/test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/">
+    <Project Path="test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests.csproj" />
+  </Folder>
 </Solution>
