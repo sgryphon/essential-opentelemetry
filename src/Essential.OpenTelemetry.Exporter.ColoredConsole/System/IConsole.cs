@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Essential.System;
+﻿namespace Essential.System;
 
 /// <summary>
 /// Interface for console operations to support color output and testing.

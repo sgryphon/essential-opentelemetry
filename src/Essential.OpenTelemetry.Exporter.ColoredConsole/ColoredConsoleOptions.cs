@@ -1,6 +1,6 @@
 ﻿using Essential.System;
 
-namespace Essential.OpenTelemetry.Exporter;
+namespace Essential.OpenTelemetry;
 
 public class ColoredConsoleOptions
 {

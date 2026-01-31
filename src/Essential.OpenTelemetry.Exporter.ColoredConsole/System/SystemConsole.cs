@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Essential.System;
+﻿namespace Essential.System;
 
 /// <summary>
 /// Implementation of IConsole that wraps System.Console.

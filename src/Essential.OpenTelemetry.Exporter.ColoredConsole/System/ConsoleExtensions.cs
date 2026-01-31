@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Essential.System;
+﻿namespace Essential.System;
 
 internal static class ConsoleExtensions
 {
