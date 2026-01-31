@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/examples/" />
+  <Folder Name="/examples/SimpleConsole/">
+    <Project Path="examples/SimpleConsole/Examples.SimpleConsole.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Essential.OpenTelemetry.Exporter.ColoredConsole/Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
+  </Folder>
+</Solution>
