@@ -60,4 +60,29 @@ public static class ColoredConsoleLoggingExtensions
             return new SimpleLogRecordExportProcessor(new ColoredConsoleLogRecordExporter(options));
         });
     }
+
+    /// <summary>
+    /// Adds Console exporter with OpenTelemetryLoggerOptions.
+    /// </summary>
+    /// <param name="loggerOptions"><see cref="OpenTelemetryLoggerOptions"/>.</param>
+    /// <param name="configure">Callback action for configuring <see cref="ColoredConsoleOptions"/>.</param>
+    /// <returns>The supplied instance of <see cref="OpenTelemetryLoggerOptions"/> to chain the calls.</returns>
+    public static OpenTelemetryLoggerOptions AddColoredConsoleExporter(
+        this OpenTelemetryLoggerOptions loggerOptions,
+        Action<ColoredConsoleOptions>? configure
+    )
+    {
+        if (loggerOptions == null)
+            throw new ArgumentNullException(nameof(loggerOptions));
+
+        var coloredConsoleOptions = new ColoredConsoleOptions();
+        configure?.Invoke(coloredConsoleOptions);
+
+        return loggerOptions.AddProcessor(sp =>
+        {
+            return new SimpleLogRecordExportProcessor(
+                new ColoredConsoleLogRecordExporter(coloredConsoleOptions)
+            );
+        });
+    }
 }
