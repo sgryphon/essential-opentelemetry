@@ -16,8 +16,9 @@ public static class ColoredConsoleMetricsExtensions
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
-    public static MeterProviderBuilder AddColoredConsoleExporter(this MeterProviderBuilder builder)
-        => AddColoredConsoleExporter(builder, name: null, configure: null);
+    public static MeterProviderBuilder AddColoredConsoleExporter(
+        this MeterProviderBuilder builder
+    ) => AddColoredConsoleExporter(builder, name: null, configure: null);
 
     /// <summary>
     /// Adds Console exporter to the MeterProvider.
@@ -55,9 +56,7 @@ public static class ColoredConsoleMetricsExtensions
 
         return builder.AddReader(sp =>
         {
-            var options = sp
-                .GetRequiredService<IOptionsMonitor<ColoredConsoleOptions>>()
-                .Get(name);
+            var options = sp.GetRequiredService<IOptionsMonitor<ColoredConsoleOptions>>().Get(name);
 
             var exporter = new ColoredConsoleMetricExporter(options);
             return new PeriodicExportingMetricReader(
@@ -93,9 +92,7 @@ public static class ColoredConsoleMetricsExtensions
 
         return builder.AddReader(sp =>
         {
-            var options = sp
-                .GetRequiredService<IOptionsMonitor<ColoredConsoleOptions>>()
-                .Get(name);
+            var options = sp.GetRequiredService<IOptionsMonitor<ColoredConsoleOptions>>().Get(name);
 
             var exporter = new ColoredConsoleMetricExporter(options);
             return new PeriodicExportingMetricReader(
