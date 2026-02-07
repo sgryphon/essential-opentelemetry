@@ -35,10 +35,24 @@ if (!$?) { throw 'Tool restore failed' }
 # Get version from GitVersion
 Write-Host ""
 Write-Host "Getting version from GitVersion..." -ForegroundColor Yellow
-$json = (dotnet tool run dotnet-gitversion /output json)
-if (!$?) { throw 'GitVersion failed' }
+$json = (dotnet tool run dotnet-gitversion /output json 2>&1)
+$gitVersionExitCode = $LASTEXITCODE
 
-$v = ($json | ConvertFrom-Json)
+if ($gitVersionExitCode -ne 0) {
+    Write-Host "GitVersion encountered an issue (this is normal for feature branches or repos without tags)" -ForegroundColor Yellow
+    Write-Host "Using default version 0.1.0-dev" -ForegroundColor Yellow
+    $v = @{
+        SemVer = "0.1.0-dev"
+        ShortSha = (git rev-parse --short HEAD)
+        FullSemVer = "0.1.0-dev"
+        AssemblySemVer = "0.1.0.0"
+        AssemblySemFileVer = "0.1.0.0"
+    }
+} else {
+    Write-Host $json
+    $v = ($json | ConvertFrom-Json)
+}
+
 Write-Host "Building version $($v.SemVer)+$($v.ShortSha) (NuGet $($v.FullSemVer))" -ForegroundColor Green
 Write-Host ""
 
