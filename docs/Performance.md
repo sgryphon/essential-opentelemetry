@@ -6,10 +6,32 @@ This document provides performance testing results and analysis for the Essentia
 
 Performance testing is conducted using [BenchmarkDotNet](https://benchmarkdotnet.org/), the industry standard for .NET performance testing. The benchmarks compare:
 
-- **Standard .NET Console Logger** - The default Microsoft.Extensions.Logging console logger
+- **Standard .NET Console Logger** - The default Microsoft.Extensions.Logging console logger (for reference)
 - **OpenTelemetry Console Exporter** - The out-of-the-box OpenTelemetry console exporter
 - **Essential.OpenTelemetry Colored Console Exporter** - This project's colored console exporter
 - **Disabled/Overhead** - Measurements with logging/tracing/metrics disabled to understand the overhead
+
+The focus is on comparing the console exporters, specifically the performance difference between the standard OpenTelemetry console exporter and the Essential.OpenTelemetry colored console exporter.
+
+## Configuration
+
+Benchmark parameters can be configured via `appsettings.json` or command-line arguments:
+
+```json
+{
+  "BenchmarkConfiguration": {
+    "LoggingIterations": 1000,
+    "TracingIterations": 1000,
+    "MetricsCounterCount": 1000,
+    "MetricsIncrementsPerCounter": 10
+  }
+}
+```
+
+Command-line example:
+```bash
+dotnet run -c Release -- BenchmarkConfiguration:LoggingIterations=2000
+```
 
 ## Running the Benchmarks
 
@@ -44,7 +66,7 @@ Results are saved in the `BenchmarkDotNet.Artifacts` directory.
 
 ## Logging Performance
 
-The logging benchmarks measure the performance of logging 100 messages with a simple template (`"Benchmark test message {Value}"`).
+The logging benchmarks measure the performance of logging 1,000 messages with a simple template (`"Benchmark test message {Value}"`).
 
 ### Results Summary
 
@@ -54,6 +76,8 @@ The logging benchmarks measure the performance of logging 100 messages with a si
 | ColoredConsoleExporter       |   902.390 us |  1.77 |  16.41 KB |        0.49 |
 | OpenTelemetryConsoleExporter | 3,412.384 us |  6.68 | 189.10 KB |        5.63 |
 | DisabledLogging              |     3.776 us |  0.01 |   5.47 KB |        0.16 |
+
+*Note: Results shown are for 100 iterations. Update with actual 1,000 iteration results after running benchmarks.*
 
 ### Analysis
 
@@ -77,7 +101,7 @@ The logging benchmarks measure the performance of logging 100 messages with a si
 
 ## Tracing Performance
 
-The tracing benchmarks measure the performance of creating and exporting 100 activities (spans) with a simple tag.
+The tracing benchmarks measure the performance of creating and exporting 1,000 activities (spans) with a simple tag.
 
 ### Results Summary
 
@@ -86,6 +110,8 @@ The tracing benchmarks measure the performance of creating and exporting 100 act
 | OpenTelemetryConsoleExporter | 4.454 ms |  1.00 | 266.44 KB |        1.00 |
 | ColoredConsoleExporter       | 4.284 ms |  0.96 | 266.44 KB |        1.00 |
 | DisabledTracing              | 4.013 ms |  0.90 | 266.44 KB |        1.00 |
+
+*Note: Results shown are for 100 iterations. Update with actual 1,000 iteration results after running benchmarks.*
 
 ### Analysis
 
@@ -107,7 +133,7 @@ The tracing benchmarks measure the performance of creating and exporting 100 act
 
 ## Metrics Performance
 
-The metrics benchmarks measure the performance of incrementing a counter 1,000 times.
+The metrics benchmarks test the performance of exporting 1,000 counters (each incremented 10 times).
 
 ### Results Summary
 
@@ -116,6 +142,8 @@ The metrics benchmarks measure the performance of incrementing a counter 1,000 t
 | OpenTelemetryConsoleExporter | 22.58 us |  1.00 |
 | ColoredConsoleExporter       | 22.02 us |  0.98 |
 | DisabledMetrics              | 21.68 us |  0.96 |
+
+*Note: Results shown are for a single counter incremented 1,000 times. Update with actual results for 1,000 counters after running benchmarks.*
 
 ### Analysis
 
@@ -131,37 +159,9 @@ The metrics benchmarks measure the performance of incrementing a counter 1,000 t
 
 ### Performance Recommendations
 
-- Use metrics freely; the overhead is negligible (approximately 22 nanoseconds per increment)
+- Use metrics freely; the overhead is negligible
 - The Essential.OpenTelemetry Colored Console Exporter is a drop-in replacement for the standard exporter with no performance impact
 - Metrics provide excellent observability with minimal performance cost
-
-## Overall Conclusions
-
-### Essential.OpenTelemetry Colored Console Exporter Performance Profile
-
-1. **Logging**: **3.8x faster** and **11.5x more memory efficient** than standard OpenTelemetry Console Exporter
-2. **Tracing**: **Equivalent performance** to standard OpenTelemetry Console Exporter
-3. **Metrics**: **Equivalent performance** to standard OpenTelemetry Console Exporter
-
-### When to Use Essential.OpenTelemetry
-
-The Essential.OpenTelemetry Colored Console Exporter is an excellent choice for:
-
-- **Development environments** where colored console output improves readability
-- **Production scenarios** where console logging is required and performance matters
-- **Memory-constrained environments** where allocation rates are important
-- **Any OpenTelemetry console output** - it's a superior drop-in replacement
-
-### Performance Best Practices
-
-1. **Logging**: Use appropriate log levels and filtering to minimize unnecessary logging
-2. **Tracing**: Use sampling to control the volume of traces in production
-3. **Metrics**: Metrics have negligible overhead; use them liberally for observability
-4. **Console Output**: For production, consider structured exporters (OTLP, etc.) for better performance than console output
-
-## Comparison with Legacy Systems
-
-This performance testing approach is similar to the [Essential.Diagnostics project](https://github.com/sgryphon/essential-diagnostics/blob/develop/docs/Comparison.md), which provided detailed performance comparisons for System.Diagnostics listeners. The modern OpenTelemetry approach with Essential.OpenTelemetry continues this tradition of providing high-performance, efficient telemetry solutions.
 
 ## Methodology Notes
 
@@ -170,6 +170,7 @@ This performance testing approach is similar to the [Essential.Diagnostics proje
 - Memory diagnostics track managed memory allocations only
 - Results may vary based on hardware, OS, and .NET runtime version
 - Benchmarks simulate realistic workloads (message logging, span creation, metric recording)
+- All benchmark methods call `ForceFlush()` to ensure exporters have completed their work
 
 ## Contributing Performance Improvements
 

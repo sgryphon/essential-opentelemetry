@@ -13,11 +13,11 @@ namespace Essential.OpenTelemetry.Performance;
 /// </summary>
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
-public class MetricsBenchmarks
+public class MetricsBenchmarks : BenchmarkBase
 {
     private const string ServiceName = "BenchmarkService";
     private Meter? _meter;
-    private Counter<int>? _counter;
+    private Counter<int>[]? _counters;
     private IHost? _openTelemetryConsoleHost;
     private IHost? _coloredConsoleHost;
     private IHost? _disabledMetricsHost;
@@ -29,7 +29,17 @@ public class MetricsBenchmarks
     public void Setup()
     {
         _meter = new Meter(ServiceName);
-        _counter = _meter.CreateCounter<int>("benchmark_counter", "count", "Benchmark counter");
+
+        // Create multiple counters
+        _counters = new Counter<int>[Configuration.MetricsCounterCount];
+        for (int i = 0; i < Configuration.MetricsCounterCount; i++)
+        {
+            _counters[i] = _meter.CreateCounter<int>(
+                $"benchmark_counter_{i}",
+                "count",
+                $"Benchmark counter {i}"
+            );
+        }
 
         // OpenTelemetry Console Exporter (out of the box)
         var otelBuilder = Host.CreateApplicationBuilder();
@@ -81,27 +91,42 @@ public class MetricsBenchmarks
     [Benchmark(Baseline = true)]
     public void OpenTelemetryConsoleExporter()
     {
-        for (int i = 0; i < 1000; i++)
+        // Increment each counter multiple times
+        for (int i = 0; i < Configuration.MetricsCounterCount; i++)
         {
-            _counter!.Add(1);
+            for (int j = 0; j < Configuration.MetricsIncrementsPerCounter; j++)
+            {
+                _counters![i].Add(1);
+            }
         }
+        _openTelemetryMeterProvider!.ForceFlush();
     }
 
     [Benchmark]
     public void ColoredConsoleExporter()
     {
-        for (int i = 0; i < 1000; i++)
+        // Increment each counter multiple times
+        for (int i = 0; i < Configuration.MetricsCounterCount; i++)
         {
-            _counter!.Add(1);
+            for (int j = 0; j < Configuration.MetricsIncrementsPerCounter; j++)
+            {
+                _counters![i].Add(1);
+            }
         }
+        _coloredMeterProvider!.ForceFlush();
     }
 
     [Benchmark]
     public void DisabledMetrics()
     {
-        for (int i = 0; i < 1000; i++)
+        // Increment each counter multiple times
+        for (int i = 0; i < Configuration.MetricsCounterCount; i++)
         {
-            _counter!.Add(1);
+            for (int j = 0; j < Configuration.MetricsIncrementsPerCounter; j++)
+            {
+                _counters![i].Add(1);
+            }
         }
+        _disabledMeterProvider!.ForceFlush();
     }
 }
