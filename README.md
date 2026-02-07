@@ -4,15 +4,39 @@
 
 Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
 
+## Development
+
+### Dev Containers
+
+This project supports development in containers using VS Code Dev Containers, providing a consistent .NET 10 development environment with all tools pre-installed.
+
+**Quick Start:**
+
+1. Install VS Code and the Dev Containers extension
+2. Install Docker Desktop or Podman
+3. Open the project in VS Code
+4. Press F1 and select "Dev Containers: Reopen in Container"
+
+#### Windows with Podman
+
+If you're using Podman on Windows (WSL2/Hyper-V), follow these additional steps:
+
+1. Install Podman Desktop from [podman-desktop.io](https://podman-desktop.io/)
+2. Start the Podman Machine (or let Podman Desktop manage it)
+3. Configure VS Code to use Podman:
+   - Open VS Code Settings (Ctrl+,)
+   - Search for "dev.containers.dockerPath"
+   - Set it to "podman" (or the full path to podman.exe)
+4. Alternatively, set the environment variable:
+   ```powershell
+   $env:DOCKER_HOST="npipe:////./pipe/podman-machine-default"
+   ```
+
 ## Supported .NET Versions
 
-This library supports the following .NET versions:
+The library uses modern C# features (file-scoped namespaces, nullable reference types, implicit usings).
 
-- .NET 10.0
-- .NET 9.0
-- .NET 8.0
-
-All officially supported versions of .NET are targeted. The library uses modern C# features (file-scoped namespaces, nullable reference types, implicit usings) that are compatible with these versions.
+It is primarily targeted at .NET 10.0, but is also built for .NET 8.0 and .NET 9.0, using the relevant version of the Microsoft.Extensions library.
 
 ## License
 
