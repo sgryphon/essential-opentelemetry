@@ -45,5 +45,5 @@ using (var activity = activitySource.StartActivity("SampleOperation"))
 }
 
 // Force flush to ensure all telemetry is exported before exit
-tracerProvider.ForceFlush();
 meterProvider.ForceFlush();
+tracerProvider.ForceFlush();
