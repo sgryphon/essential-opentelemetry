@@ -18,6 +18,7 @@
 - **Nullable Types**: Always use nullable reference types (enabled by default)
 - **Namespaces**: Use file-scoped namespaces (C# 10+ style)
 - **Implicit usings**: Enabled (`<ImplicitUsings>enable</ImplicitUsings>`)
+- **Frameworks**: Support .NET 8, .NET 9 and .NET 10; use #if where necessary to use new code constructs and have the older builds use older code.
 
 ## Project Structure
 
@@ -58,12 +59,13 @@
 
 ### Running Tests
 
-- Run the specific test for the functionality you are changing.
-- Only run tests for the project you have modified
-- Don't run all tests in the solution (it takes too long)
+- During development only run the specific test for the functionality you are changing, and only for the latest framework, to reduce time
+- After it is working, then consider when you might need to run for other frameworks, or regression test that project
+- When checking in, run the entire project (no framework filter)
+- Don't run all tests in the entire solution (it takes too long)
 
 ```bash
-dotnet test ./test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests
+dotnet test ./test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests --framework net10.0
 ```
 
 ## Versioning
