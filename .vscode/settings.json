@@ -30,5 +30,10 @@
   },
   "[yaml]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "chat.tools.terminal.autoApprove": {
+    "dotnet build": true,
+    "dotnet csharpier": true,
+    "dotnet run": true
   }
 }
