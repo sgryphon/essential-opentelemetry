@@ -95,7 +95,7 @@ public class ColoredConsoleMetricExporterTests
     }
 
     [Fact]
-    public async Task CumulativeMeter()
+    public async Task CumulativeMeterTest()
     {
         // Arrange
         var mockConsole = new MockConsole();
