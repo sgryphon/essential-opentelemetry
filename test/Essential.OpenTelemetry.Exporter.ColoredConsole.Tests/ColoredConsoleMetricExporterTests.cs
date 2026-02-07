@@ -1,4 +1,4 @@
-// Copyright The OpenTelemetry Authors
+﻿// Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Diagnostics.Metrics;
@@ -23,15 +23,20 @@ public class CompactMetricFormatterTests
         using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+            .AddConsoleExporter(
+                (exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Formatter = "compact";
                     exporterOptions.TimestampFormat = string.Empty;
                     exporterOptions.Console = mockConsole;
 
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 100;
-                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Cumulative;
-                })
+                    metricReaderOptions
+                        .PeriodicExportingMetricReaderOptions
+                        .ExportIntervalMilliseconds = 100;
+                    metricReaderOptions.TemporalityPreference =
+                        MetricReaderTemporalityPreference.Cumulative;
+                }
+            )
             .Build();
 
         // Act
@@ -66,23 +71,26 @@ public class CompactMetricFormatterTests
         using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+            .AddConsoleExporter(
+                (exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Formatter = "compact";
                     exporterOptions.TimestampFormat = string.Empty;
                     exporterOptions.Console = mockConsole;
 
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 100;
-                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Delta;
-                })
+                    metricReaderOptions
+                        .PeriodicExportingMetricReaderOptions
+                        .ExportIntervalMilliseconds = 100;
+                    metricReaderOptions.TemporalityPreference =
+                        MetricReaderTemporalityPreference.Delta;
+                }
+            )
             .Build();
 
         // Act
         var counter = meter.CreateCounter<int>("counter", "things", "A count of things");
 
-        counter?.Add(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
+        counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
         await Task.Delay(150);
 
         // Assert
@@ -112,14 +120,19 @@ public class CompactMetricFormatterTests
         using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+            .AddConsoleExporter(
+                (exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Formatter = "compact";
                     exporterOptions.Console = mockConsole;
 
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
-                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Cumulative;
-                })
+                    metricReaderOptions
+                        .PeriodicExportingMetricReaderOptions
+                        .ExportIntervalMilliseconds = 1000;
+                    metricReaderOptions.TemporalityPreference =
+                        MetricReaderTemporalityPreference.Cumulative;
+                }
+            )
             .Build();
 
         // Act
@@ -127,25 +140,17 @@ public class CompactMetricFormatterTests
 
         await Task.Delay(600);
 
-        counter?.Add(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
+        counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
         await Task.Delay(50);
 
-        counter?.Add(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
+        counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
         await Task.Delay(350);
 
         await Task.Delay(600);
-        counter?.Add(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
+        counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
         await Task.Delay(50);
 
-        counter?.Add(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
+        counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
         await Task.Delay(350);
 
         await Task.Delay(600);
@@ -156,12 +161,16 @@ public class CompactMetricFormatterTests
 
         var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
-        var line200 = lines.FirstOrDefault(x => x.Contains("sum=200", StringComparison.InvariantCulture));
+        var line200 = lines.FirstOrDefault(x =>
+            x.Contains("sum=200", StringComparison.InvariantCulture)
+        );
         Assert.NotNull(line200);
         var values200 = line200.Split(' ');
         Assert.Contains("1s", values200[3], StringComparison.InvariantCulture);
 
-        var line400 = lines.FirstOrDefault(x => x.Contains("sum=400", StringComparison.InvariantCulture));
+        var line400 = lines.FirstOrDefault(x =>
+            x.Contains("sum=400", StringComparison.InvariantCulture)
+        );
         Assert.NotNull(line400);
         var values400 = line400.Split(' ');
         Assert.Contains("2s", values400[3], StringComparison.InvariantCulture);
@@ -178,32 +187,29 @@ public class CompactMetricFormatterTests
         using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+            .AddConsoleExporter(
+                (exporterOptions, metricReaderOptions) =>
                 {
                     exporterOptions.Formatter = "compact";
                     exporterOptions.TimestampFormat = string.Empty;
                     exporterOptions.Console = mockConsole;
 
-                    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 100;
-                    metricReaderOptions.TemporalityPreference = MetricReaderTemporalityPreference.Cumulative;
-                })
+                    metricReaderOptions
+                        .PeriodicExportingMetricReaderOptions
+                        .ExportIntervalMilliseconds = 100;
+                    metricReaderOptions.TemporalityPreference =
+                        MetricReaderTemporalityPreference.Cumulative;
+                }
+            )
             .Build();
 
         // Act
         var histogram = meter.CreateHistogram<int>("histogram"); // No Unit
 
-        histogram?.Record(
-            50,
-            new KeyValuePair<string, object?>("tag1", "value1"));
-        histogram?.Record(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
-        histogram?.Record(
-            100,
-            new KeyValuePair<string, object?>("tag1", "value1"));
-        histogram?.Record(
-            150,
-            new KeyValuePair<string, object?>("tag1", "value1"));
+        histogram?.Record(50, new KeyValuePair<string, object?>("tag1", "value1"));
+        histogram?.Record(100, new KeyValuePair<string, object?>("tag1", "value1"));
+        histogram?.Record(100, new KeyValuePair<string, object?>("tag1", "value1"));
+        histogram?.Record(150, new KeyValuePair<string, object?>("tag1", "value1"));
 
         await Task.Delay(150);
 

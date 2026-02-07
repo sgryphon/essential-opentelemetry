@@ -1,4 +1,4 @@
-// Copyright The OpenTelemetry Authors
+﻿// Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Globalization;
@@ -20,9 +20,7 @@ internal sealed class CompactMetricFormatter : CompactFormatterBase<Metric>
     private const string MetricText = "METRIC";
 
     public CompactMetricFormatter(ConsoleExporterOptions options)
-        : base(options)
-    {
-    }
+        : base(options) { }
 
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<Metric> batch, ConsoleFormatterContext context)
@@ -42,7 +40,8 @@ internal sealed class CompactMetricFormatter : CompactFormatterBase<Metric>
 
                     timestamp = timestampToFormat.ToString(
                         this.Options.TimestampFormat!,
-                        CultureInfo.InvariantCulture);
+                        CultureInfo.InvariantCulture
+                    );
                 }
 
                 var metricDetails = string.Empty;
@@ -63,7 +62,10 @@ internal sealed class CompactMetricFormatter : CompactFormatterBase<Metric>
                 }
 
                 var metricType = metric.MetricType;
-                if (metricType == MetricType.Histogram || metricType == MetricType.ExponentialHistogram)
+                if (
+                    metricType == MetricType.Histogram
+                    || metricType == MetricType.ExponentialHistogram
+                )
                 {
                     var count = metricPoint.GetHistogramCount();
                     metricDetails += $" count={count}";
