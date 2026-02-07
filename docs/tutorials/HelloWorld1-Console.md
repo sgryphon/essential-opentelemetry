@@ -22,6 +22,7 @@ dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
 ```
 
 These packages provide:
+
 - **Microsoft.Extensions.Hosting**: The hosting infrastructure for dependency injection and configuration
 - **OpenTelemetry.Extensions.Hosting**: OpenTelemetry integration with the .NET hosting model
 - **Essential.OpenTelemetry.Exporter.ColoredConsole**: The colored console exporter for viewing telemetry

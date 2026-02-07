@@ -22,6 +22,7 @@ dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
 ```
 
 These packages provide:
+
 - **OpenTelemetry.Extensions.Hosting**: OpenTelemetry integration with the .NET hosting model
 - **OpenTelemetry.Instrumentation.AspNetCore**: Automatic instrumentation for ASP.NET Core
 - **Essential.OpenTelemetry.Exporter.ColoredConsole**: The colored console exporter for viewing telemetry
@@ -167,10 +168,10 @@ Experiment with the application:
 app.MapGet("/api/users/{id}", (int id, ILogger<Program> logger) =>
 {
     logger.LogInformation("Fetching user {UserId}", id);
-    
+
     // Simulate some work
     Thread.Sleep(100);
-    
+
     return new { Id = id, Name = "User " + id };
 });
 ```
