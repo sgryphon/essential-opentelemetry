@@ -19,8 +19,7 @@ public class ColoredConsoleMetricExporterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name)
             .AddColoredConsoleExporter(
@@ -61,8 +60,7 @@ public class ColoredConsoleMetricExporterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name)
             .AddColoredConsoleExporter(
@@ -104,8 +102,7 @@ public class ColoredConsoleMetricExporterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name)
             .AddColoredConsoleExporter(
@@ -166,8 +163,7 @@ public class ColoredConsoleMetricExporterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name)
             .AddColoredConsoleExporter(
@@ -215,8 +211,7 @@ public class ColoredConsoleMetricExporterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name)
             .AddColoredConsoleExporter(
@@ -252,8 +247,7 @@ public class ColoredConsoleMetricExporterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
             .AddMeter(meter.Name)
             .AddColoredConsoleExporter(
