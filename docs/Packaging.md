@@ -36,10 +36,12 @@ Use the `build.ps1` script to create NuGet packages locally:
 
 The script will:
 1. Restore dotnet tools (including GitVersion)
-2. Calculate version from Git history
+2. Calculate version from Git history (or use fallback version 0.1.0-dev if GitVersion fails)
 3. Build the solution
 4. Run tests (unless `-SkipTests` is specified)
 5. Create NuGet package in the `pack/` directory
+
+**Note**: If you haven't created any version tags yet, GitVersion will not be able to determine a version, and the script will use a default version of `0.1.0-dev`. To create a proper version, see the "Creating Version Tags" section below.
 
 ### Publishing to NuGet.org
 
@@ -138,6 +140,24 @@ git tag v2.0.0
 # Push tags
 git push origin --tags
 ```
+
+### Creating the First Release
+
+For the initial release, create a `v1.0.0` tag on the main branch:
+
+```bash
+# Ensure you're on the main branch with all changes merged
+git checkout main
+git pull
+
+# Create the first version tag
+git tag v1.0.0 -a -m "Initial release"
+
+# Push the tag to GitHub
+git push origin v1.0.0
+```
+
+This will trigger the GitHub Actions workflow to automatically build, test, and publish version 1.0.0 to NuGet.org (if the `NUGET_API_KEY` secret is configured).
 
 ## Package Metadata
 
