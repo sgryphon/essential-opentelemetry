@@ -1,10 +1,12 @@
 # Development Container Setup
 
-This project includes VS Code Dev Container configurations for developing in containerized environments. This allows you to develop with a consistent, reproducible environment regardless of your host operating system.
+This project includes a VS Code Dev Container configuration for developing in a containerized environment. This provides a consistent, reproducible .NET 10 development environment regardless of your host operating system.
+
+The project supports multi-targeting (builds for .NET 8, 9, and 10), so the .NET 10 SDK is sufficient for all development work.
 
 ## What are Dev Containers?
 
-Development Containers (Dev Containers) let you use a container as a full-featured development environment. VS Code can run inside the container, providing a Linux-based development environment with all the necessary tools pre-installed.
+Development Containers (Dev Containers) let you use a container as a full-featured development environment. VS Code runs inside the container, providing a Linux-based development environment with all the necessary tools pre-installed.
 
 ## Prerequisites
 
@@ -32,14 +34,6 @@ If you're using Podman on Windows (WSL2/Hyper-V), follow these additional steps:
    $env:DOCKER_HOST="npipe:////./pipe/podman-machine-default"
    ```
 
-## Available Configurations
-
-This project provides three Dev Container configurations for different .NET versions:
-
-- **.NET 10** (default) - Latest version, located in `.devcontainer/`
-- **.NET 9** - Located in `.devcontainer/dotnet9/`
-- **.NET 8** - Located in `.devcontainer/dotnet8/`
-
 ## Getting Started
 
 ### Method 1: Open in Container (Recommended)
@@ -47,26 +41,21 @@ This project provides three Dev Container configurations for different .NET vers
 1. Open the project folder in VS Code
 2. Press `F1` (or `Ctrl+Shift+P`) to open the Command Palette
 3. Type and select: **Dev Containers: Reopen in Container**
-4. Select the desired configuration:
-   - "Essential OpenTelemetry (.NET 10)" - Default, uses .NET 10
-   - "Essential OpenTelemetry (.NET 9)" - Uses .NET 9
-   - "Essential OpenTelemetry (.NET 8)" - Uses .NET 8
-5. Wait for the container to build and initialize (first time takes longer)
-6. VS Code will reload inside the container
+4. Wait for the container to build and initialize (first time takes longer)
+5. VS Code will reload inside the container
 
 ### Method 2: Clone in Container
 
 1. Press `F1` in VS Code
 2. Type and select: **Dev Containers: Clone Repository in Container Volume**
 3. Enter the repository URL: `https://github.com/sgryphon/essential-opentelemetry`
-4. Select the desired .NET version configuration
-5. Wait for the container to build and the repository to clone
+4. Wait for the container to build and the repository to clone
 
 ## What's Included
 
-Each Dev Container includes:
+The Dev Container includes:
 
-- **Pre-installed .NET SDK** (8.0, 9.0, or 10.0 depending on configuration)
+- **Pre-installed .NET 10 SDK** - Supports multi-targeting for .NET 8, 9, and 10
 - **Git** - Version control
 - **GitHub CLI (gh)** - GitHub command-line tool
 - **VS Code Extensions**:
@@ -114,7 +103,7 @@ The Dev Container configuration mounts your local NuGet package cache into the c
 
 - Faster package restores
 - Reduced bandwidth usage
-- Packages downloaded once are available in all containers
+- Packages are shared between host and container
 
 ### Rebuilding the Container
 
@@ -123,27 +112,6 @@ If you need to rebuild the container (e.g., after configuration changes):
 1. Press `F1`
 2. Select: **Dev Containers: Rebuild Container**
 3. Choose "Rebuild" or "Rebuild Without Cache"
-
-### Switching Between .NET Versions
-
-To test your code on different .NET versions:
-
-1. Press `F1`
-2. Select: **Dev Containers: Reopen in Container**
-3. Choose a different configuration (e.g., switch from .NET 10 to .NET 8)
-4. Your local changes are preserved
-
-### Running Multiple Containers
-
-You can open the same project in multiple VS Code windows with different .NET versions:
-
-1. Open the project in VS Code
-2. Open in .NET 10 container
-3. Open a new VS Code window (File > New Window)
-4. Open the same project folder
-5. Open in .NET 8 or 9 container
-
-This allows side-by-side testing across .NET versions.
 
 ## Troubleshooting
 

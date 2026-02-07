@@ -1,16 +1,8 @@
-# Dev Container Configurations
+# Dev Container Configuration
 
-This directory contains Development Container configurations for VS Code.
+This directory contains the Development Container configuration for VS Code.
 
-## Available Configurations
-
-- **Default (.NET 10)**: `devcontainer.json` - Uses the latest .NET 10 SDK
-- **.NET 9**: `dotnet9/devcontainer.json` - For testing with .NET 9
-- **.NET 8**: `dotnet8/devcontainer.json` - For testing with .NET 8 LTS
-
-## Selecting a Configuration
-
-When you open the project in VS Code and choose "Reopen in Container", you'll be presented with a list of available configurations. Select the one that matches your development or testing needs.
+The dev container provides a consistent .NET 10 development environment with all necessary tools pre-installed. The project supports multi-targeting (builds for .NET 8, 9, and 10), so a single .NET 10 SDK is sufficient for all development work.
 
 ## Documentation
 

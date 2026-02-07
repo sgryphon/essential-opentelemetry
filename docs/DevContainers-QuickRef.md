@@ -5,7 +5,6 @@
 1. Open project in VS Code
 2. Press `F1` or `Ctrl+Shift+P`
 3. Type: `Dev Containers: Reopen in Container`
-4. Select .NET version (8, 9, or 10)
 
 ## Common Commands (Inside Container)
 
@@ -25,12 +24,6 @@ dotnet run --project examples/SimpleConsole/
 # Restore tools
 dotnet tool restore
 ```
-
-## Switching .NET Versions
-
-1. Press `F1`
-2. `Dev Containers: Reopen in Container`
-3. Choose different version
 
 ## Rebuilding Container
 

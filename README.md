@@ -8,7 +8,7 @@ Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
 
 ### Dev Containers
 
-This project supports development in containers using VS Code Dev Containers. This provides a consistent development environment with all tools pre-installed.
+This project supports development in containers using VS Code Dev Containers, providing a consistent .NET 10 development environment with all tools pre-installed.
 
 **Quick Start:**
 
@@ -16,7 +16,6 @@ This project supports development in containers using VS Code Dev Containers. Th
 2. Install Docker Desktop or Podman
 3. Open the project in VS Code
 4. Press F1 and select "Dev Containers: Reopen in Container"
-5. Choose your preferred .NET version (8, 9, or 10)
 
 See [Development Container Setup](docs/DevContainers.md) for detailed instructions, including Podman configuration for Windows users.
 
