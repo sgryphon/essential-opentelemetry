@@ -1,0 +1,68 @@
+name: Build and Publish NuGet
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for GitVersion
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dotnet tools
+      run: dotnet tool restore
+    
+    - name: Get version from GitVersion
+      id: gitversion
+      run: |
+        dotnet tool run dotnet-gitversion /output buildserver
+        dotnet tool run dotnet-gitversion /showvariable FullSemVer
+    
+    - name: Restore dependencies
+      run: dotnet restore Essential.OpenTelemetry.slnx
+    
+    - name: Build
+      run: dotnet build Essential.OpenTelemetry.slnx --no-restore --configuration Release
+    
+    - name: Test
+      run: dotnet test Essential.OpenTelemetry.slnx --no-build --configuration Release --verbosity normal
+    
+    - name: Pack
+      run: |
+        dotnet pack src/Essential.OpenTelemetry.Exporter.ColoredConsole \
+          --no-build \
+          --configuration Release \
+          -p:AssemblyVersion=${{ env.GitVersion_AssemblySemVer }} \
+          -p:FileVersion=${{ env.GitVersion_AssemblySemFileVer }} \
+          -p:Version=${{ env.GitVersion_SemVer }}+${{ env.GitVersion_ShortSha }} \
+          -p:PackageVersion=${{ env.GitVersion_FullSemVer }} \
+          --output pack
+    
+    - name: Upload package artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages
+        path: pack/*.nupkg
+    
+    - name: Publish to NuGet.org
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        dotnet nuget push pack/*.nupkg \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
