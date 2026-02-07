@@ -1,10 +1,17 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Essential.System;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 
 namespace Essential.OpenTelemetry.Exporter;
 
+/// <summary>
+/// Simple console exporter for OpenTelemetry metrics.
+/// </summary>
+/// <remarks>
+/// Default format is:
+/// "[EndTimestamp] 'METRIC' [MetricName] [Duration] [unit=Unit] [[Tag=value],..] [value=X|sum=A|count=X min=Y max=Z sum=A]".
+/// </remarks>
 public class ColoredConsoleMetricExporter : ColoredConsoleExporter<Metric>
 {
     private const ConsoleColor MetricForeground = ConsoleColor.DarkBlue;

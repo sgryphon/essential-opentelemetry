@@ -6,6 +6,13 @@ using OpenTelemetry.Logs;
 
 namespace Essential.OpenTelemetry.Exporter;
 
+/// <summary>
+/// Simple console exporter for OpenTelemetry logs.
+/// </summary>
+/// <remarks>
+/// Default format is:
+/// "[Timestamp] [SeverityRange] [EventName] [TraceId][-SpanId]]: [Body]".
+/// </remarks>
 public class ColoredConsoleLogRecordExporter : ColoredConsoleExporter<LogRecord>
 {
     private const ConsoleColor MessageForeground = ConsoleColor.White;
