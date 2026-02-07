@@ -10,4 +10,7 @@
   <Folder Name="/test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/">
     <Project Path="test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests.csproj" />
   </Folder>
+  <Folder Name="/test/Essential.OpenTelemetry.Performance/">
+    <Project Path="test/Essential.OpenTelemetry.Performance/Essential.OpenTelemetry.Performance.csproj" />
+  </Folder>
 </Solution>
