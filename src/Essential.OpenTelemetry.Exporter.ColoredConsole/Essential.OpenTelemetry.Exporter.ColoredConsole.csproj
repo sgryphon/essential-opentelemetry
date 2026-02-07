@@ -28,6 +28,7 @@
   </PropertyGroup>
   <ItemGroup>
     <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
     <None Include="..\..\docs\images\diagnostics-logo-64.png" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>

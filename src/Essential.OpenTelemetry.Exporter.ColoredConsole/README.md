@@ -18,21 +18,47 @@ Or via Package Manager:
 Install-Package Essential.OpenTelemetry.Exporter.ColoredConsole
 ```
 
-## Usage
+## Basic usage (logging)
 
-Add the following using statements to your code:
+Add the following using statements:
+
+```csharp
+using Essential.OpenTelemetry;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+```
+
+Configure OpenTelemetry with the colored console exporter for logging:
+
+```csharp
+var builder = Host.CreateApplicationBuilder(args);
+
+// Clear default logging providers to use only OpenTelemetry
+builder.Logging.ClearProviders();
+
+builder.Services.AddOpenTelemetry()
+    .WithLogging(logging =>
+    {
+        logging.AddColoredConsoleExporter();
+    });
+
+var host = builder.Build();
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Hello from OpenTelemetry!");
+```
+
+## Usage (full telemetry)
+
+For full telemetry support including traces and metrics, add these using statements:
 
 ```csharp
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using OpenTelemetry.Metrics;
 ```
-
-### Configuring OpenTelemetry with Colored Console Exporter
 
 Register the colored console exporter for logs, traces, and metrics:
 
