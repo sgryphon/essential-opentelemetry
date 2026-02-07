@@ -2,18 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Concurrent;
+using Essential.System;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
 using Xunit;
-#if NET8_0_OR_GREATER
-using TimeProvider = System.TimeProvider;
-#endif
 
-namespace OpenTelemetry.Exporter.Console.Tests.Compact;
+namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 
 /// <summary>
-/// Threading tests for SimpleConsoleExporter.
+/// Threading tests for ColoredConsoleLogRecordExporter.
 /// </summary>
+[Collection("ColoredConsoleTests")]
 public class ThreadingTests
 {
 #if NETCOREAPP2_1_OR_GREATER
@@ -30,9 +28,8 @@ public class ThreadingTests
         using var loggerFactory = LoggerFactory.Create(logging => logging
             .AddOpenTelemetry(options =>
             {
-                options.AddConsoleExporter(configure =>
+                options.AddColoredConsoleExporter(configure =>
                 {
-                    configure.Formatter = "compact";
                     configure.TimestampFormat = string.Empty;
                     configure.Console = mockConsole;
                 });
@@ -62,9 +59,8 @@ public class ThreadingTests
             .AddOpenTelemetry(options =>
             {
                 options.IncludeFormattedMessage = true;
-                options.AddConsoleExporter(configure =>
+                options.AddColoredConsoleExporter(configure =>
                 {
-                    configure.Formatter = "compact";
                     configure.TimestampFormat = string.Empty;
                     configure.Console = mockConsole;
                 });
@@ -88,7 +84,7 @@ public class ThreadingTests
         // t=915, Info message completes (it only has 15ns delay, but should wait until after the warning)
         // t=930, Error message completes
 
-        System.Console.WriteLine($"Start: {getUtcNow():HH:mm:ss.fff}");
+        Console.WriteLine($"Start: {getUtcNow():HH:mm:ss.fff}");
 
         var t1 = Task.Run(async () =>
         {
@@ -108,7 +104,7 @@ public class ThreadingTests
 
         await Task.WhenAll(t1, t2, t3);
 
-        System.Console.WriteLine($"End: {getUtcNow():HH:mm:ss.fff}");
+        Console.WriteLine($"End: {getUtcNow():HH:mm:ss.fff}");
 
         // Assert
         var calls = mockConsole.Calls.ToArray();
@@ -121,8 +117,8 @@ public class ThreadingTests
         var failStart = Array.FindIndex(calls, c => Contains(c, "foreground:Black", StringComparison.OrdinalIgnoreCase));
         var failEnd = Array.FindIndex(calls, c => Contains(c, "Error message third", StringComparison.OrdinalIgnoreCase));
 
-        System.Console.WriteLine($"warn: {warnStart}-{warnEnd}, info: {infoStart}-{infoEnd}, fail: {failStart}-{failEnd}");
-        System.Console.WriteLine(string.Join("\n", calls));
+        Console.WriteLine($"warn: {warnStart}-{warnEnd}, info: {infoStart}-{infoEnd}, fail: {failStart}-{failEnd}");
+        Console.WriteLine(string.Join("\n", calls));
 
         Assert.True(infoStart >= 0, "Should have info messages");
         Assert.True(warnStart >= 0, "Should have warn messages");
