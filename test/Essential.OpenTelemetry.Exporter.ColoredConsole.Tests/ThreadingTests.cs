@@ -1,4 +1,4 @@
-// Copyright The OpenTelemetry Authors
+﻿// Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
 using System.Collections.Concurrent;
@@ -15,9 +15,17 @@ namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 public class ThreadingTests
 {
 #if NETCOREAPP2_1_OR_GREATER
-    private static readonly Func<string, string, StringComparison, bool> Contains = (s, value, comparison) => s.Contains(value, comparison);
+    private static readonly Func<string, string, StringComparison, bool> Contains = (
+        s,
+        value,
+        comparison
+    ) => s.Contains(value, comparison);
 #else
-    private static readonly Func<string, string, StringComparison, bool> Contains = (s, value, comparison) => s.IndexOf(value, comparison) >= 0;
+    private static readonly Func<string, string, StringComparison, bool> Contains = (
+        s,
+        value,
+        comparison
+    ) => s.IndexOf(value, comparison) >= 0;
 #endif
 
     [Fact]
@@ -25,15 +33,16 @@ public class ThreadingTests
     {
         // Arrange
         var mockConsole = new ThreadingTestMockConsole();
-        using var loggerFactory = LoggerFactory.Create(logging => logging
-            .AddOpenTelemetry(options =>
+        using var loggerFactory = LoggerFactory.Create(logging =>
+            logging.AddOpenTelemetry(options =>
             {
                 options.AddColoredConsoleExporter(configure =>
                 {
                     configure.TimestampFormat = string.Empty;
                     configure.Console = mockConsole;
                 });
-            }));
+            })
+        );
 
         var logger = loggerFactory.CreateLogger<ThreadingTests>();
 
@@ -42,7 +51,10 @@ public class ThreadingTests
 
         // Assert
         var calls = mockConsole.Calls.ToArray();
-        var fgIndex = Array.FindIndex(calls, c => c.StartsWith("Foreground:", StringComparison.Ordinal));
+        var fgIndex = Array.FindIndex(
+            calls,
+            c => c.StartsWith("Foreground:", StringComparison.Ordinal)
+        );
         Assert.True(fgIndex >= 0, "Should have a Foreground color call");
         Assert.True(calls.Length > fgIndex + 4, "Should have enough calls after Foreground");
         Assert.StartsWith("Write:INFO", calls[fgIndex + 2], StringComparison.InvariantCulture);
@@ -55,8 +67,8 @@ public class ThreadingTests
     {
         // Arrange
         var mockConsole = new ThreadingTestMockConsole();
-        using var loggerFactory = LoggerFactory.Create(logging => logging
-            .AddOpenTelemetry(options =>
+        using var loggerFactory = LoggerFactory.Create(logging =>
+            logging.AddOpenTelemetry(options =>
             {
                 options.IncludeFormattedMessage = true;
                 options.AddColoredConsoleExporter(configure =>
@@ -64,7 +76,8 @@ public class ThreadingTests
                     configure.TimestampFormat = string.Empty;
                     configure.Console = mockConsole;
                 });
-            }));
+            })
+        );
 
         var loggerInfo = loggerFactory.CreateLogger("ThreadingTests.LoggerInfo");
         var loggerWarn = loggerFactory.CreateLogger("ThreadingTests.LoggerWarn");
@@ -110,14 +123,34 @@ public class ThreadingTests
         var calls = mockConsole.Calls.ToArray();
 
         // Find the first info and last write
-        var warnStart = Array.FindIndex(calls, c => Contains(c, "foreground:Yellow", StringComparison.OrdinalIgnoreCase));
-        var warnEnd = Array.FindIndex(calls, c => Contains(c, "Warning message first", StringComparison.OrdinalIgnoreCase));
-        var infoStart = Array.FindIndex(calls, c => Contains(c, "foreground:DarkGreen", StringComparison.OrdinalIgnoreCase));
-        var infoEnd = Array.FindIndex(calls, c => Contains(c, "Info message second", StringComparison.OrdinalIgnoreCase));
-        var failStart = Array.FindIndex(calls, c => Contains(c, "foreground:Black", StringComparison.OrdinalIgnoreCase));
-        var failEnd = Array.FindIndex(calls, c => Contains(c, "Error message third", StringComparison.OrdinalIgnoreCase));
+        var warnStart = Array.FindIndex(
+            calls,
+            c => Contains(c, "foreground:Yellow", StringComparison.OrdinalIgnoreCase)
+        );
+        var warnEnd = Array.FindIndex(
+            calls,
+            c => Contains(c, "Warning message first", StringComparison.OrdinalIgnoreCase)
+        );
+        var infoStart = Array.FindIndex(
+            calls,
+            c => Contains(c, "foreground:DarkGreen", StringComparison.OrdinalIgnoreCase)
+        );
+        var infoEnd = Array.FindIndex(
+            calls,
+            c => Contains(c, "Info message second", StringComparison.OrdinalIgnoreCase)
+        );
+        var failStart = Array.FindIndex(
+            calls,
+            c => Contains(c, "foreground:Black", StringComparison.OrdinalIgnoreCase)
+        );
+        var failEnd = Array.FindIndex(
+            calls,
+            c => Contains(c, "Error message third", StringComparison.OrdinalIgnoreCase)
+        );
 
-        Console.WriteLine($"warn: {warnStart}-{warnEnd}, info: {infoStart}-{infoEnd}, fail: {failStart}-{failEnd}");
+        Console.WriteLine(
+            $"warn: {warnStart}-{warnEnd}, info: {infoStart}-{infoEnd}, fail: {failStart}-{failEnd}"
+        );
         Console.WriteLine(string.Join("\n", calls));
 
         Assert.True(infoStart >= 0, "Should have info messages");
@@ -135,9 +168,17 @@ public class ThreadingTests
     internal sealed class ThreadingTestMockConsole : IConsole
     {
 #if NETCOREAPP2_1_OR_GREATER
-        private static readonly Func<string, string, StringComparison, bool> Contains = (s, value, comparison) => s.Contains(value, comparison);
+        private static readonly Func<string, string, StringComparison, bool> Contains = (
+            s,
+            value,
+            comparison
+        ) => s.Contains(value, comparison);
 #else
-        private static readonly Func<string, string, StringComparison, bool> Contains = (s, value, comparison) => s.IndexOf(value, comparison) >= 0;
+        private static readonly Func<string, string, StringComparison, bool> Contains = (
+            s,
+            value,
+            comparison
+        ) => s.IndexOf(value, comparison) >= 0;
 #endif
 
         private ConsoleColor foregroundColor = ConsoleColor.White;
