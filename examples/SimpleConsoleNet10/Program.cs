@@ -1,4 +1,4 @@
-﻿// Simple OpenTelemetry example
+﻿// Simple OpenTelemetry example for .NET 10.0
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using Essential.OpenTelemetry;
@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-const string ServiceName = "SimpleConsole";
+const string ServiceName = "SimpleConsoleNet10";
 var activitySource = new ActivitySource(ServiceName);
 var meter = new Meter(ServiceName);
 
@@ -37,10 +37,12 @@ var meterProvider = host.Services.GetRequiredService<MeterProvider>();
 // Create a simple counter metric
 var requestCounter = meter.CreateCounter<int>("requests", "count", "Number of requests");
 
+Console.WriteLine("Running on .NET 10.0");
+
 // Create a simple activity (span)
 using (var activity = activitySource.StartActivity("SampleOperation"))
 {
-    logger.LogInformation("Hello world");
+    logger.LogInformation("Hello world from .NET 10.0");
     requestCounter.Add(1);
 }
 
