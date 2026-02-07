@@ -17,7 +17,20 @@ This project supports development in containers using VS Code Dev Containers, pr
 3. Open the project in VS Code
 4. Press F1 and select "Dev Containers: Reopen in Container"
 
-See [Development Container Setup](docs/DevContainers.md) for detailed instructions, including Podman configuration for Windows users.
+#### Windows with Podman
+
+If you're using Podman on Windows (WSL2/Hyper-V), follow these additional steps:
+
+1. Install Podman Desktop from [podman-desktop.io](https://podman-desktop.io/)
+2. Start the Podman Machine (or let Podman Desktop manage it)
+3. Configure VS Code to use Podman:
+   - Open VS Code Settings (Ctrl+,)
+   - Search for "dev.containers.dockerPath"
+   - Set it to "podman" (or the full path to podman.exe)
+4. Alternatively, set the environment variable:
+   ```powershell
+   $env:DOCKER_HOST="npipe:////./pipe/podman-machine-default"
+   ```
 
 ## Supported .NET Versions
 

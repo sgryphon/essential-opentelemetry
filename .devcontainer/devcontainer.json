@@ -1,6 +1,6 @@
 {
   "name": "Essential OpenTelemetry (.NET 10)",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
 
   "features": {
     "ghcr.io/devcontainers/features/git:1": {},
