@@ -1,7 +1,5 @@
 # AGENTS.md - AI Assistant Guidelines
 
-This file provides context and guidelines for AI coding assistants working on the Essential .NET OpenTelemetry project.
-
 ## Project Overview
 
 **Essential .NET OpenTelemetry** provides guidance, additional exporters, and extensions for .NET OpenTelemetry implementations. The primary component is a colored console exporter for OpenTelemetry logging.
@@ -10,20 +8,29 @@ This file provides context and guidelines for AI coding assistants working on th
 - **Copyright**: Gryphon Technology Pty Ltd
 - **Primary Language**: C# (.NET 10.0)
 
-## Repository Structure
+## Key Guidelines
 
-```
-Essential.OpenTelemetry.slnx     # XML-based solution file (preferred format)
-├── src/                         # Source code for libraries
-│   └── Essential.OpenTelemetry.Exporter.ColoredConsole/
-├── test/                        # Unit tests (xUnit)
-│   └── Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/
-├── examples/                    # Example applications
-│   └── SimpleConsole/
-├── docs/                        # Documentation
-└── .config/                     # Tooling configuration
-    └── dotnet-tools.json
-```
+- **Language**: C# with .NET 10.0 target framework
+- **Formatting**: Use CSharpier for C# files (`dotnet csharpier .`). For other files use Prettier.
+- **Testing**: xUnit framework - run with `dotnet test`
+- **Building**: Build with `dotnet build Essential.OpenTelemetry.slnx`
+- **Style**: Follow EditorConfig and existing code patterns
+- **Nullable Types**: Always use nullable reference types (enabled by default)
+- **Namespaces**: Use file-scoped namespaces (C# 10+ style)
+- **Implicit usings**: Enabled (`<ImplicitUsings>enable</ImplicitUsings>`)
+
+## Project Structure
+
+- `src/` - Library source code
+- `test/` - Unit tests (xUnit)
+- `examples/` - Example applications
+- `docs/` - Documentation
+
+## Before Committing
+
+1. Format code: `dotnet csharpier format .`
+2. Build solution: `dotnet build Essential.OpenTelemetry.slnx`
+3. Run tests: `dotnet test Essential.OpenTelemetry.slnx`
 
 ## Development Tools & Environment
 
@@ -32,54 +39,6 @@ Essential.OpenTelemetry.slnx     # XML-based solution file (preferred format)
 - **.NET SDK 10.0** (target framework)
 - **CSharpier 1.2.5** - C# code formatter (configured as dotnet tool)
 - **GitVersion 6.5.1** - Semantic versioning (configured as dotnet tool)
-
-### VS Code Extensions
-
-The project recommends these extensions (in [.vscode/extensions.json](.vscode/extensions.json)):
-
-- `EditorConfig.EditorConfig` - Base formatting rules
-- `csharpier.csharpier-vscode` - C# formatting
-- `esbenp.prettier-vscode` - Formatting for JSON, YAML, Markdown, etc.
-
-### Formatting Configuration
-
-- **Format on save**: Enabled
-- **C# files**: Formatted with CSharpier
-- **JSON/JSONC**: Formatted with Prettier (format on save disabled)
-- **Markdown, YAML, HTML, TypeScript**: Formatted with Prettier
-- **Default solution**: `Essential.OpenTelemetry.slnx`
-
-## Code Style & Conventions
-
-### General Rules (from .editorconfig)
-
-- **Indentation**: Spaces (never tabs)
-- **C# files** (`.cs`):
-  - 4 spaces per indent level
-  - UTF-8 with BOM encoding
-  - Insert final newline
-- **XML files** (`.csproj`, `.props`, `.targets`, etc.): 2 spaces
-- **JSON files**: 2 spaces
-- **PowerShell** (`.ps1`): 2 spaces
-- **Shell scripts** (`.sh`): 2 spaces, LF line endings
-
-### C# Specific Conventions
-
-- **Nullable reference types**: Enabled (`<Nullable>enable</Nullable>`)
-- **Implicit usings**: Enabled (`<ImplicitUsings>enable</ImplicitUsings>`)
-- **XML documentation**: Suppressed for CS1591 (missing XML comments warning)
-- **Namespace style**: File-scoped namespaces (C# 10+ style)
-- **Access modifiers**: Explicit for public APIs
-- **Naming**: PascalCase for public members, camelCase for parameters
-
-### Project File Conventions
-
-- Use SDK-style project files
-- Target framework: `net10.0` for libraries
-- References:
-  - OpenTelemetry core packages
-  - Microsoft.Extensions.\* for dependency injection and hosting
-- Organize ItemGroups logically (properties, packages, project references)
 
 ## Testing Strategy
 
@@ -99,16 +58,17 @@ The project recommends these extensions (in [.vscode/extensions.json](.vscode/ex
 
 ### Running Tests
 
+- Run the specific test for the functionality you are changing.
+- Only run tests for the project you have modified
+- Don't run all tests in the solution (it takes too long)
+
 ```bash
-dotnet test
+dotnet test ./test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests
 ```
 
 ## Versioning
 
 - **GitVersion** handles semantic versioning
-- Mode: Mainline
-- Assembly versioning: MajorMinor
-- Informational format: `{SemVer}+{ShortSha}`
 
 ## Common Workflows
 
@@ -122,9 +82,7 @@ dotnet tool restore
 
 ```bash
 # Format C# code
-dotnet csharpier .
-
-# VS Code will auto-format on save
+dotnet csharpier format .
 ```
 
 ### Building
@@ -181,18 +139,6 @@ dotnet run --project examples/SimpleConsole/
 - Use Prettier formatting
 - Include code examples where helpful
 - See [docs/](docs/) for existing documentation patterns
-
-## Adding New Components
-
-When adding new exporters or extensions:
-
-1. Create project in `src/` directory
-2. Follow naming: `Essential.OpenTelemetry.{ComponentType}.{ComponentName}`
-3. Add corresponding test project in `test/`
-4. Update solution file (`Essential.OpenTelemetry.slnx`)
-5. Add example in `examples/` if applicable
-6. Document in `docs/` as needed
-7. Use consistent patterns with existing exporters
 
 ## Important Notes
 
