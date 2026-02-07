@@ -5,6 +5,13 @@ using OpenTelemetry;
 
 namespace Essential.OpenTelemetry.Exporter;
 
+/// <summary>
+/// Simple console exporter for OpenTelemetry traces (activity spans).
+/// </summary>
+/// <remarks>
+/// Default format is:
+/// "[EndTimestamp] 'SPAN' ['ERROR'] [SpanName] [TraceId][-SpanId]] [DurationMilliseconds]".
+/// </remarks>
 public class ColoredConsoleActivityExporter : ColoredConsoleExporter<Activity>
 {
     private const ConsoleColor SpanForeground = ConsoleColor.DarkCyan;
