@@ -2,7 +2,14 @@
 
 # Essential .NET OpenTelemetry
 
+[![CI](https://github.com/sgryphon/essential-opentelemetry/actions/workflows/ci.yml/badge.svg)](https://github.com/sgryphon/essential-opentelemetry/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sgryphon/essential-opentelemetry/branch/main/graph/badge.svg)](https://codecov.io/gh/sgryphon/essential-opentelemetry)
+
 Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
+
+## Getting Started
+
+- [Continuous Integration](docs/Continuous-Integration.md) - CI/CD pipeline and testing guide
 
 ## License
 
