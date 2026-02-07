@@ -14,7 +14,6 @@
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Essential.OpenTelemetry.Exporter.ColoredConsole\Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
   </ItemGroup>
