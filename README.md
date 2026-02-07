@@ -4,6 +4,13 @@
 
 Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
 
+## Documentation
+
+- [Performance Testing](docs/Performance.md) - Performance benchmarks and comparisons
+- [Correlation IDs](docs/Correlation-Ids.md)
+- [Event IDs](docs/Event-Ids.md)
+- [Logging Levels](docs/Logging-Levels.md)
+
 ## License
 
 Copyright (C) 2026 Gryphon Technology Pty Ltd
