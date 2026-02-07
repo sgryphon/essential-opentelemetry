@@ -12,7 +12,7 @@ public static class ColoredConsoleMetricsExtensions
     private const int DefaultExportTimeoutMilliseconds = Timeout.Infinite;
 
     /// <summary>
-    /// Adds Console exporter to the MeterProvider.
+    /// Adds ColoredConsole exporter to the MeterProvider.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
@@ -21,7 +21,7 @@ public static class ColoredConsoleMetricsExtensions
     ) => AddColoredConsoleExporter(builder, name: null, configure: null);
 
     /// <summary>
-    /// Adds Console exporter to the MeterProvider.
+    /// Adds ColoredConsole exporter to the MeterProvider.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <param name="configure">Callback action for configuring <see cref="ColoredConsoleOptions"/>.</param>
@@ -32,7 +32,7 @@ public static class ColoredConsoleMetricsExtensions
     ) => AddColoredConsoleExporter(builder, name: null, configure);
 
     /// <summary>
-    /// Adds Console exporter to the MeterProvider.
+    /// Adds ColoredConsole exporter to the MeterProvider.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <param name="name">Optional name which is used when retrieving options.</param>
@@ -68,7 +68,7 @@ public static class ColoredConsoleMetricsExtensions
     }
 
     /// <summary>
-    /// Adds Console exporter to the MeterProvider with configurable export interval.
+    /// Adds ColoredConsole exporter to the MeterProvider with configurable export interval.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <param name="configure">Callback action for configuring <see cref="ColoredConsoleOptions"/>.</param>
