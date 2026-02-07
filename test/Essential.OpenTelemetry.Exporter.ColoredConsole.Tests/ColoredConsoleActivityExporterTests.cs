@@ -1,15 +1,13 @@
-// Copyright The OpenTelemetry Authors
-// SPDX-License-Identifier: Apache-2.0
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Xunit;
 
-namespace OpenTelemetry.Exporter.Console.Tests.Compact;
+namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 
-public class CompactActivityFormatterTests
+[Collection("ColoredConsoleTests")]
+public class ColoredConsoleActivityExporterTests
 {
     [Fact]
     public async Task BasicActivityOutputTest()
@@ -19,12 +17,11 @@ public class CompactActivityFormatterTests
         using var tracerProvider = Sdk.CreateTracerProviderBuilder()
             .AddSource("TestActivitySource")
             .ConfigureResource(res => res.AddService("console-test"))
-            .AddConsoleExporter(configure =>
-                {
-                    configure.Formatter = "compact";
-                    configure.TimestampFormat = string.Empty;
-                    configure.Console = mockConsole;
-                })
+            .AddColoredConsoleExporter(configure =>
+            {
+                configure.TimestampFormat = string.Empty;
+                configure.Console = mockConsole;
+            })
             .Build();
 
         // Act
@@ -39,7 +36,7 @@ public class CompactActivityFormatterTests
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Output: {0}", output);
+        global::System.Console.WriteLine("Output: {0}", output);
 
         // Contains trace ID and span ID
         Assert.Matches(@"^SPAN \[TestActivity\] [0-9a-f]{32}-[0-9a-f]{16}", output);
@@ -55,12 +52,11 @@ public class CompactActivityFormatterTests
         using var tracerProvider = Sdk.CreateTracerProviderBuilder()
             .AddSource("OuterActivitySource", "InnerActivitySource")
             .ConfigureResource(res => res.AddService("console-test"))
-            .AddConsoleExporter(configure =>
-                {
-                    configure.Formatter = "compact";
-                    configure.TimestampFormat = string.Empty;
-                    configure.Console = mockConsole;
-                })
+            .AddColoredConsoleExporter(configure =>
+            {
+                configure.TimestampFormat = string.Empty;
+                configure.Console = mockConsole;
+            })
             .Build();
 
         // Act
@@ -84,7 +80,7 @@ public class CompactActivityFormatterTests
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Output: {0}", output);
+        global::System.Console.WriteLine("Output: {0}", output);
 
         // Inner Activity completes first, so should be output first
         Assert.Matches(@"^SPAN \[InnerActivity\]", output);
@@ -104,28 +100,32 @@ public class CompactActivityFormatterTests
     {
         // Arrange
         var mockConsole = new MockConsole();
-        using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+        var tracerProvider = Sdk.CreateTracerProviderBuilder()
             .AddSource("TestActivitySource")
             .ConfigureResource(res => res.AddService("console-test"))
-            .AddConsoleExporter(configure =>
-                {
-                    configure.Formatter = "compact";
-                    configure.TimestampFormat = string.Empty;
-                    configure.Console = mockConsole;
-                })
+            .AddColoredConsoleExporter(configure =>
+            {
+                configure.TimestampFormat = string.Empty;
+                configure.Console = mockConsole;
+            })
             .Build();
 
         // Act
-        using var activitySource = new ActivitySource("TestActivitySource");
-        using (var activity1 = activitySource.StartActivity("TestActivity"))
+        using (var activitySource = new ActivitySource("TestActivitySource"))
         {
-            await Task.Delay(100);
-            activity1?.SetStatus(ActivityStatusCode.Error, "Failed");
+            using (var activity1 = activitySource.StartActivity("TestActivity"))
+            {
+                await Task.Delay(100);
+                activity1?.SetStatus(ActivityStatusCode.Error, "Failed");
+            }
         }
+
+        // Dispose to ensure all activities are exported
+        tracerProvider?.Dispose();
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Output: {0}", output);
+        global::System.Console.WriteLine("Output: {0}", output);
 
         // Contains ERROR indicator
         Assert.Matches(@"^SPAN ERROR", output);

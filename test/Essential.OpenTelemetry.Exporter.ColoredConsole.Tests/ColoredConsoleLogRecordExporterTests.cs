@@ -9,6 +9,7 @@ using Xunit;
 
 namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 
+[Collection("ColoredConsoleTests")]
 public class CompactLogRecordFormatterTests
 {
     [Fact]

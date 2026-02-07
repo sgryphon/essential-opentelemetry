@@ -1,19 +1,11 @@
-// Copyright The OpenTelemetry Authors
-// SPDX-License-Identifier: Apache-2.0
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
+using Essential.System;
+using OpenTelemetry;
 
-namespace OpenTelemetry.Exporter.Formatting.Compact;
+namespace Essential.OpenTelemetry.Exporter;
 
-/// <summary>
-/// Simple console exporter for OpenTelemetry logs.
-/// </summary>
-/// <remarks>
-/// Default format is:
-/// "[EndTimestamp] 'SPAN' ['ERROR'] [SpanName] [TraceId][-SpanId]] [DurationMilliseconds]".
-/// </remarks>
-internal sealed class CompactActivityFormatter : CompactFormatterBase<Activity>
+public class ColoredConsoleActivityExporter : ColoredConsoleExporter<Activity>
 {
     private const ConsoleColor SpanForeground = ConsoleColor.DarkCyan;
     private const ConsoleColor SpanBackground = ConsoleColor.Black;
@@ -23,13 +15,11 @@ internal sealed class CompactActivityFormatter : CompactFormatterBase<Activity>
     private const ConsoleColor ErrorBackground = ConsoleColor.DarkRed;
     private const string ErrorText = "ERROR";
 
-    public CompactActivityFormatter(ConsoleExporterOptions options)
-        : base(options)
-    {
-    }
+    public ColoredConsoleActivityExporter(ColoredConsoleOptions options)
+        : base(options) { }
 
     /// <inheritdoc/>
-    public override ExportResult Export(in Batch<Activity> batch, ConsoleFormatterContext context)
+    public override ExportResult Export(in Batch<Activity> batch)
     {
         var console = this.Options.Console;
 
@@ -46,7 +36,8 @@ internal sealed class CompactActivityFormatter : CompactFormatterBase<Activity>
 
                 timestamp = timestampToFormat.ToString(
                     this.Options.TimestampFormat!,
-                    CultureInfo.InvariantCulture);
+                    CultureInfo.InvariantCulture
+                );
             }
 
             var isError = activity.Status == ActivityStatusCode.Error;
@@ -89,5 +80,11 @@ internal sealed class CompactActivityFormatter : CompactFormatterBase<Activity>
         }
 
         return ExportResult.Success;
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
     }
 }
