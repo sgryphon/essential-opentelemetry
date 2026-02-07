@@ -33,28 +33,35 @@ public class MetricsBenchmarks
 
         // OpenTelemetry Console Exporter (out of the box)
         var otelBuilder = Host.CreateApplicationBuilder();
-        otelBuilder.Services.AddOpenTelemetry().WithMetrics(metrics =>
-        {
-            metrics.AddMeter(ServiceName).AddConsoleExporter();
-        });
+        otelBuilder
+            .Services.AddOpenTelemetry()
+            .WithMetrics(metrics =>
+            {
+                metrics.AddMeter(ServiceName).AddConsoleExporter();
+            });
         _openTelemetryConsoleHost = otelBuilder.Build();
-        _openTelemetryMeterProvider = _openTelemetryConsoleHost.Services.GetRequiredService<MeterProvider>();
+        _openTelemetryMeterProvider =
+            _openTelemetryConsoleHost.Services.GetRequiredService<MeterProvider>();
 
         // Essential.OpenTelemetry Colored Console Exporter
         var coloredBuilder = Host.CreateApplicationBuilder();
-        coloredBuilder.Services.AddOpenTelemetry().WithMetrics(metrics =>
-        {
-            metrics.AddMeter(ServiceName).AddColoredConsoleExporter();
-        });
+        coloredBuilder
+            .Services.AddOpenTelemetry()
+            .WithMetrics(metrics =>
+            {
+                metrics.AddMeter(ServiceName).AddColoredConsoleExporter();
+            });
         _coloredConsoleHost = coloredBuilder.Build();
         _coloredMeterProvider = _coloredConsoleHost.Services.GetRequiredService<MeterProvider>();
 
         // Disabled metrics (no exporters)
         var disabledBuilder = Host.CreateApplicationBuilder();
-        disabledBuilder.Services.AddOpenTelemetry().WithMetrics(metrics =>
-        {
-            metrics.AddMeter(ServiceName);
-        });
+        disabledBuilder
+            .Services.AddOpenTelemetry()
+            .WithMetrics(metrics =>
+            {
+                metrics.AddMeter(ServiceName);
+            });
         _disabledMetricsHost = disabledBuilder.Build();
         _disabledMeterProvider = _disabledMetricsHost.Services.GetRequiredService<MeterProvider>();
     }

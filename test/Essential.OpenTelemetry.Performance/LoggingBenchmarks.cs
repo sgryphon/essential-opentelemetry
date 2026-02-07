@@ -33,34 +33,46 @@ public class LoggingBenchmarks
         standardBuilder.Logging.AddConsole();
         standardBuilder.Logging.SetMinimumLevel(LogLevel.Information);
         _standardConsoleHost = standardBuilder.Build();
-        _standardLogger = _standardConsoleHost.Services.GetRequiredService<ILogger<LoggingBenchmarks>>();
+        _standardLogger = _standardConsoleHost.Services.GetRequiredService<
+            ILogger<LoggingBenchmarks>
+        >();
 
         // OpenTelemetry Console Exporter (out of the box)
         var otelBuilder = Host.CreateApplicationBuilder();
         otelBuilder.Logging.ClearProviders();
-        otelBuilder.Services.AddOpenTelemetry().WithLogging(logging =>
-        {
-            logging.AddConsoleExporter();
-        });
+        otelBuilder
+            .Services.AddOpenTelemetry()
+            .WithLogging(logging =>
+            {
+                logging.AddConsoleExporter();
+            });
         _openTelemetryConsoleHost = otelBuilder.Build();
-        _openTelemetryLogger = _openTelemetryConsoleHost.Services.GetRequiredService<ILogger<LoggingBenchmarks>>();
+        _openTelemetryLogger = _openTelemetryConsoleHost.Services.GetRequiredService<
+            ILogger<LoggingBenchmarks>
+        >();
 
         // Essential.OpenTelemetry Colored Console Exporter
         var coloredBuilder = Host.CreateApplicationBuilder();
         coloredBuilder.Logging.ClearProviders();
-        coloredBuilder.Services.AddOpenTelemetry().WithLogging(logging =>
-        {
-            logging.AddColoredConsoleExporter();
-        });
+        coloredBuilder
+            .Services.AddOpenTelemetry()
+            .WithLogging(logging =>
+            {
+                logging.AddColoredConsoleExporter();
+            });
         _coloredConsoleHost = coloredBuilder.Build();
-        _coloredLogger = _coloredConsoleHost.Services.GetRequiredService<ILogger<LoggingBenchmarks>>();
+        _coloredLogger = _coloredConsoleHost.Services.GetRequiredService<
+            ILogger<LoggingBenchmarks>
+        >();
 
         // Disabled logging (to measure overhead)
         var disabledBuilder = Host.CreateApplicationBuilder();
         disabledBuilder.Logging.ClearProviders();
         disabledBuilder.Logging.SetMinimumLevel(LogLevel.None);
         _disabledLoggingHost = disabledBuilder.Build();
-        _disabledLogger = _disabledLoggingHost.Services.GetRequiredService<ILogger<LoggingBenchmarks>>();
+        _disabledLogger = _disabledLoggingHost.Services.GetRequiredService<
+            ILogger<LoggingBenchmarks>
+        >();
     }
 
     [GlobalCleanup]
