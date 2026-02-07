@@ -4,6 +4,16 @@
 
 Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
 
+## Supported .NET Versions
+
+This library supports the following .NET versions:
+
+- .NET 10.0
+- .NET 9.0
+- .NET 8.0
+
+All officially supported versions of .NET are targeted. The library uses modern C# features (file-scoped namespaces, nullable reference types, implicit usings) that are compatible with these versions.
+
 ## License
 
 Copyright (C) 2026 Gryphon Technology Pty Ltd

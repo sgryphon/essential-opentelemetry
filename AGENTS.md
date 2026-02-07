@@ -6,11 +6,11 @@
 
 - **License**: LGPL v3
 - **Copyright**: Gryphon Technology Pty Ltd
-- **Primary Language**: C# (.NET 10.0)
+- **Primary Language**: C# (multi-targeting .NET 10.0, 9.0, 8.0)
 
 ## Key Guidelines
 
-- **Language**: C# with .NET 10.0 target framework
+- **Language**: C# with multi-targeting support for .NET 10.0, 9.0, and 8.0
 - **Formatting**: Use CSharpier for C# files (`dotnet csharpier .`). For other files use Prettier.
 - **Testing**: xUnit framework - run with `dotnet test`
 - **Building**: Build with `dotnet build Essential.OpenTelemetry.slnx`
