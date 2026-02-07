@@ -125,25 +125,6 @@ logger.LogError("This is an error message");
 
 These methods log messages at different severity levels. The colored console exporter displays them in different colors to make them easy to distinguish.
 
-## Log Levels
-
-OpenTelemetry supports the following log levels (from most to least severe):
-
-- **Critical**: For critical errors that require immediate attention
-- **Error**: For error conditions that need to be addressed
-- **Warning**: For warning messages about potential issues
-- **Information**: For general informational messages
-- **Debug**: For detailed debugging information
-- **Trace**: For very detailed trace information
-
-Try adding more log statements with different levels:
-
-```csharp
-logger.LogTrace("This is a trace message");
-logger.LogDebug("This is a debug message");
-logger.LogCritical("This is a critical message");
-```
-
 > **Note:** By default, Trace and Debug messages may not be displayed. You can configure the minimum log level in your application configuration if needed.
 
 ## Next Steps
@@ -152,5 +133,5 @@ Now that you have basic logging working, continue to the next tutorial: **[Addin
 
 ## Learn More
 
-- [Logging Levels Documentation](../Logging-Levels.md)
+- [Logging Levels Documentation](./Logging-Levels.md)
 - [OpenTelemetry Logging Concepts](https://opentelemetry.io/docs/concepts/signals/logs/)

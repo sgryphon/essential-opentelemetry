@@ -141,30 +141,11 @@ When you run the application, you'll notice the log messages and span have the s
 
 The format is typically: `[trace-id]-[span-id]`
 
-## Try It Yourself
-
-Experiment with adding multiple log statements within the activity:
-
-```csharp
-using (var activity = activitySource.StartActivity("MainOperation"))
-{
-    logger.LogInformation("Step 1: Starting");
-    Thread.Sleep(50);
-
-    logger.LogInformation("Step 2: Processing");
-    Thread.Sleep(50);
-
-    logger.LogInformation("Step 3: Completing");
-}
-```
-
-Notice how all the log messages share the same trace ID and span ID, making it easy to correlate them.
-
 ## Next Steps
 
-Continue to the next tutorial: **[Working with Spans](./HelloWorld3-Spans.md)** to learn how to create nested spans and add more detailed information to your traces.
+Continue to the next tutorial: **[Hello World - ASP.NET Core](./HelloWorld4-AspNetCore.md)** to see how OpenTelemetry works in web applications.
 
 ## Learn More
 
 - [OpenTelemetry Tracing Concepts](https://opentelemetry.io/docs/concepts/signals/traces/)
-- [Correlation IDs Documentation](../Correlation-Ids.md)
+- [Correlation IDs Documentation](./Correlation-Ids.md)

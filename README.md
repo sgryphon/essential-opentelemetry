@@ -10,9 +10,8 @@ New to OpenTelemetry? Check out our [Getting Started Guide](docs/Getting-Started
 
 - Setting up OpenTelemetry logging in console applications
 - Adding distributed tracing
-- Working with spans and attributes
 - Instrumenting ASP.NET Core applications
-- Collecting and exporting metrics
+- Viewing built-in metrics
 
 The tutorials use the Essential OpenTelemetry colored console exporter to make observability data easy to read during development.
 

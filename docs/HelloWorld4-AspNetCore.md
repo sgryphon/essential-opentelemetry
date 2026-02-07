@@ -36,8 +36,6 @@ using Essential.OpenTelemetry;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
 
-const string ServiceName = "HelloWeb";
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure OpenTelemetry with logging and tracing
@@ -158,44 +156,6 @@ Notice that each HTTP request generates a span with information about:
 
 The log messages include the same trace ID, making it easy to see which logs belong to which request.
 
-## Try It Yourself
-
-Experiment with the application:
-
-### 1. Add More Endpoints
-
-```csharp
-app.MapGet("/api/users/{id}", (int id, ILogger<Program> logger) =>
-{
-    logger.LogInformation("Fetching user {UserId}", id);
-
-    // Simulate some work
-    Thread.Sleep(100);
-
-    return new { Id = id, Name = "User " + id };
-});
-```
-
-### 2. Add Error Handling
-
-```csharp
-app.MapGet("/error", (ILogger<Program> logger) =>
-{
-    logger.LogError("Simulating an error");
-    return Results.Problem("Something went wrong!");
-});
-```
-
-### 3. Make Multiple Requests
-
-Make several requests and observe how each one gets its own trace ID:
-
-```bash
-curl http://localhost:5000
-curl http://localhost:5000/greet/Alice
-curl http://localhost:5000/greet/Bob
-```
-
 ## Understanding Automatic Instrumentation
 
 ASP.NET Core instrumentation provides many benefits automatically:
@@ -207,7 +167,7 @@ ASP.NET Core instrumentation provides many benefits automatically:
 
 ## Next Steps
 
-Continue to the final tutorial: **[Adding Metrics](./HelloWorld5-Metrics.md)** to learn how to add custom metrics to track application behavior and performance indicators.
+Continue to the final tutorial: **[Adding Metrics](./HelloWorld5-Metrics.md)** to learn how to view metrics from your application.
 
 ## Learn More
 
