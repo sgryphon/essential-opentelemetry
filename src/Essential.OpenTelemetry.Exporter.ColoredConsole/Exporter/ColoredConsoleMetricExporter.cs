@@ -1,29 +1,21 @@
-﻿// Copyright The OpenTelemetry Authors
-// SPDX-License-Identifier: Apache-2.0
-
 using System.Globalization;
+using Essential.System;
+using OpenTelemetry;
 using OpenTelemetry.Metrics;
 
-namespace OpenTelemetry.Exporter.Formatting.Compact;
+namespace Essential.OpenTelemetry.Exporter;
 
-/// <summary>
-/// Simple console exporter for OpenTelemetry logs.
-/// </summary>
-/// <remarks>
-/// Default format is:
-/// "[EndTimestamp] 'METRIC' [MetricName] [Duration] [unit=Unit] [[Tag=value],..] [value=X|sum=A|count=X min=Y max=Z sum=A]".
-/// </remarks>
-internal sealed class CompactMetricFormatter : CompactFormatterBase<Metric>
+public class ColoredConsoleMetricExporter : ColoredConsoleExporter<Metric>
 {
     private const ConsoleColor MetricForeground = ConsoleColor.DarkBlue;
     private const ConsoleColor MetricBackground = ConsoleColor.Black;
     private const string MetricText = "METRIC";
 
-    public CompactMetricFormatter(ConsoleExporterOptions options)
+    public ColoredConsoleMetricExporter(ColoredConsoleOptions options)
         : base(options) { }
 
     /// <inheritdoc/>
-    public override ExportResult Export(in Batch<Metric> batch, ConsoleFormatterContext context)
+    public override ExportResult Export(in Batch<Metric> batch)
     {
         var console = this.Options.Console;
 
@@ -111,5 +103,11 @@ internal sealed class CompactMetricFormatter : CompactFormatterBase<Metric>
         }
 
         return ExportResult.Success;
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
     }
 }

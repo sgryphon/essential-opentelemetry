@@ -1,16 +1,15 @@
-﻿// Copyright The OpenTelemetry Authors
-// SPDX-License-Identifier: Apache-2.0
-
 using System.Diagnostics.Metrics;
+using Essential.OpenTelemetry;
+using Essential.System;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using Xunit;
 
-namespace OpenTelemetry.Exporter.Console.Tests.Compact;
+namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 
-public class CompactMetricFormatterTests
+[Collection("ColoredConsoleTests")]
+public class ColoredConsoleMetricExporterTests
 {
     [Fact]
     public async Task BasicMetricOutputTest()
@@ -20,22 +19,17 @@ public class CompactMetricFormatterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+        using var meterProvider = Sdk
+            .CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
-            .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter(
-                (exporterOptions, metricReaderOptions) =>
+            .AddMeter(meter.Name)
+            .AddColoredConsoleExporter(
+                configure =>
                 {
-                    exporterOptions.Formatter = "compact";
-                    exporterOptions.TimestampFormat = string.Empty;
-                    exporterOptions.Console = mockConsole;
-
-                    metricReaderOptions
-                        .PeriodicExportingMetricReaderOptions
-                        .ExportIntervalMilliseconds = 100;
-                    metricReaderOptions.TemporalityPreference =
-                        MetricReaderTemporalityPreference.Cumulative;
-                }
+                    configure.TimestampFormat = string.Empty;
+                    configure.Console = mockConsole;
+                },
+                exportIntervalMilliseconds: 100
             )
             .Build();
 
@@ -47,9 +41,8 @@ public class CompactMetricFormatterTests
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Metric: {0}", output);
+        Console.WriteLine("Metric: {0}", output);
 
-        // Contains trace ID and span ID
         Assert.Matches(@"^METRIC \[counter\]", output);
 
         var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
@@ -68,22 +61,17 @@ public class CompactMetricFormatterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+        using var meterProvider = Sdk
+            .CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
-            .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter(
-                (exporterOptions, metricReaderOptions) =>
+            .AddMeter(meter.Name)
+            .AddColoredConsoleExporter(
+                configure =>
                 {
-                    exporterOptions.Formatter = "compact";
-                    exporterOptions.TimestampFormat = string.Empty;
-                    exporterOptions.Console = mockConsole;
-
-                    metricReaderOptions
-                        .PeriodicExportingMetricReaderOptions
-                        .ExportIntervalMilliseconds = 100;
-                    metricReaderOptions.TemporalityPreference =
-                        MetricReaderTemporalityPreference.Delta;
-                }
+                    configure.TimestampFormat = string.Empty;
+                    configure.Console = mockConsole;
+                },
+                exportIntervalMilliseconds: 100
             )
             .Build();
 
@@ -95,9 +83,8 @@ public class CompactMetricFormatterTests
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Metric: {0}", output);
+        Console.WriteLine("Metric: {0}", output);
 
-        // Contains trace ID and span ID
         Assert.Matches(@"^METRIC \[counter\]", output);
 
         var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
@@ -117,21 +104,16 @@ public class CompactMetricFormatterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+        using var meterProvider = Sdk
+            .CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
-            .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter(
-                (exporterOptions, metricReaderOptions) =>
+            .AddMeter(meter.Name)
+            .AddColoredConsoleExporter(
+                configure =>
                 {
-                    exporterOptions.Formatter = "compact";
-                    exporterOptions.Console = mockConsole;
-
-                    metricReaderOptions
-                        .PeriodicExportingMetricReaderOptions
-                        .ExportIntervalMilliseconds = 1000;
-                    metricReaderOptions.TemporalityPreference =
-                        MetricReaderTemporalityPreference.Cumulative;
-                }
+                    configure.Console = mockConsole;
+                },
+                exportIntervalMilliseconds: 1000
             )
             .Build();
 
@@ -157,7 +139,7 @@ public class CompactMetricFormatterTests
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Metric: {0}", output);
+        Console.WriteLine("Metric: {0}", output);
 
         var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
 
@@ -184,22 +166,17 @@ public class CompactMetricFormatterTests
 
         using var meter = new Meter("TestMeter");
 
-        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+        using var meterProvider = Sdk
+            .CreateMeterProviderBuilder()
             .ConfigureResource(r => r.AddService("myservice"))
-            .AddMeter(meter.Name) // All instruments from this meter are enabled.
-            .AddConsoleExporter(
-                (exporterOptions, metricReaderOptions) =>
+            .AddMeter(meter.Name)
+            .AddColoredConsoleExporter(
+                configure =>
                 {
-                    exporterOptions.Formatter = "compact";
-                    exporterOptions.TimestampFormat = string.Empty;
-                    exporterOptions.Console = mockConsole;
-
-                    metricReaderOptions
-                        .PeriodicExportingMetricReaderOptions
-                        .ExportIntervalMilliseconds = 100;
-                    metricReaderOptions.TemporalityPreference =
-                        MetricReaderTemporalityPreference.Cumulative;
-                }
+                    configure.TimestampFormat = string.Empty;
+                    configure.Console = mockConsole;
+                },
+                exportIntervalMilliseconds: 100
             )
             .Build();
 
@@ -215,9 +192,8 @@ public class CompactMetricFormatterTests
 
         // Assert
         var output = mockConsole.GetOutput();
-        System.Console.WriteLine("Metric: {0}", output);
+        Console.WriteLine("Metric: {0}", output);
 
-        // Contains trace ID and span ID
         Assert.Matches(@"^METRIC \[histogram\]", output);
 
         var lines = output.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries);
@@ -228,5 +204,82 @@ public class CompactMetricFormatterTests
         Assert.Contains("min=50", values0[5], StringComparison.InvariantCulture);
         Assert.Contains("max=150", values0[6], StringComparison.InvariantCulture);
         Assert.Contains("sum=400", values0[7], StringComparison.InvariantCulture);
+    }
+
+    [Fact]
+    public async Task TimestampOutputTest()
+    {
+        // Arrange
+        var mockConsole = new MockConsole();
+        var timestampFormat = "HH:mm:ss ";
+
+        using var meter = new Meter("TestMeter");
+
+        using var meterProvider = Sdk
+            .CreateMeterProviderBuilder()
+            .ConfigureResource(r => r.AddService("myservice"))
+            .AddMeter(meter.Name)
+            .AddColoredConsoleExporter(
+                configure =>
+                {
+                    configure.TimestampFormat = timestampFormat;
+                    configure.UseUtcTimestamp = false;
+                    configure.Console = mockConsole;
+                },
+                exportIntervalMilliseconds: 100
+            )
+            .Build();
+
+        // Act
+        var counter = meter.CreateCounter<int>("counter", "things", "A count of things");
+
+        counter?.Add(10);
+        await Task.Delay(150);
+
+        // Assert
+        var output = mockConsole.GetOutput();
+        Console.WriteLine("Metric: {0}", output);
+
+        // Should start with a timestamp
+        Assert.Matches(@"^\d\d:\d\d:\d\d METRIC", output);
+    }
+
+    [Fact]
+    public async Task ColorChangeTest()
+    {
+        // Arrange
+        var mockConsole = new MockConsole();
+
+        using var meter = new Meter("TestMeter");
+
+        using var meterProvider = Sdk
+            .CreateMeterProviderBuilder()
+            .ConfigureResource(r => r.AddService("myservice"))
+            .AddMeter(meter.Name)
+            .AddColoredConsoleExporter(
+                configure =>
+                {
+                    configure.TimestampFormat = string.Empty;
+                    configure.Console = mockConsole;
+                },
+                exportIntervalMilliseconds: 100
+            )
+            .Build();
+
+        // Act
+        var counter = meter.CreateCounter<int>("counter");
+
+        counter?.Add(10);
+        await Task.Delay(150);
+
+        // Assert
+        var output = mockConsole.GetOutput();
+
+        // Verify color changes: fg and bg for metric text, then restore both
+        Assert.True(mockConsole.ColorChanges.Count >= 4);
+        Assert.Equal(("Foreground", ConsoleColor.DarkBlue), mockConsole.ColorChanges[0]); // Metric fg
+        Assert.Equal(("Background", ConsoleColor.Black), mockConsole.ColorChanges[1]); // Metric bg
+        Assert.Equal(("Foreground", MockConsole.DefaultForeground), mockConsole.ColorChanges[2]); // Restore fg
+        Assert.Equal(("Background", MockConsole.DefaultBackground), mockConsole.ColorChanges[3]); // Restore bg
     }
 }

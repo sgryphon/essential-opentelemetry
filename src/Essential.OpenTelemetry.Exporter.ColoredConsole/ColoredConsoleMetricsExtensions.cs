@@ -1,130 +1,108 @@
-﻿// Copyright The OpenTelemetry Authors
-// SPDX-License-Identifier: Apache-2.0
-
+using Essential.OpenTelemetry.Exporter;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using OpenTelemetry.Exporter;
-using OpenTelemetry.Internal;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 
-namespace OpenTelemetry.Metrics;
+namespace Essential.OpenTelemetry;
 
-/// <summary>
-/// Extension methods to simplify registering of the Console exporter.
-/// </summary>
-public static class ConsoleExporterMetricsExtensions
+public static class ColoredConsoleMetricsExtensions
 {
     private const int DefaultExportIntervalMilliseconds = 10000;
     private const int DefaultExportTimeoutMilliseconds = Timeout.Infinite;
 
     /// <summary>
-    /// Adds <see cref="ConsoleMetricExporter"/> to the <see cref="MeterProviderBuilder"/> using default options.
+    /// Adds Console exporter to the MeterProvider.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
-    public static MeterProviderBuilder AddConsoleExporter(this MeterProviderBuilder builder) =>
-        AddConsoleExporter(builder, name: null, configureExporter: null);
+    public static MeterProviderBuilder AddColoredConsoleExporter(this MeterProviderBuilder builder)
+        => AddColoredConsoleExporter(builder, name: null, configure: null);
 
     /// <summary>
-    /// Adds <see cref="ConsoleMetricExporter"/> to the <see cref="MeterProviderBuilder"/>.
+    /// Adds Console exporter to the MeterProvider.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
-    /// <param name="configureExporter">Callback action for configuring <see cref="ConsoleExporterOptions"/>.</param>
+    /// <param name="configure">Callback action for configuring <see cref="ColoredConsoleOptions"/>.</param>
     /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
-    public static MeterProviderBuilder AddConsoleExporter(
+    public static MeterProviderBuilder AddColoredConsoleExporter(
         this MeterProviderBuilder builder,
-        Action<ConsoleExporterOptions> configureExporter
-    ) => AddConsoleExporter(builder, name: null, configureExporter);
+        Action<ColoredConsoleOptions> configure
+    ) => AddColoredConsoleExporter(builder, name: null, configure);
 
     /// <summary>
-    /// Adds <see cref="ConsoleMetricExporter"/> to the <see cref="MeterProviderBuilder"/>.
+    /// Adds Console exporter to the MeterProvider.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
     /// <param name="name">Optional name which is used when retrieving options.</param>
-    /// <param name="configureExporter">Optional callback action for configuring <see cref="ConsoleExporterOptions"/>.</param>
+    /// <param name="configure">Optional callback action for configuring <see cref="ColoredConsoleOptions"/>.</param>
     /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
-    public static MeterProviderBuilder AddConsoleExporter(
+    public static MeterProviderBuilder AddColoredConsoleExporter(
         this MeterProviderBuilder builder,
         string? name,
-        Action<ConsoleExporterOptions>? configureExporter
+        Action<ColoredConsoleOptions>? configure
     )
     {
-        Guard.ThrowIfNull(builder);
+        if (builder == null)
+            throw new ArgumentNullException(nameof(builder));
 
         name ??= Options.DefaultName;
 
-        if (configureExporter != null)
+        if (configure != null)
         {
-            builder.ConfigureServices(services => services.Configure(name, configureExporter));
+            builder.ConfigureServices(services => services.Configure(name, configure));
         }
 
         return builder.AddReader(sp =>
         {
-            return BuildConsoleExporterMetricReader(
-                sp.GetRequiredService<IOptionsMonitor<ConsoleExporterOptions>>().Get(name),
-                sp.GetRequiredService<IOptionsMonitor<MetricReaderOptions>>().Get(name)
+            var options = sp
+                .GetRequiredService<IOptionsMonitor<ColoredConsoleOptions>>()
+                .Get(name);
+
+            var exporter = new ColoredConsoleMetricExporter(options);
+            return new PeriodicExportingMetricReader(
+                exporter,
+                DefaultExportIntervalMilliseconds,
+                DefaultExportTimeoutMilliseconds
             );
         });
     }
 
     /// <summary>
-    /// Adds <see cref="ConsoleMetricExporter"/> to the <see cref="MeterProviderBuilder"/>.
+    /// Adds Console exporter to the MeterProvider with configurable export interval.
     /// </summary>
     /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
-    /// <param name="configureExporterAndMetricReader">Callback action for
-    /// configuring <see cref="ConsoleExporterOptions"/> and <see
-    /// cref="MetricReaderOptions"/>.</param>
+    /// <param name="configure">Callback action for configuring <see cref="ColoredConsoleOptions"/>.</param>
+    /// <param name="exportIntervalMilliseconds">The export interval in milliseconds.</param>
     /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
-    public static MeterProviderBuilder AddConsoleExporter(
+    public static MeterProviderBuilder AddColoredConsoleExporter(
         this MeterProviderBuilder builder,
-        Action<ConsoleExporterOptions, MetricReaderOptions>? configureExporterAndMetricReader
-    ) => AddConsoleExporter(builder, name: null, configureExporterAndMetricReader);
-
-    /// <summary>
-    /// Adds <see cref="ConsoleMetricExporter"/> to the <see cref="MeterProviderBuilder"/>.
-    /// </summary>
-    /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
-    /// <param name="name">Name which is used when retrieving options.</param>
-    /// <param name="configureExporterAndMetricReader">Callback action for
-    /// configuring <see cref="ConsoleExporterOptions"/> and <see
-    /// cref="MetricReaderOptions"/>.</param>
-    /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
-    public static MeterProviderBuilder AddConsoleExporter(
-        this MeterProviderBuilder builder,
-        string? name,
-        Action<ConsoleExporterOptions, MetricReaderOptions>? configureExporterAndMetricReader
+        Action<ColoredConsoleOptions> configure,
+        int exportIntervalMilliseconds
     )
     {
-        Guard.ThrowIfNull(builder);
+        if (builder == null)
+            throw new ArgumentNullException(nameof(builder));
 
-        name ??= Options.DefaultName;
+        var name = Options.DefaultName;
+
+        if (configure != null)
+        {
+            builder.ConfigureServices(services => services.Configure(name, configure));
+        }
 
         return builder.AddReader(sp =>
         {
-            var exporterOptions = sp.GetRequiredService<IOptionsMonitor<ConsoleExporterOptions>>()
-                .Get(name);
-            var metricReaderOptions = sp.GetRequiredService<IOptionsMonitor<MetricReaderOptions>>()
+            var options = sp
+                .GetRequiredService<IOptionsMonitor<ColoredConsoleOptions>>()
                 .Get(name);
 
-            configureExporterAndMetricReader?.Invoke(exporterOptions, metricReaderOptions);
-
-            return BuildConsoleExporterMetricReader(exporterOptions, metricReaderOptions);
+            var exporter = new ColoredConsoleMetricExporter(options);
+            return new PeriodicExportingMetricReader(
+                exporter,
+                exportIntervalMilliseconds,
+                DefaultExportTimeoutMilliseconds
+            );
         });
-    }
-
-    private static PeriodicExportingMetricReader BuildConsoleExporterMetricReader(
-        ConsoleExporterOptions exporterOptions,
-        MetricReaderOptions metricReaderOptions
-    )
-    {
-#pragma warning disable CA2000 // Dispose objects before losing scope
-        var metricExporter = new ConsoleMetricExporter(exporterOptions);
-#pragma warning restore CA2000 // Dispose objects before losing scope
-
-        return PeriodicExportingMetricReaderHelper.CreatePeriodicExportingMetricReader(
-            metricExporter,
-            metricReaderOptions,
-            DefaultExportIntervalMilliseconds,
-            DefaultExportTimeoutMilliseconds
-        );
     }
 }
