@@ -81,16 +81,13 @@ dotnet run
 
 You should see output indicating the application is listening:
 
-```
-info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: http://localhost:5000
-```
+![ASP.NET startup](images/screen-web-startup.png)
 
 ## Test the Application
 
 Open a web browser or use curl to make requests:
 
-```bash
+```powershell
 # In another terminal
 curl http://localhost:5000
 curl http://localhost:5000/greet/World
@@ -98,14 +95,9 @@ curl http://localhost:5000/greet/World
 
 In your application console, you should see output similar to:
 
-```
-[timestamp] INFO [trace-id-span-id]: Received request to root endpoint
-[timestamp] SPAN [HTTP GET /] [trace-id-span-id] 5ms
-[timestamp] INFO [trace-id-span-id]: Greeting World
-[timestamp] SPAN [HTTP GET /greet/{name}] [trace-id-span-id] 3ms
-```
+![ASP.NET startup](images/screen-web-requests.png)
 
-**Screenshot placeholder:** _[Screenshot showing colored console output with HTTP request spans and log messages, demonstrating automatic tracing of web requests]_
+Note that spans (and trace IDs) are already provided by the ASP.NET core instrumentation.
 
 ## Understanding the Code
 
@@ -144,17 +136,6 @@ This example uses the minimal API pattern introduced in .NET 6. The `MapGet` met
 - Defines an HTTP endpoint
 - Uses dependency injection to provide the logger
 - Returns a response
-
-## Exploring the Trace Data
-
-Notice that each HTTP request generates a span with information about:
-
-- **Operation name**: `HTTP GET /` or `HTTP GET /greet/{name}`
-- **Timing**: How long the request took to process
-- **Trace ID**: A unique identifier for this request
-- **Span ID**: A unique identifier for this specific operation
-
-The log messages include the same trace ID, making it easy to see which logs belong to which request.
 
 ## Understanding Automatic Instrumentation
 

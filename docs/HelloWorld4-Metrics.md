@@ -76,22 +76,18 @@ Make several requests to generate metrics:
 
 ```bash
 # In another terminal, make multiple requests
-curl http://localhost:5000
-curl http://localhost:5000/greet/Alice
-curl http://localhost:5000/greet/Bob
-curl http://localhost:5000
-curl http://localhost:5000/greet/Charlie
+curl http://localhost:5213
+curl http://localhost:5213/greet/Alice
+curl http://localhost:5213/greet/Bob
+curl http://localhost:5213
+curl http://localhost:5213/greet/Charlie
 ```
 
 Every 5 seconds, you should see metrics output in the console showing HTTP request metrics:
 
-```
-[timestamp] METRIC [http.server.request.duration] 5s http.request.method=GET http.response.status_code=200 http.route=/ count=2 min=1ms max=3ms
-[timestamp] METRIC [http.server.request.duration] 5s http.request.method=GET http.response.status_code=200 http.route=/greet/{name} count=3 min=1ms max=2ms
-[timestamp] METRIC [http.server.active_requests] 5s count=0
-```
+![ASP.NET startup](images/screen-web-metrics.png)
 
-**Screenshot placeholder:** _[Screenshot showing colored console output with metrics being exported every 5 seconds, including request counts and durations for different endpoints]_
+Note that outputting individual metric counters to the console is not very interesting -- you generally want to send them to an observability platform includes a time series database for statistical analysis of the metrics, such as [Prometheus](https://prometheus.io/).
 
 ## Understanding the Code
 
@@ -138,6 +134,8 @@ This data helps you:
 - Identify which endpoints are most frequently used
 - Spot performance issues (endpoints with high max duration)
 - Monitor application health (status codes, active requests)
+
+Metrics may be cumulative, with varying periods, or additive. For example in the screen shot the metrics at 17:34:11 are for 20s, which overlap with the 15s already reported at 17:34:06. An observability platform will correctly interpret this data for you.
 
 ## Next Steps
 

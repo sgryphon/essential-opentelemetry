@@ -25,7 +25,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Trace;
 
-const string ServiceName = "HelloLogging";
+const string ServiceName = "HelloOpenTelemetry";
 
 // Create an ActivitySource for tracing
 var activitySource = new ActivitySource(ServiceName);
@@ -55,7 +55,7 @@ var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
 // Create a trace
 using (var activity = activitySource.StartActivity("MainOperation"))
 {
-    logger.LogInformation("Starting main operation");
+    logger.LogInformation("Starting {Name}", "MainOperation");
 
     // Simulate some work
     Thread.Sleep(100);
