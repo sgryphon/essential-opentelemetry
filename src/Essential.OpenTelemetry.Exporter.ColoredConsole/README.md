@@ -9,7 +9,7 @@ This exporter is part of the [Essential .NET OpenTelemetry](https://github.com/s
 - **Color-coded output**: Different colors for different log levels, trace events, and metrics
 - **Structured logging support**: Displays structured log data in a readable format
 - **OpenTelemetry standard compliance**: Works seamlessly with the OpenTelemetry SDK
-- **Multi-framework support**: Compatible with .NET 10.0 and earlier versions
+- **Multi-framework support**: Compatible with currently supported .NET versions
 
 ## Installation
 
