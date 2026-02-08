@@ -36,10 +36,10 @@ var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
 using (var activity = activitySource.StartActivity("MainOperation"))
 {
     logger.LogInformation("Starting main operation");
-    
+
     // Simulate some work
     Thread.Sleep(100);
-    
+
     logger.LogInformation("Main operation completed");
 }
 

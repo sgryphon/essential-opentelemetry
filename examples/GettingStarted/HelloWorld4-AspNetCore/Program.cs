@@ -21,17 +21,23 @@ builder
 var app = builder.Build();
 
 // Define a simple endpoint
-app.MapGet("/", (ILogger<Program> logger) =>
-{
-    logger.LogInformation("Received request to root endpoint");
-    return "Hello from OpenTelemetry!";
-});
+app.MapGet(
+    "/",
+    (ILogger<Program> logger) =>
+    {
+        logger.LogInformation("Received request to root endpoint");
+        return "Hello from OpenTelemetry!";
+    }
+);
 
 // Define another endpoint with a parameter
-app.MapGet("/greet/{name}", (string name, ILogger<Program> logger) =>
-{
-    logger.LogInformation("Greeting {Name}", name);
-    return $"Hello, {name}!";
-});
+app.MapGet(
+    "/greet/{name}",
+    (string name, ILogger<Program> logger) =>
+    {
+        logger.LogInformation("Greeting {Name}", name);
+        return $"Hello, {name}!";
+    }
+);
 
 app.Run();

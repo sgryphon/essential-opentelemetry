@@ -10,9 +10,21 @@ const string ServiceName = "HelloWeb";
 var meter = new Meter(ServiceName);
 
 // Create metric instruments
-var requestCounter = meter.CreateCounter<long>("app.requests", "requests", "Total number of requests");
-var activeRequests = meter.CreateUpDownCounter<long>("app.active_requests", "requests", "Number of active requests");
-var requestDuration = meter.CreateHistogram<double>("app.request_duration", "ms", "Request duration in milliseconds");
+var requestCounter = meter.CreateCounter<long>(
+    "app.requests",
+    "requests",
+    "Total number of requests"
+);
+var activeRequests = meter.CreateUpDownCounter<long>(
+    "app.active_requests",
+    "requests",
+    "Number of active requests"
+);
+var requestDuration = meter.CreateHistogram<double>(
+    "app.request_duration",
+    "ms",
+    "Request duration in milliseconds"
+);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,70 +52,88 @@ builder
 var app = builder.Build();
 
 // Define endpoints with metrics
-app.MapGet("/", async (ILogger<Program> logger) =>
-{
-    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-    activeRequests.Add(1);
-    
-    try
+app.MapGet(
+    "/",
+    async (ILogger<Program> logger) =>
     {
-        logger.LogInformation("Processing request to root endpoint");
-        
-        // Simulate some work
-        await Task.Delay(50);
-        
-        requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/"));
-        return "Hello from OpenTelemetry with Metrics!";
-    }
-    finally
-    {
-        activeRequests.Add(-1);
-        requestDuration.Record(stopwatch.ElapsedMilliseconds, new KeyValuePair<string, object?>("endpoint", "/"));
-    }
-});
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        activeRequests.Add(1);
 
-app.MapGet("/greet/{name}", async (string name, ILogger<Program> logger) =>
-{
-    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-    activeRequests.Add(1);
-    
-    try
-    {
-        logger.LogInformation("Greeting {Name}", name);
-        
-        // Simulate some work
-        await Task.Delay(75);
-        
-        requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/greet"));
-        return $"Hello, {name}!";
-    }
-    finally
-    {
-        activeRequests.Add(-1);
-        requestDuration.Record(stopwatch.ElapsedMilliseconds, new KeyValuePair<string, object?>("endpoint", "/greet"));
-    }
-});
+        try
+        {
+            logger.LogInformation("Processing request to root endpoint");
 
-app.MapGet("/slow", async (ILogger<Program> logger) =>
-{
-    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-    activeRequests.Add(1);
-    
-    try
-    {
-        logger.LogInformation("Processing slow request");
-        
-        // Simulate slow operation
-        await Task.Delay(200);
-        
-        requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/slow"));
-        return "This was a slow operation";
+            // Simulate some work
+            await Task.Delay(50);
+
+            requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/"));
+            return "Hello from OpenTelemetry with Metrics!";
+        }
+        finally
+        {
+            activeRequests.Add(-1);
+            requestDuration.Record(
+                stopwatch.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("endpoint", "/")
+            );
+        }
     }
-    finally
+);
+
+app.MapGet(
+    "/greet/{name}",
+    async (string name, ILogger<Program> logger) =>
     {
-        activeRequests.Add(-1);
-        requestDuration.Record(stopwatch.ElapsedMilliseconds, new KeyValuePair<string, object?>("endpoint", "/slow"));
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        activeRequests.Add(1);
+
+        try
+        {
+            logger.LogInformation("Greeting {Name}", name);
+
+            // Simulate some work
+            await Task.Delay(75);
+
+            requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/greet"));
+            return $"Hello, {name}!";
+        }
+        finally
+        {
+            activeRequests.Add(-1);
+            requestDuration.Record(
+                stopwatch.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("endpoint", "/greet")
+            );
+        }
     }
-});
+);
+
+app.MapGet(
+    "/slow",
+    async (ILogger<Program> logger) =>
+    {
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        activeRequests.Add(1);
+
+        try
+        {
+            logger.LogInformation("Processing slow request");
+
+            // Simulate slow operation
+            await Task.Delay(200);
+
+            requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/slow"));
+            return "This was a slow operation";
+        }
+        finally
+        {
+            activeRequests.Add(-1);
+            requestDuration.Record(
+                stopwatch.ElapsedMilliseconds,
+                new KeyValuePair<string, object?>("endpoint", "/slow")
+            );
+        }
+    }
+);
 
 app.Run();
