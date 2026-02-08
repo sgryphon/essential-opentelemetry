@@ -4,6 +4,7 @@ using Essential.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 
 namespace Essential.OpenTelemetry.Performance;
@@ -13,7 +14,7 @@ namespace Essential.OpenTelemetry.Performance;
 /// </summary>
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
-public class LoggingBenchmarks
+public class LoggingBenchmarks : BenchmarkBase
 {
     private IHost? _standardConsoleHost;
     private IHost? _openTelemetryConsoleHost;
@@ -23,6 +24,8 @@ public class LoggingBenchmarks
     private ILogger<LoggingBenchmarks>? _openTelemetryLogger;
     private ILogger<LoggingBenchmarks>? _coloredLogger;
     private ILogger<LoggingBenchmarks>? _disabledLogger;
+    private LoggerProvider? _openTelemetryLoggerProvider;
+    private LoggerProvider? _coloredLoggerProvider;
 
     [GlobalSetup]
     public void Setup()
@@ -50,6 +53,8 @@ public class LoggingBenchmarks
         _openTelemetryLogger = _openTelemetryConsoleHost.Services.GetRequiredService<
             ILogger<LoggingBenchmarks>
         >();
+        _openTelemetryLoggerProvider =
+            _openTelemetryConsoleHost.Services.GetRequiredService<LoggerProvider>();
 
         // Essential.OpenTelemetry Colored Console Exporter
         var coloredBuilder = Host.CreateApplicationBuilder();
@@ -64,6 +69,7 @@ public class LoggingBenchmarks
         _coloredLogger = _coloredConsoleHost.Services.GetRequiredService<
             ILogger<LoggingBenchmarks>
         >();
+        _coloredLoggerProvider = _coloredConsoleHost.Services.GetRequiredService<LoggerProvider>();
 
         // Disabled logging (to measure overhead)
         var disabledBuilder = Host.CreateApplicationBuilder();
@@ -78,6 +84,8 @@ public class LoggingBenchmarks
     [GlobalCleanup]
     public void Cleanup()
     {
+        _openTelemetryLoggerProvider?.Dispose();
+        _coloredLoggerProvider?.Dispose();
         _standardConsoleHost?.Dispose();
         _openTelemetryConsoleHost?.Dispose();
         _coloredConsoleHost?.Dispose();
@@ -87,7 +95,7 @@ public class LoggingBenchmarks
     [Benchmark(Baseline = true)]
     public void StandardConsoleLogger()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.LoggingIterations; i++)
         {
             _standardLogger!.LogInformation("Benchmark test message {Value}", 42);
         }
@@ -96,25 +104,27 @@ public class LoggingBenchmarks
     [Benchmark]
     public void OpenTelemetryConsoleExporter()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.LoggingIterations; i++)
         {
             _openTelemetryLogger!.LogInformation("Benchmark test message {Value}", 42);
         }
+        _openTelemetryLoggerProvider!.ForceFlush();
     }
 
     [Benchmark]
     public void ColoredConsoleExporter()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.LoggingIterations; i++)
         {
             _coloredLogger!.LogInformation("Benchmark test message {Value}", 42);
         }
+        _coloredLoggerProvider!.ForceFlush();
     }
 
     [Benchmark]
     public void DisabledLogging()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.LoggingIterations; i++)
         {
             _disabledLogger!.LogInformation("Benchmark test message {Value}", 42);
         }

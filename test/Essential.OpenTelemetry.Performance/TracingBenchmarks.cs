@@ -13,7 +13,7 @@ namespace Essential.OpenTelemetry.Performance;
 /// </summary>
 [SimpleJob(RuntimeMoniker.Net90)]
 [MemoryDiagnoser]
-public class TracingBenchmarks
+public class TracingBenchmarks : BenchmarkBase
 {
     private const string ServiceName = "BenchmarkService";
     private ActivitySource? _activitySource;
@@ -80,30 +80,33 @@ public class TracingBenchmarks
     [Benchmark(Baseline = true)]
     public void OpenTelemetryConsoleExporter()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.TracingIterations; i++)
         {
             using var activity = _activitySource!.StartActivity("BenchmarkActivity");
             activity?.SetTag("benchmark", "test");
         }
+        _openTelemetryTracerProvider!.ForceFlush();
     }
 
     [Benchmark]
     public void ColoredConsoleExporter()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.TracingIterations; i++)
         {
             using var activity = _activitySource!.StartActivity("BenchmarkActivity");
             activity?.SetTag("benchmark", "test");
         }
+        _coloredTracerProvider!.ForceFlush();
     }
 
     [Benchmark]
     public void DisabledTracing()
     {
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < Configuration.TracingIterations; i++)
         {
             using var activity = _activitySource!.StartActivity("BenchmarkActivity");
             activity?.SetTag("benchmark", "test");
         }
+        _disabledTracerProvider!.ForceFlush();
     }
 }

@@ -7,6 +7,27 @@ This project contains performance benchmarks for comparing different OpenTelemet
 - .NET 10.0 SDK
 - BenchmarkDotNet 0.14.0
 
+## Configuration
+
+Benchmark parameters can be configured in `appsettings.json`:
+
+```json
+{
+  "BenchmarkConfiguration": {
+    "LoggingIterations": 1000,
+    "TracingIterations": 1000,
+    "MetricsCounterCount": 1000,
+    "MetricsIncrementsPerCounter": 10
+  }
+}
+```
+
+You can also override these settings via command-line arguments:
+
+```bash
+dotnet run -c Release -- BenchmarkConfiguration:LoggingIterations=2000
+```
+
 ## Running the Benchmarks
 
 ### Using the provided scripts
@@ -54,17 +75,23 @@ Compares the performance of:
 - Essential.OpenTelemetry Colored Console Exporter
 - Disabled Logging (to measure overhead)
 
+Default: 1,000 log messages per iteration
+
 ### Tracing Benchmarks (`TracingBenchmarks`)
 Compares the performance of:
 - OpenTelemetry Console Exporter (out of the box)
 - Essential.OpenTelemetry Colored Console Exporter
 - Disabled Tracing (no exporters)
 
+Default: 1,000 activity/spans per iteration
+
 ### Metrics Benchmarks (`MetricsBenchmarks`)
 Compares the performance of:
 - OpenTelemetry Console Exporter (out of the box)
 - Essential.OpenTelemetry Colored Console Exporter
 - Disabled Metrics (no exporters)
+
+Default: 1,000 counters, each incremented 10 times
 
 ## Results
 
