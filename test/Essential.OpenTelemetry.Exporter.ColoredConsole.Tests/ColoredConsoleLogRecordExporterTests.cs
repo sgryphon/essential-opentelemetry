@@ -75,7 +75,7 @@ public class CompactLogRecordFormatterTests
         var logger = loggerFactory.CreateLogger<CompactLogRecordFormatterTests>();
 
 #pragma warning disable CA1848
-        logger.LogInformation("Test log message from SimpleConsole exporter");
+        logger.LogInformation("Test log message: {Number}", 42);
 #pragma warning restore CA1848
 
         // Assert
@@ -83,11 +83,7 @@ public class CompactLogRecordFormatterTests
 
         // First line should NOT contain trace ID when no activity is present
         Assert.Matches(@"^\d\d:\d\d:\d\d INFO", output);
-        Assert.Contains(
-            $"Test log message from SimpleConsole exporter",
-            output,
-            StringComparison.InvariantCulture
-        );
+        Assert.Contains($"Test log message: 42", output, StringComparison.InvariantCulture);
 
         // Verify color changes: fg and bg for severity, then restore both
         Assert.Equal(8, mockConsole.ColorChanges.Count);

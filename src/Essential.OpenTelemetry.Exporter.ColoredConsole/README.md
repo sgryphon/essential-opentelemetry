@@ -1,4 +1,4 @@
-# Essential.OpenTelemetry.Exporter.ColoredConsole
+# Essential .NET OpenTelemetry Colored Console Exporter
 
 Enhanced console exporter for OpenTelemetry .NET with color-coded formatting for logs, traces, and metrics.
 

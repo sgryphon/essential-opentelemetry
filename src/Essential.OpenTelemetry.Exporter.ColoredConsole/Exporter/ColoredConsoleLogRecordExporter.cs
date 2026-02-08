@@ -77,10 +77,21 @@ public class ColoredConsoleLogRecordExporter : ColoredConsoleExporter<LogRecord>
                 }
             }
 
-            // Build the message. Use FormattedMessage if available, otherwise fall back to Body
-            var message = !string.IsNullOrEmpty(logRecord.FormattedMessage)
-                ? logRecord.FormattedMessage
-                : logRecord.Body?.ToString() ?? string.Empty;
+            // Build the message. Use FormattedMessage if available,
+            var message = logRecord.FormattedMessage;
+            // Otherwise
+            if (string.IsNullOrEmpty(message))
+            {
+                // When logging through ILogger the formattable message is set here
+#pragma warning disable CS0618 // Type or member is obsolete
+                message = logRecord.State?.ToString();
+#pragma warning restore CS0618 // Type or member is obsolete
+            }
+            // Otherwise fall back to Body (or empty)
+            if (string.IsNullOrEmpty(message))
+            {
+                message = logRecord.Body?.ToString() ?? string.Empty;
+            }
 
             lock (console.SyncRoot)
             {
