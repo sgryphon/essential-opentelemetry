@@ -4,6 +4,13 @@
 
 Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
 
+## Documentation
+
+- [Getting Started](docs/Getting-Started.md.md)
+- [Logging Levels](docs/Logging-Levels.md)
+- [Event IDs](docs/Event-Ids.md)
+- [Performance Testing](docs/Performance.md) - Performance benchmarks and comparisons
+
 ## Supported .NET Versions
 
 This library supports the following .NET versions:
@@ -71,13 +78,6 @@ For earlier versions of .NET see:
 
 - Essential Logging, for Microsoft.Extensions.Logging: <https://github.com/sgryphon/essential-logging>
 - Essential Diagnostics, for System.Diagnostics: <https://github.com/sgryphon/essential-diagnostics>
-
-## Documentation
-
-- [Performance Testing](docs/Performance.md) - Performance benchmarks and comparisons
-- [Correlation IDs](docs/Correlation-Ids.md)
-- [Event IDs](docs/Event-Ids.md)
-- [Logging Levels](docs/Logging-Levels.md)
 
 ## License
 

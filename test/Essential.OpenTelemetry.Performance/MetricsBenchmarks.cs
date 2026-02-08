@@ -1,4 +1,4 @@
-using System.Diagnostics.Metrics;
+﻿using System.Diagnostics.Metrics;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Essential.OpenTelemetry;
@@ -11,7 +11,7 @@ namespace Essential.OpenTelemetry.Performance;
 /// <summary>
 /// Benchmarks for comparing metrics performance across different implementations.
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net10_0)]
 [MemoryDiagnoser]
 public class MetricsBenchmarks : BenchmarkBase
 {
@@ -32,12 +32,12 @@ public class MetricsBenchmarks : BenchmarkBase
 
         // Create multiple counters
         _counters = new Counter<int>[Configuration.MetricsCounterCount];
-        for (int i = 0; i < Configuration.MetricsCounterCount; i++)
+        for (int index = 0; index < Configuration.MetricsCounterCount; index++)
         {
-            _counters[i] = _meter.CreateCounter<int>(
-                $"benchmark_counter_{i}",
+            _counters[index] = _meter.CreateCounter<int>(
+                $"benchmark_counter_{index}",
                 "count",
-                $"Benchmark counter {i}"
+                $"Benchmark counter {index}"
             );
         }
 
@@ -47,7 +47,17 @@ public class MetricsBenchmarks : BenchmarkBase
             .Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
-                metrics.AddMeter(ServiceName).AddConsoleExporter();
+                metrics
+                    .AddMeter(ServiceName)
+                    .AddConsoleExporter(
+                        (configExporter, configMetrics) =>
+                        {
+                            configMetrics
+                                .PeriodicExportingMetricReaderOptions
+                                .ExportIntervalMilliseconds =
+                                Configuration.MetricsExportIntervalMilliseconds;
+                        }
+                    );
             });
         _openTelemetryConsoleHost = otelBuilder.Build();
         _openTelemetryMeterProvider =
@@ -59,7 +69,12 @@ public class MetricsBenchmarks : BenchmarkBase
             .Services.AddOpenTelemetry()
             .WithMetrics(metrics =>
             {
-                metrics.AddMeter(ServiceName).AddColoredConsoleExporter();
+                metrics
+                    .AddMeter(ServiceName)
+                    .AddColoredConsoleExporter(
+                        configure => { },
+                        Configuration.MetricsExportIntervalMilliseconds
+                    );
             });
         _coloredConsoleHost = coloredBuilder.Build();
         _coloredMeterProvider = _coloredConsoleHost.Services.GetRequiredService<MeterProvider>();
@@ -92,11 +107,11 @@ public class MetricsBenchmarks : BenchmarkBase
     public void OpenTelemetryConsoleExporter()
     {
         // Increment each counter multiple times
-        for (int i = 0; i < Configuration.MetricsCounterCount; i++)
+        for (int increment = 0; increment < Configuration.MetricsIncrementsPerCounter; increment++)
         {
-            for (int j = 0; j < Configuration.MetricsIncrementsPerCounter; j++)
+            for (int index = 0; index < Configuration.MetricsCounterCount; index++)
             {
-                _counters![i].Add(1);
+                _counters![index].Add(1);
             }
         }
         _openTelemetryMeterProvider!.ForceFlush();

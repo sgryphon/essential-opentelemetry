@@ -1,4 +1,4 @@
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +12,7 @@ namespace Essential.OpenTelemetry.Performance;
 /// <summary>
 /// Benchmarks for comparing logging performance across different implementations.
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net10_0)]
 [MemoryDiagnoser]
 public class LoggingBenchmarks : BenchmarkBase
 {

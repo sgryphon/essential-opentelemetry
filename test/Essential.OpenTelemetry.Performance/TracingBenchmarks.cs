@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using Essential.OpenTelemetry;
@@ -11,7 +11,7 @@ namespace Essential.OpenTelemetry.Performance;
 /// <summary>
 /// Benchmarks for comparing tracing performance across different implementations.
 /// </summary>
-[SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net10_0)]
 [MemoryDiagnoser]
 public class TracingBenchmarks : BenchmarkBase
 {
