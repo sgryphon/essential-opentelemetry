@@ -9,7 +9,23 @@ This project contains performance benchmarks for comparing different OpenTelemet
 
 ## Running the Benchmarks
 
-To run all benchmarks:
+### Using the provided scripts
+
+The easiest way to run all benchmarks:
+
+**Linux/macOS:**
+```bash
+./run-benchmarks.sh
+```
+
+**Windows:**
+```powershell
+.\run-benchmarks.ps1
+```
+
+### Manual execution
+
+To run all benchmarks manually:
 
 ```bash
 cd test/Essential.OpenTelemetry.Performance
