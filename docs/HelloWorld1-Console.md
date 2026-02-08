@@ -6,16 +6,16 @@ In this tutorial, you'll create a simple console application that uses OpenTelem
 
 Open a terminal or command prompt and create a new console application:
 
-```bash
-dotnet new console -n HelloLogging
-cd HelloLogging
+```powershell
+dotnet new console -n HelloOpenTelemetry
+cd HelloOpenTelemetry
 ```
 
 ## Install Required Packages
 
 Install the necessary NuGet packages:
 
-```bash
+```powershell
 dotnet add package Microsoft.Extensions.Hosting
 dotnet add package OpenTelemetry.Extensions.Hosting
 dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
@@ -64,19 +64,13 @@ logger.LogError("This is an error message");
 
 Build and run your application:
 
-```bash
+```powershell
 dotnet run
 ```
 
-You should see output similar to this (with colors in your terminal):
+You should see output similar to this:
 
-```
-[timestamp] INFO [correlation-id]: Hello World!
-[timestamp] WARN [correlation-id]: This is a warning message
-[timestamp] ERROR [correlation-id]: This is an error message
-```
-
-**Screenshot placeholder:** _[Screenshot showing colored console output with INFO, WARN, and ERROR messages in different colors]_
+![Example HelloOpenTelemetry logging screen](images/screen-hello-logging.png)
 
 ## Understanding the Code
 

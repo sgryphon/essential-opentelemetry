@@ -71,19 +71,13 @@ tracerProvider.ForceFlush();
 
 Build and run your application:
 
-```bash
+```powershell
 dotnet run
 ```
 
 You should see output similar to this:
 
-```
-[timestamp] INFO [trace-id-span-id]: Starting main operation
-[timestamp] INFO [trace-id-span-id]: Main operation completed
-[timestamp] SPAN [MainOperation] [trace-id-span-id] 100ms
-```
-
-**Screenshot placeholder:** _[Screenshot showing colored console output with log messages and span information, all sharing the same trace ID]_
+![Example HelloOpenTelemetry tracing screen](images/screen-hello-tracing.png)
 
 ## Understanding the Code
 
@@ -108,6 +102,8 @@ An `ActivitySource` is used to create activities (spans). The service name ident
 - `WithTracing()` configures OpenTelemetry tracing
 - `AddSource(ServiceName)` tells OpenTelemetry to collect activities from your ActivitySource
 - `AddColoredConsoleExporter()` adds the colored console exporter for traces
+
+**NOTE:** You only need to create your own activity source if you want to create custom activities. Many existing components have automatically instrumented activities, such as ASP.NET, Entity Framework, and other system components.
 
 ### 3. Creating an Activity
 

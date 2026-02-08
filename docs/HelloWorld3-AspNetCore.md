@@ -6,7 +6,7 @@ In this tutorial, you'll create an ASP.NET Core web application with OpenTelemet
 
 Open a terminal or command prompt and create a new web application:
 
-```bash
+```powershell
 dotnet new web -n HelloWeb
 cd HelloWeb
 ```
@@ -15,7 +15,7 @@ cd HelloWeb
 
 Install the necessary NuGet packages:
 
-```bash
+```powershell
 dotnet add package OpenTelemetry.Extensions.Hosting
 dotnet add package OpenTelemetry.Instrumentation.AspNetCore
 dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
@@ -75,7 +75,7 @@ app.Run();
 
 Build and run your application:
 
-```bash
+```powershell
 dotnet run
 ```
 
