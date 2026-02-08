@@ -84,7 +84,7 @@ You should see output similar to this:
 ### 1. Creating an ActivitySource
 
 ```csharp
-const string ServiceName = "HelloLogging";
+const string ServiceName = "HelloOpenTelemetry";
 var activitySource = new ActivitySource(ServiceName);
 ```
 
@@ -143,4 +143,4 @@ The format is typically: `[trace-id]-[span-id]`
 
 **Next:** [Hello World - ASP.NET Core](HelloWorld3-AspNetCore.md)
 
-[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](./Performance.md)

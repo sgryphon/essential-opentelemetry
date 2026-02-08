@@ -72,7 +72,7 @@ dotnet run
 
 ## Test the Application
 
-Make several requests to generate metrics:
+Make several requests to generate metrics, copying the port shown on start up:
 
 ```bash
 # In another terminal, make multiple requests
@@ -139,7 +139,7 @@ Metrics may be cumulative, with varying periods, or additive. For example in the
 
 ## Next Steps
 
-Now that you understand the basics, consider installed and connecting to a local observability backends like:
+Now that you understand the basics, consider installing and connecting to a local observability backends like:
 
 - Jaeger (for traces)
 - Prometheus (for metrics)
@@ -147,7 +147,7 @@ Now that you understand the basics, consider installed and connecting to a local
 - Aspire Dashboard
 - Seq
 
-You can then to deploy to one of dozens of production scale observability [vendors that support OpenTelemetry](https://opentelemetry.io/ecosystem/vendors/), including:
+You can then deploy to one of dozens of production scale observability [vendors that support OpenTelemetry](https://opentelemetry.io/ecosystem/vendors/), including:
 
 - Azure Monitor
 - AWS X-Ray
@@ -164,4 +164,4 @@ You can then to deploy to one of dozens of production scale observability [vendo
 
 **Next:** Add the ColoredConsoleExporter to your project, and join the OpenTelemetry ecosystem.
 
-[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](./Performance.md)

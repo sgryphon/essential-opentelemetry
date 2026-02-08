@@ -73,4 +73,4 @@ In this case the second digit may help, I.e. a 51xx error means the system has c
 
 Another note on the concept of error vs warning, is that errors are things where the program needs to notify a human operator; when scanning the event log they should be the entries that quickly draw attention to themselves.
 
-[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | Event IDs | [Performance Testing](docs/Performance.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | Event IDs | [Performance Testing](./Performance.md)

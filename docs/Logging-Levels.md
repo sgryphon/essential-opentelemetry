@@ -78,4 +78,4 @@ Applications should also use a consistent Windows event log “source”. If the
 the event log source. Otherwise, the application name (as it appears in Windows) should be used. Note that you need to install event log sources
 (as administrator) before they can be used.
 
-[Home](../README.md) | [Getting Started](./Getting-Started.md) | Logging Levels | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | Logging Levels | [Event IDs](./Event-Ids.md) | [Performance Testing](./Performance.md)

@@ -85,12 +85,12 @@ You should see output indicating the application is listening:
 
 ## Test the Application
 
-Open a web browser or use curl to make requests:
+Open a web browser or use curl to make requests, copying the port shown on start up (5213 in the example above):
 
 ```powershell
 # In another terminal
-curl http://localhost:5000
-curl http://localhost:5000/greet/World
+curl http://localhost:5213
+curl http://localhost:5213/greet/World
 ```
 
 In your application console, you should see output similar to:
@@ -150,4 +150,4 @@ ASP.NET Core instrumentation provides many benefits automatically:
 
 **Next:** [Adding Metrics](HelloWorld4-Metrics.md)
 
-[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](./Performance.md)

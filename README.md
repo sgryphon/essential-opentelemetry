@@ -46,7 +46,7 @@ builder.Services.AddOpenTelemetry()
 
 ## Documentation
 
-New to OpenTelemetry? Check out our [Getting Started Guide](docs/Getting-Started.md) for a walk through settings up OpenTelemetry logging.
+New to OpenTelemetry? Check out our [Getting Started Guide](docs/Getting-Started.md) for a walk through for setting up OpenTelemetry logging.
 
 - [Getting Started](docs/Getting-Started.md) - New to OpenTelemetry? Check out our walk through guide.
 - [Logging Levels](docs/Logging-Levels.md) - How to use logging levels.

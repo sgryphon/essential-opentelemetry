@@ -125,4 +125,4 @@ These methods log messages at different severity levels. The colored console exp
 
 **Next:** [Adding Traces](./HelloWorld2-Traces.md)
 
-[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](./Performance.md)
