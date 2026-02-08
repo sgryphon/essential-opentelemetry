@@ -4,6 +4,17 @@
 
 Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
 
+## Getting Started
+
+New to OpenTelemetry? Check out our [Getting Started Guide](docs/Getting-Started.md) for hands-on tutorials that walk you through:
+
+- Setting up OpenTelemetry logging in console applications
+- Adding distributed tracing
+- Instrumenting ASP.NET Core applications
+- Viewing built-in metrics
+
+The tutorials use the Essential OpenTelemetry colored console exporter to make observability data easy to read during development.
+
 ## Documentation
 
 - [Getting Started](docs/Getting-Started.md)

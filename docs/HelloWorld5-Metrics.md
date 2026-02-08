@@ -1,0 +1,174 @@
+# Hello World - Viewing Metrics
+
+In this tutorial, you'll see how ASP.NET Core automatically generates metrics and how to export them using the Essential OpenTelemetry colored console exporter.
+
+## What are Metrics?
+
+Metrics are numerical measurements that help you understand your application's behavior and performance over time. ASP.NET Core automatically tracks metrics such as:
+
+- Request counts
+- Request durations
+- Active requests
+- Failed requests
+
+## Update Your Web Application
+
+Starting from the previous ASP.NET Core tutorial, update your `Program.cs` to add metrics collection:
+
+```csharp
+using Essential.OpenTelemetry;
+using Microsoft.Extensions.Logging;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure OpenTelemetry with logging, tracing, and metrics
+builder.Logging.ClearProviders();
+builder
+    .Services.AddOpenTelemetry()
+    .WithLogging(logging =>
+    {
+        logging.AddColoredConsoleExporter();
+    })
+    .WithTracing(tracing =>
+    {
+        tracing.AddAspNetCoreInstrumentation().AddColoredConsoleExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        // Collect metrics from ASP.NET Core
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
+    });
+
+var app = builder.Build();
+
+// Define a simple endpoint
+app.MapGet("/", (ILogger<Program> logger) =>
+{
+    logger.LogInformation("Received request to root endpoint");
+    return "Hello from OpenTelemetry with Metrics!";
+});
+
+// Define another endpoint
+app.MapGet("/greet/{name}", (string name, ILogger<Program> logger) =>
+{
+    logger.LogInformation("Greeting {Name}", name);
+    return $"Hello, {name}!";
+});
+
+app.Run();
+```
+
+## Run the Application
+
+Build and run your application:
+
+```bash
+dotnet run
+```
+
+## Test the Application
+
+Make several requests to generate metrics:
+
+```bash
+# In another terminal, make multiple requests
+curl http://localhost:5000
+curl http://localhost:5000/greet/Alice
+curl http://localhost:5000/greet/Bob
+curl http://localhost:5000
+curl http://localhost:5000/greet/Charlie
+```
+
+Every 5 seconds, you should see metrics output in the console showing HTTP request metrics:
+
+```
+[timestamp] METRIC [http.server.request.duration] 5s http.request.method=GET http.response.status_code=200 http.route=/ count=2 min=1ms max=3ms
+[timestamp] METRIC [http.server.request.duration] 5s http.request.method=GET http.response.status_code=200 http.route=/greet/{name} count=3 min=1ms max=2ms
+[timestamp] METRIC [http.server.active_requests] 5s count=0
+```
+
+**Screenshot placeholder:** _[Screenshot showing colored console output with metrics being exported every 5 seconds, including request counts and durations for different endpoints]_
+
+## Understanding the Code
+
+### 1. Adding Metrics Collection
+
+```csharp
+.WithMetrics(metrics =>
+{
+    metrics
+        .AddAspNetCoreInstrumentation()
+        .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
+})
+```
+
+- `WithMetrics()` configures OpenTelemetry metrics collection
+- `AddAspNetCoreInstrumentation()` automatically collects HTTP metrics from ASP.NET Core
+- `AddColoredConsoleExporter()` exports metrics to the console every 5 seconds
+
+### 2. Automatic Metric Collection
+
+ASP.NET Core automatically tracks:
+
+- **http.server.request.duration**: How long each request takes
+- **http.server.active_requests**: Number of requests currently being processed
+- **Request attributes**: HTTP method, status code, route
+
+You don't need to write any code to instrument individual requests – the metrics are collected automatically!
+
+### 3. Metric Export Interval
+
+The metrics are exported every 5 seconds (5000 milliseconds). This is configured in the `exportIntervalMilliseconds` parameter.
+
+## Understanding the Metrics
+
+When you make multiple requests, you'll see metrics grouped by route and HTTP method:
+
+- **count**: Total number of requests to this endpoint
+- **min/max**: Minimum and maximum request durations
+- **http.route**: The route pattern (e.g., `/`, `/greet/{name}`)
+- **http.response.status_code**: HTTP status code (200 for success)
+
+This data helps you:
+
+- Identify which endpoints are most frequently used
+- Spot performance issues (endpoints with high max duration)
+- Monitor application health (status codes, active requests)
+
+## Congratulations!
+
+You've completed the getting started tutorial series! You now know how to:
+
+✅ Set up OpenTelemetry in console and web applications  
+✅ Use the Essential OpenTelemetry colored console exporter  
+✅ Implement logging with correlation IDs  
+✅ Add distributed tracing to track operations  
+✅ Instrument ASP.NET Core applications  
+✅ View built-in metrics from your application
+
+## Next Steps
+
+Now that you understand the basics, explore:
+
+- [Logging Levels](./Logging-Levels.md) - Understanding different log severity levels
+- [Event IDs](./Event-Ids.md) - Using event IDs to categorize log messages
+- [Correlation IDs](./Correlation-Ids.md) - Deep dive into trace and span IDs
+- [OpenTelemetry Documentation](https://opentelemetry.io/docs/languages/net/) - Official OpenTelemetry .NET documentation
+
+Consider connecting to real observability backends like:
+
+- Jaeger (for traces)
+- Prometheus (for metrics)
+- Grafana Loki (for logs)
+- Azure Monitor
+- AWS X-Ray
+- Google Cloud Trace
+
+## Learn More
+
+- [OpenTelemetry Metrics Concepts](https://opentelemetry.io/docs/concepts/signals/metrics/)
+- [ASP.NET Core Metrics](https://learn.microsoft.com/aspnet/core/log-mon/metrics/)
