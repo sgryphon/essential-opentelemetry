@@ -1,6 +1,6 @@
 assembly-versioning-scheme: MajorMinor
-assembly-informational-format: '{SemVer}+{ShortSha}'
-mode: Mainline
+assembly-informational-format: "{SemVer}+{ShortSha}"
 branches: {}
 ignore:
   sha: []
+workflow: TrunkBased/preview1

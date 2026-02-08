@@ -36,21 +36,13 @@ if (!$?) { throw 'Tool restore failed' }
 
 # Get version from GitVersion
 Write-Verbose "Getting version from GitVersion..."
-$json = (dotnet tool run dotnet-gitversion /output json 2>&1)
+$json = dotnet tool run dotnet-gitversion /output json
 $gitVersionExitCode = $LASTEXITCODE
 
+Write-Verbose "$json"
 if ($gitVersionExitCode -ne 0) {
-    Write-Warning "GitVersion encountered an issue (this is normal for feature branches or repos without tags)"
-    Write-Verbose "Using default version 0.1.0-dev"
-    $v = @{
-        SemVer = "0.1.0-dev"
-        ShortSha = (git rev-parse --short HEAD)
-        FullSemVer = "0.1.0-dev"
-        AssemblySemVer = "0.1.0.0"
-        AssemblySemFileVer = "0.1.0.0"
-    }
+    throw "Gitversion failed"
 } else {
-    Write-Verbose $json
     $v = ($json | ConvertFrom-Json)
 }
 

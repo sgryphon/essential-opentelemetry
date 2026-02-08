@@ -57,8 +57,8 @@ Use the `build.ps1` script to create NuGet packages locally:
 After building the package locally, publish it to NuGet.org:
 
 ```powershell
-$apiKey = "YOUR_API_KEY"
-dotnet nuget push pack/*.nupkg --api-key $apiKey --source https://api.nuget.org/v3/index.json
+$nugetKey = "YOUR_API_KEY"
+dotnet nuget push pack/Essential.OpenTelemetry.Exporter.ColoredConsole.1.0.0.nupkg --api-key $nugetKey --source https://api.nuget.org/v3/index.json
 ```
 
 For more details see:
