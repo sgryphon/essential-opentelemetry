@@ -72,6 +72,13 @@ For earlier versions of .NET see:
 - Essential Logging, for Microsoft.Extensions.Logging: <https://github.com/sgryphon/essential-logging>
 - Essential Diagnostics, for System.Diagnostics: <https://github.com/sgryphon/essential-diagnostics>
 
+## Documentation
+
+- [Performance Testing](docs/Performance.md) - Performance benchmarks and comparisons
+- [Correlation IDs](docs/Correlation-Ids.md)
+- [Event IDs](docs/Event-Ids.md)
+- [Logging Levels](docs/Logging-Levels.md)
+
 ## License
 
 Copyright (C) 2026 Gryphon Technology Pty Ltd

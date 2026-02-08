@@ -31,30 +31,38 @@ public class TracingBenchmarks
 
         // OpenTelemetry Console Exporter (out of the box)
         var otelBuilder = Host.CreateApplicationBuilder();
-        otelBuilder.Services.AddOpenTelemetry().WithTracing(tracing =>
-        {
-            tracing.AddSource(ServiceName).AddConsoleExporter();
-        });
+        otelBuilder
+            .Services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing.AddSource(ServiceName).AddConsoleExporter();
+            });
         _openTelemetryConsoleHost = otelBuilder.Build();
-        _openTelemetryTracerProvider = _openTelemetryConsoleHost.Services.GetRequiredService<TracerProvider>();
+        _openTelemetryTracerProvider =
+            _openTelemetryConsoleHost.Services.GetRequiredService<TracerProvider>();
 
         // Essential.OpenTelemetry Colored Console Exporter
         var coloredBuilder = Host.CreateApplicationBuilder();
-        coloredBuilder.Services.AddOpenTelemetry().WithTracing(tracing =>
-        {
-            tracing.AddSource(ServiceName).AddColoredConsoleExporter();
-        });
+        coloredBuilder
+            .Services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing.AddSource(ServiceName).AddColoredConsoleExporter();
+            });
         _coloredConsoleHost = coloredBuilder.Build();
         _coloredTracerProvider = _coloredConsoleHost.Services.GetRequiredService<TracerProvider>();
 
         // Disabled tracing (no exporters)
         var disabledBuilder = Host.CreateApplicationBuilder();
-        disabledBuilder.Services.AddOpenTelemetry().WithTracing(tracing =>
-        {
-            tracing.AddSource(ServiceName);
-        });
+        disabledBuilder
+            .Services.AddOpenTelemetry()
+            .WithTracing(tracing =>
+            {
+                tracing.AddSource(ServiceName);
+            });
         _disabledTracingHost = disabledBuilder.Build();
-        _disabledTracerProvider = _disabledTracingHost.Services.GetRequiredService<TracerProvider>();
+        _disabledTracerProvider =
+            _disabledTracingHost.Services.GetRequiredService<TracerProvider>();
     }
 
     [GlobalCleanup]
