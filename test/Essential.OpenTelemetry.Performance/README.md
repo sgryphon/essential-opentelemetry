@@ -77,4 +77,4 @@ For detailed performance analysis and comparison, see [docs/Performance.md](../.
 - All benchmarks are run in Release mode for accurate performance measurements
 - BenchmarkDotNet automatically runs warmup iterations before actual measurements
 - Memory diagnostics are enabled to track memory allocations
-- The benchmarks target .NET 9.0 runtime (the latest stable version supported by BenchmarkDotNet)
+- The benchmarks target .NET 10.0 and use .NET 9.0 runtime moniker (the latest stable version supported by BenchmarkDotNet)
