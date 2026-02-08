@@ -1,55 +1,43 @@
 # Getting started
 
-## Basic usage (logging)
+Welcome to Essential OpenTelemetry! This guide will help you get started with OpenTelemetry logging, tracing, and metrics in .NET applications using the Essential OpenTelemetry colored console exporter.
 
-Add the following using statements:
+## What is OpenTelemetry?
 
-```csharp
-using Essential.OpenTelemetry;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-```
+OpenTelemetry is an open-source observability framework for instrumenting, generating, collecting, and exporting telemetry data such as traces, metrics, and logs. It provides a unified way to collect observability data from your applications.
 
-Configure OpenTelemetry with the colored console exporter for logging, and clear the default loggers:
+## What is Essential OpenTelemetry?
 
-```csharp
-builder.Logging.ClearProviders();
-builder.Services.AddOpenTelemetry()
-    .WithLogging(logging =>
-    {
-        logging.AddColoredConsoleExporter();
-    });
-```
+Essential OpenTelemetry provides guidance, additional exporters, and extensions for .NET OpenTelemetry implementations. The primary component is a colored console exporter that makes it easy to see your telemetry data during development and debugging.
 
-## Usage (full telemetry)
+## Prerequisites
 
-For full telemetry support including traces and metrics, also add these using statements:
+- [.NET SDK 8.0 or later](https://dotnet.microsoft.com/download) installed on your computer
+- Basic familiarity with C# and .NET console or web applications
 
-```csharp
-using Microsoft.Extensions.DependencyInjection;
-using OpenTelemetry.Trace;
-using OpenTelemetry.Metrics;
-```
+## Walk through
 
-Then configure the colored console exporter along with your other configuration for logs, traces, and metrics:
+1. [Hello World - Console Logging](./HelloWorld1-Console.md) -
+   Create your first console application with OpenTelemetry logging using the colored console exporter.
 
-```csharp
-builder.Logging.ClearProviders();
-builder.Services.AddOpenTelemetry()
-    .WithLogging(logging =>
-    {
-        logging.AddColoredConsoleExporter();
-    })
-    .WithTracing(tracing =>
-    {
-        tracing.AddSource("YourServiceName")
-               .AddColoredConsoleExporter();
-    })
-    .WithMetrics(metrics =>
-    {
-        metrics.AddMeter("YourServiceName")
-               .AddColoredConsoleExporter();
-    });
-```
+2. [Adding Traces](./HelloWorld2-Traces.md) -
+   Learn how to add distributed tracing to your console application.
 
-See the [examples](../examples/SimpleConsole) for a working example.
+3. [Hello World - ASP.NET Core](HelloWorld3-AspNetCore.md) -
+   Build an ASP.NET Core web application with OpenTelemetry, and see how traces are automatically created for HTTP requests.
+
+4. [Viewing Metrics](HelloWorld4-Metrics.md) - See how ASP.NET Core automatically generates metrics and how to view them.
+
+See the [SimpleConsole example](../examples/SimpleConsole) for a working example.
+
+## Next steps
+
+1. Add OpenTelemetry and the `ColoredConsoleExporter` to your project, and start your OpenTelemetry journey today.
+2. Expand from console logging to a local system such as [Grafana Loki](https://grafana.com/oss/loki/), [Jaeger](https://www.jaegertracing.io/), [Aspire Dashboard](https://aspire.dev/dashboard/overview/), or [Seq](https://datalust.co/).
+3. Deploy with standard OpenTelemetry Protocol (OTLP), or a custom protocol, to one of dozens of supported logging platforms.
+
+---
+
+**Next:** [Hello World - Console Logging](./HelloWorld1-Console.md)
+
+[Home](../README.md) | Getting Started | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)

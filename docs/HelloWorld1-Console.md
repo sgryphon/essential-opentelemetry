@@ -1,0 +1,128 @@
+# Hello World - Console Logging
+
+In this tutorial, you'll create a simple console application that uses OpenTelemetry logging with the Essential OpenTelemetry colored console exporter.
+
+## Create a New Console Application
+
+Open a terminal or command prompt and create a new console application:
+
+```powershell
+dotnet new console -n HelloOpenTelemetry
+cd HelloOpenTelemetry
+```
+
+## Install Required Packages
+
+Install the necessary NuGet packages:
+
+```powershell
+dotnet add package Microsoft.Extensions.Hosting
+dotnet add package OpenTelemetry.Extensions.Hosting
+dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
+```
+
+These packages provide:
+
+- **Microsoft.Extensions.Hosting**: The hosting infrastructure for dependency injection and configuration
+- **OpenTelemetry.Extensions.Hosting**: OpenTelemetry integration with the .NET hosting model
+- **Essential.OpenTelemetry.Exporter.ColoredConsole**: The colored console exporter for viewing telemetry
+
+## Write the Code
+
+Replace the contents of `Program.cs` with the following code:
+
+```csharp
+using Essential.OpenTelemetry;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+
+// Create the application host with OpenTelemetry
+var builder = Host.CreateApplicationBuilder(args);
+
+// Clear default logging providers and configure OpenTelemetry
+builder.Logging.ClearProviders();
+builder
+    .Services.AddOpenTelemetry()
+    .WithLogging(logging =>
+    {
+        logging.AddColoredConsoleExporter();
+    });
+
+var host = builder.Build();
+
+// Get the logger from the service provider
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+
+// Log some messages
+logger.LogInformation("Hello World!");
+logger.LogWarning("This is a warning message");
+logger.LogError("This is an error message");
+```
+
+## Run the Application
+
+Build and run your application:
+
+```powershell
+dotnet run
+```
+
+You should see output similar to this:
+
+![Example HelloOpenTelemetry logging screen](images/screen-hello-logging.png)
+
+## Understanding the Code
+
+Let's break down what's happening:
+
+### 1. Creating the Host
+
+```csharp
+var builder = Host.CreateApplicationBuilder(args);
+```
+
+This creates a host builder, which provides dependency injection, configuration, and logging infrastructure. This is the recommended approach for .NET applications, as it makes your code testable and follows best practices.
+
+### 2. Configuring OpenTelemetry Logging
+
+```csharp
+builder.Logging.ClearProviders();
+builder
+    .Services.AddOpenTelemetry()
+    .WithLogging(logging =>
+    {
+        logging.AddColoredConsoleExporter();
+    });
+```
+
+- `ClearProviders()` removes the default logging providers (like the console logger)
+- `AddOpenTelemetry()` adds OpenTelemetry services to the dependency injection container
+- `WithLogging()` configures OpenTelemetry logging
+- `AddColoredConsoleExporter()` adds the Essential OpenTelemetry colored console exporter
+
+### 3. Getting the Logger
+
+```csharp
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+```
+
+This retrieves a logger instance from the service provider. The `ILogger<Program>` syntax creates a logger with the category name "Program", which helps identify where log messages come from.
+
+### 4. Logging Messages
+
+```csharp
+logger.LogInformation("Hello World!");
+logger.LogWarning("This is a warning message");
+logger.LogError("This is an error message");
+```
+
+These methods log messages at different severity levels. The colored console exporter displays them in different colors to make them easy to distinguish.
+
+> **Note:** By default, Trace and Debug messages may not be displayed. You can configure the minimum log level in your application configuration if needed.
+
+---
+
+**Next:** [Adding Traces](./HelloWorld2-Traces.md)
+
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](./Performance.md)
