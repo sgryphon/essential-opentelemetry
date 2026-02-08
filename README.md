@@ -63,7 +63,7 @@ dotnet nuget push pack/*.nupkg --api-key $apiKey --source https://api.nuget.org/
 
 For more details see:
 
-- [NuGet Documentation](https://docs.microsoft.com/en-us/nuget/)
+- [NuGet Documentation](https://learn.microsoft.com/en-us/nuget/)
 
 ## Other projects
 
