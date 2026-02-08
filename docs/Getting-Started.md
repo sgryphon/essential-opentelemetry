@@ -53,3 +53,65 @@ builder.Services.AddOpenTelemetry()
 ```
 
 See the [examples](../examples/SimpleConsole) for a working example.
+
+# Getting Started with Essential OpenTelemetry
+
+Welcome to Essential OpenTelemetry! This guide will help you get started with OpenTelemetry logging, tracing, and metrics in .NET applications using the Essential OpenTelemetry colored console exporter.
+
+## What is OpenTelemetry?
+
+OpenTelemetry is an open-source observability framework for instrumenting, generating, collecting, and exporting telemetry data such as traces, metrics, and logs. It provides a unified way to collect observability data from your applications.
+
+## What is Essential OpenTelemetry?
+
+Essential OpenTelemetry provides guidance, additional exporters, and extensions for .NET OpenTelemetry implementations. The primary component is a colored console exporter that makes it easy to see your telemetry data during development and debugging.
+
+## Prerequisites
+
+- [.NET SDK 8.0 or later](https://dotnet.microsoft.com/download) installed on your computer
+- Basic familiarity with C# and .NET console or web applications
+
+## Tutorial Series
+
+This getting started guide consists of a series of hands-on tutorials that progressively introduce OpenTelemetry concepts:
+
+### Console Application Tutorials
+
+1. **[Hello World - Console Logging](./tutorials/HelloWorld1-Console.md)**  
+   Create your first console application with OpenTelemetry logging using the colored console exporter.
+
+2. **[Adding Traces](./tutorials/HelloWorld2-Traces.md)**  
+   Learn how to add distributed tracing to your console application.
+
+3. **[Working with Spans](./tutorials/HelloWorld3-Spans.md)**  
+   Create custom spans to track operations within your application.
+
+### ASP.NET Core Tutorials
+
+4. **[Hello World - ASP.NET Core](./tutorials/HelloWorld4-AspNetCore.md)**  
+   Build an ASP.NET Core web application with OpenTelemetry, and see how traces are automatically created for HTTP requests.
+
+5. **[Adding Metrics](./tutorials/HelloWorld5-Metrics.md)**  
+   Learn how to add custom metrics to your ASP.NET Core application.
+
+## What You'll Learn
+
+By the end of these tutorials, you'll understand:
+
+- How to set up OpenTelemetry in both console and web applications
+- The three pillars of observability: logs, traces, and metrics
+- How to use the Essential OpenTelemetry colored console exporter
+- How to instrument your code with custom telemetry
+- How OpenTelemetry integrates with .NET's built-in logging and diagnostic features
+
+## Next Steps
+
+Ready to begin? Start with **[Hello World - Console Logging](./tutorials/HelloWorld1-Console.md)** to create your first OpenTelemetry-enabled application!
+
+## Additional Resources
+
+- [OpenTelemetry .NET Documentation](https://opentelemetry.io/docs/languages/net/)
+- [Essential OpenTelemetry GitHub Repository](https://github.com/sgryphon/essential-opentelemetry)
+- [Logging Levels](./Logging-Levels.md)
+- [Event IDs](./Event-Ids.md)
+- [Correlation IDs](./Correlation-Ids.md)
