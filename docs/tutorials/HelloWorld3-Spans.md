@@ -56,9 +56,9 @@ using (var parentActivity = activitySource.StartActivity("ProcessOrder"))
     // Add attributes to provide context
     parentActivity?.SetTag("order.id", "12345");
     parentActivity?.SetTag("customer.id", "user@example.com");
-    
+
     logger.LogInformation("Processing order 12345");
-    
+
     // Create a child span for validation
     using (var validationActivity = activitySource.StartActivity("ValidateOrder"))
     {
@@ -66,7 +66,7 @@ using (var parentActivity = activitySource.StartActivity("ProcessOrder"))
         Thread.Sleep(50);
         validationActivity?.SetTag("validation.result", "success");
     }
-    
+
     // Create a child span for payment processing
     using (var paymentActivity = activitySource.StartActivity("ProcessPayment"))
     {
@@ -75,7 +75,7 @@ using (var parentActivity = activitySource.StartActivity("ProcessOrder"))
         paymentActivity?.SetTag("payment.amount", 99.99);
         paymentActivity?.SetTag("payment.method", "credit_card");
     }
-    
+
     // Create a child span for shipping
     using (var shippingActivity = activitySource.StartActivity("ArrangeShipping"))
     {
@@ -84,7 +84,7 @@ using (var parentActivity = activitySource.StartActivity("ProcessOrder"))
         shippingActivity?.SetTag("shipping.carrier", "FastShip");
         shippingActivity?.SetTag("shipping.method", "express");
     }
-    
+
     logger.LogInformation("Order processed successfully");
 }
 

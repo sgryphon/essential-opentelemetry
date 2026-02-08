@@ -4,21 +4,21 @@
 
 Instrumentation needs to support different levels of operation, from high performance production systems through to developmental debugging.
 
-Usually there are several levels of event type of increasing detail. The structure of the levels can be considered a pyramid, with each level 
+Usually there are several levels of event type of increasing detail. The structure of the levels can be considered a pyramid, with each level
 having less importance but a higher volume of events:
 
 ![](images/Logging-Levels_Levels-Diagram-Small.png)
 
 _Note: This diagram is an older version and has slightly different levels than described in the text._
 
-There should be few (hopefully no) critical events, maybe a few errors, and hopefully more warnings than errors; information events and 
-activities should be relatively regular occurrences, but not an overwhelming volume, while there would be a large volume of verbose and 
+There should be few (hopefully no) critical events, maybe a few errors, and hopefully more warnings than errors; information events and
+activities should be relatively regular occurrences, but not an overwhelming volume, while there would be a large volume of verbose and
 more detailed tracing – if it was all turned on at once.
 
-Usually you want all Critical, Error, Warning events reported in the trace; Information is also important for context, 
+Usually you want all Critical, Error, Warning events reported in the trace; Information is also important for context,
 but can add modest volume.
 
-However, turning on all Debug (or Trace) events as a single level would usually result in an overwhelming volume of information, so it is common to 
+However, turning on all Debug (or Trace) events as a single level would usually result in an overwhelming volume of information, so it is common to
 partition this level up into separate functions that can be individual turned on or off based on category, configuring either a full namespace, or specific
 classes within a namespace to focus on the messages you need.
 
@@ -29,7 +29,7 @@ For particular low level and high volume detailed information, it may be necessa
 e.g. a messaging application may have a `MyApp.Communication.MessageHandler` class with a logger, but you might have a separate category specifically
 for logging the full request/response details "MyApp.Communication.MessageHandler_FullMessageLog".
 
-Your application may have a different set of levels or in a different order, for example SharePoint has Critical, Warning, Unexpected, 
+Your application may have a different set of levels or in a different order, for example SharePoint has Critical, Warning, Unexpected,
 Monitorable, Information, High, Medium, Verbose, and VerboseEx, but the general principal of increasing detail and volume of messages at each level still applies.
 
 # Application logging vs diagnostics logging
@@ -52,32 +52,30 @@ Although the higher levels provide context for the trace, the gritty details cor
 
 For each level in your diagnostics model, you should plan the logging, monitoring and tracing strategies you will use. For example, with the levels above:
 
-| Type | Description | Logging | Monitoring | Tracing |
-| ---- | ----------- | ------- | ---------- | ------- |
-| Critical | Events that demand the immediate attention of the system administrator, e.g. an application or system has failed or stopped responding. | Windows event log (Error) |  | TraceSource* |
-| Error | Events that indicate problems or errors that should be investigated and fixed, for example unexpected exceptions. | Windows event log (Error) | Errors/sec | TraceSource* |
-| Warning | Events that provide forewarning of potential problems or data that can be collected and analysed over time, looking for problem trends. | Windows event log (Warning) | Resource level (where appropriate) | TraceSource* |
-| Information | Events that pass noncritical information to the administrator, such as a server start, stop or other significant (but infrequent) event. | Windows event log (Information) |  | TraceSource* |
-| Activities | For logging and tracing each operation performed by an application, e.g. each transaction or each message processed. | Application log | Trans./sec, Total trans. | TraceSource with Activity Tracing (start, stop, etc) |
-| Verbose | Useful primarily to help developers debug low-level code failures, however should not produce more detail than can be handled. |  |  | TraceSource |
-| Trace | Useful for traces that are likely to be high volume, especially information that is not needed for all debugging scenarios. |  |  | BooleanSwitch |
-
+| Type        | Description                                                                                                                              | Logging                         | Monitoring                         | Tracing                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- | ---------------------------------- | ---------------------------------------------------- |
+| Critical    | Events that demand the immediate attention of the system administrator, e.g. an application or system has failed or stopped responding.  | Windows event log (Error)       |                                    | TraceSource\*                                        |
+| Error       | Events that indicate problems or errors that should be investigated and fixed, for example unexpected exceptions.                        | Windows event log (Error)       | Errors/sec                         | TraceSource\*                                        |
+| Warning     | Events that provide forewarning of potential problems or data that can be collected and analysed over time, looking for problem trends.  | Windows event log (Warning)     | Resource level (where appropriate) | TraceSource\*                                        |
+| Information | Events that pass noncritical information to the administrator, such as a server start, stop or other significant (but infrequent) event. | Windows event log (Information) |                                    | TraceSource\*                                        |
+| Activities  | For logging and tracing each operation performed by an application, e.g. each transaction or each message processed.                     | Application log                 | Trans./sec, Total trans.           | TraceSource with Activity Tracing (start, stop, etc) |
+| Verbose     | Useful primarily to help developers debug low-level code failures, however should not produce more detail than can be handled.           |                                 |                                    | TraceSource                                          |
+| Trace       | Useful for traces that are likely to be high volume, especially information that is not needed for all debugging scenarios.              |                                 |                                    | BooleanSwitch                                        |
 
 # Instrumentation consistency
 
-Handling of events should be consistent between the different mechanisms. Applications should ensure trace events are written at the same time they are 
+Handling of events should be consistent between the different mechanisms. Applications should ensure trace events are written at the same time they are
 written to the Windows event log or application log, and the same time that performance monitor counters are updated.
 
-It can make troubleshooting difficult if a transactions/second performance counter increases but there is no entry in the application log; of if there 
+It can make troubleshooting difficult if a transactions/second performance counter increases but there is no entry in the application log; of if there
 is an entry in the application log but no start/stop in the trace.
 
-One way to implement this is have an application specific diagnostics component that provides a central location for logging, tracing and monitoring. 
+One way to implement this is have an application specific diagnostics component that provides a central location for logging, tracing and monitoring.
 This can have convenience methods for logging exceptions, errors, warnings, etc that write to the Windows event log, update performance counters, and trace all at one time.
 
-The central component can also provide any custom application logging and convenience methods for simple verbose tracing. This component would be 
+The central component can also provide any custom application logging and convenience methods for simple verbose tracing. This component would be
 application specific, as each application’s logging needs would be different, although a general template can be followed.
 
-Applications should also use a consistent Windows event log “source”. If the application is a Windows Service, then the service name should be used as 
-the event log source. Otherwise, the application name (as it appears in Windows) should be used. Note that you need to install event log sources 
+Applications should also use a consistent Windows event log “source”. If the application is a Windows Service, then the service name should be used as
+the event log source. Otherwise, the application name (as it appears in Windows) should be used. Note that you need to install event log sources
 (as administrator) before they can be used.
-

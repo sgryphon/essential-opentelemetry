@@ -61,14 +61,14 @@ app.MapGet("/", async (ILogger<Program> logger) =>
 {
     var stopwatch = System.Diagnostics.Stopwatch.StartNew();
     activeRequests.Add(1);
-    
+
     try
     {
         logger.LogInformation("Processing request to root endpoint");
-        
+
         // Simulate some work
         await Task.Delay(50);
-        
+
         requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/"));
         return "Hello from OpenTelemetry with Metrics!";
     }
@@ -83,14 +83,14 @@ app.MapGet("/greet/{name}", async (string name, ILogger<Program> logger) =>
 {
     var stopwatch = System.Diagnostics.Stopwatch.StartNew();
     activeRequests.Add(1);
-    
+
     try
     {
         logger.LogInformation("Greeting {Name}", name);
-        
+
         // Simulate some work
         await Task.Delay(75);
-        
+
         requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/greet"));
         return $"Hello, {name}!";
     }
@@ -105,14 +105,14 @@ app.MapGet("/slow", async (ILogger<Program> logger) =>
 {
     var stopwatch = System.Diagnostics.Stopwatch.StartNew();
     activeRequests.Add(1);
-    
+
     try
     {
         logger.LogInformation("Processing slow request");
-        
+
         // Simulate slow operation
         await Task.Delay(200);
-        
+
         requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/slow"));
         return "This was a slow operation";
     }
@@ -229,6 +229,7 @@ requestCounter.Add(5);  // Increment by 5
 ```
 
 Use counters for:
+
 - Total requests processed
 - Total errors encountered
 - Total bytes transferred
@@ -243,6 +244,7 @@ activeRequests.Add(-1);  // Request completed
 ```
 
 Use up-down counters for:
+
 - Active connections
 - Queue size
 - Memory usage
@@ -256,6 +258,7 @@ requestDuration.Record(stopwatch.ElapsedMilliseconds);
 ```
 
 Use histograms for:
+
 - Request durations
 - Response sizes
 - Processing times
@@ -272,6 +275,7 @@ requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/greet"));
 ```
 
 This allows you to see:
+
 - Total requests across all endpoints
 - Requests per endpoint
 - Compare different endpoints
@@ -324,6 +328,7 @@ new KeyValuePair<string, object?>("user_id", userId)
 ### 4. Consider Performance
 
 Metric collection is lightweight, but avoid:
+
 - Recording metrics in tight loops
 - Creating many metric instruments
 - Using high-cardinality attributes
@@ -347,7 +352,7 @@ You've completed the getting started tutorial series! You now know how to:
 ✅ Create and work with distributed traces  
 ✅ Add custom spans with attributes  
 ✅ Instrument ASP.NET Core applications  
-✅ Collect and record custom metrics  
+✅ Collect and record custom metrics
 
 ## Next Steps
 
@@ -359,6 +364,7 @@ Now that you understand the basics, explore:
 - [OpenTelemetry Documentation](https://opentelemetry.io/docs/languages/net/) - Official OpenTelemetry .NET documentation
 
 Consider connecting to real observability backends like:
+
 - Jaeger (for traces)
 - Prometheus (for metrics)
 - Grafana Loki (for logs)
