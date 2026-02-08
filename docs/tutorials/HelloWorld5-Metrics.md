@@ -51,11 +51,7 @@ builder
         metrics
             .AddAspNetCoreInstrumentation()
             .AddMeter(ServiceName)
-            .AddColoredConsoleExporter(options =>
-            {
-                // Export metrics every 5 seconds
-                options.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 5000;
-            });
+            .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
     });
 
 var app = builder.Build();
