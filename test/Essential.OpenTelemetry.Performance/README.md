@@ -34,9 +34,10 @@ Benchmark parameters can be configured in `appsettings.json`:
 ```json
 {
   "BenchmarkConfiguration": {
-    "LoggingIterations": 1000,
-    "TracingIterations": 1000,
-    "MetricsCounterCount": 1000,
+    "LoggingIterations": 100,
+    "TracingIterations": 100,
+    "MetricsCounterCount": 100,
+    "MetricsExportIntervalMilliseconds": 100,
     "MetricsIncrementsPerCounter": 10
   }
 }
