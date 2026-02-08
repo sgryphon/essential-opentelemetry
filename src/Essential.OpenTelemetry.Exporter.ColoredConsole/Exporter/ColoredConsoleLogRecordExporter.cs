@@ -19,7 +19,7 @@ public class ColoredConsoleLogRecordExporter : ColoredConsoleExporter<LogRecord>
     private const ConsoleColor MessageBackground = ConsoleColor.Black;
 
     private static readonly string ExceptionIndent = new string(' ', 2);
-    private static readonly char[] ExceptionSplitChars = ['\r', '\n'];
+    private static readonly char[] ExceptionSplitChars = new[] { '\r', '\n' };
     private static readonly PropertyInfo? SeverityProperty = typeof(LogRecord).GetProperty(
         "Severity",
         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public

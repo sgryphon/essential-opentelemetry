@@ -1,7 +1,10 @@
 <Solution>
   <Folder Name="/examples/" />
   <Folder Name="/examples/SimpleConsole/">
-    <Project Path="examples/SimpleConsole/Examples.SimpleConsole.csproj" />
+    <Project Path="examples/SimpleConsole/Example.SimpleConsole.csproj" />
+  </Folder>
+  <Folder Name="/examples/Net60Console/">
+    <Project Path="examples/Net60Console/Example.Net60Console.csproj" />
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Essential.OpenTelemetry.Exporter.ColoredConsole/Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
