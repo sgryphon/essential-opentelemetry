@@ -127,11 +127,8 @@ These methods log messages at different severity levels. The colored console exp
 
 > **Note:** By default, Trace and Debug messages may not be displayed. You can configure the minimum log level in your application configuration if needed.
 
-## Next Steps
+---
 
-Now that you have basic logging working, continue to the next tutorial: **[Adding Traces](./HelloWorld2-Traces.md)** to learn how to add distributed tracing to your application.
+**Next:** [Adding Traces](./HelloWorld2-Traces.md)
 
-## Learn More
-
-- [Logging Levels Documentation](./Logging-Levels.md)
-- [OpenTelemetry Logging Concepts](https://opentelemetry.io/docs/concepts/signals/logs/)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)

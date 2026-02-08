@@ -1,5 +1,3 @@
-[Home](../ReadMe.md) | [Index](Index.md) | [Examples](Examples.md) | [Guidance](Guidance.md) | [FAQ](FAQ.md) | [Listeners](Listeners.md) | [Filters](Filters.md) | [Extensions](Extensions.md)
-
 # Theory of Event IDs
 
 The "Theory of Reply Codes" was a proposition in early RFC's (particularly SMTP, FTP and HTTP) which provided some structure around reply codes. This organised codes into a hierarchy where the first digit indicated the general class of the response and so on, provide some structure to the values.
@@ -74,3 +72,5 @@ One issue that still remains is that a transaction-level error (i.e. permanent f
 In this case the second digit may help, I.e. a 51xx error means the system has crashed, whereas a 55xx error means only an individual transaction had a permanent error; the second situation could have alternatively been coded as a 41xx error (i.e. system is continuing). A 45xx code would mean a transient transaction warning where the transaction will be attempted again.
 
 Another note on the concept of error vs warning, is that errors are things where the program needs to notify a human operator; when scanning the event log they should be the entries that quickly draw attention to themselves.
+
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | Event IDs | [Performance Testing](docs/Performance.md)

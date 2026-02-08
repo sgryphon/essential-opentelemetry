@@ -11,6 +11,8 @@ A trace represents the journey of a request through your application. It consist
 - Track distributed operations across services
 - Correlate logs with specific operations
 
+Standard W3C Trace IDs are automatically sent by .NET in HTTP requests, allowing distributed trace correlation by default.
+
 ## Update Your Application
 
 Starting from the previous tutorial (or create a new console application following the same steps), update your `Program.cs`:
@@ -141,11 +143,8 @@ When you run the application, you'll notice the log messages and span have the s
 
 The format is typically: `[trace-id]-[span-id]`
 
-## Next Steps
+---
 
-Continue to the next tutorial: **[Hello World - ASP.NET Core](./HelloWorld4-AspNetCore.md)** to see how OpenTelemetry works in web applications.
+**Next:** [Hello World - ASP.NET Core](HelloWorld3-AspNetCore.md)
 
-## Learn More
-
-- [OpenTelemetry Tracing Concepts](https://opentelemetry.io/docs/concepts/signals/traces/)
-- [Correlation IDs Documentation](./Correlation-Ids.md)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)

@@ -139,36 +139,31 @@ This data helps you:
 - Spot performance issues (endpoints with high max duration)
 - Monitor application health (status codes, active requests)
 
-## Congratulations!
-
-You've completed the getting started tutorial series! You now know how to:
-
-✅ Set up OpenTelemetry in console and web applications  
-✅ Use the Essential OpenTelemetry colored console exporter  
-✅ Implement logging with correlation IDs  
-✅ Add distributed tracing to track operations  
-✅ Instrument ASP.NET Core applications  
-✅ View built-in metrics from your application
-
 ## Next Steps
 
-Now that you understand the basics, explore:
-
-- [Logging Levels](./Logging-Levels.md) - Understanding different log severity levels
-- [Event IDs](./Event-Ids.md) - Using event IDs to categorize log messages
-- [Correlation IDs](./Correlation-Ids.md) - Deep dive into trace and span IDs
-- [OpenTelemetry Documentation](https://opentelemetry.io/docs/languages/net/) - Official OpenTelemetry .NET documentation
-
-Consider connecting to real observability backends like:
+Now that you understand the basics, consider installed and connecting to a local observability backends like:
 
 - Jaeger (for traces)
 - Prometheus (for metrics)
 - Grafana Loki (for logs)
+- Aspire Dashboard
+- Seq
+
+You can then to deploy to one of dozens of production scale observability [vendors that support OpenTelemetry](https://opentelemetry.io/ecosystem/vendors/), including:
+
 - Azure Monitor
 - AWS X-Ray
 - Google Cloud Trace
+- Splunk
+- NewRelic
+- Elastic
+- AppDynamics
+- Honeycomb
+- SolarWinds
+- and many others
 
-## Learn More
+---
 
-- [OpenTelemetry Metrics Concepts](https://opentelemetry.io/docs/concepts/signals/metrics/)
-- [ASP.NET Core Metrics](https://learn.microsoft.com/aspnet/core/log-mon/metrics/)
+**Next:** Add the ColoredConsoleExporter to your project, and join the OpenTelemetry ecosystem.
+
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)

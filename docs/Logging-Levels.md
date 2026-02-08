@@ -1,5 +1,3 @@
-[Home](../ReadMe.md) | [Index](Index.md) | [Examples](Examples.md) | [Guidance](Guidance.md) | [FAQ](FAQ.md) | [Listeners](Listeners.md) | [Filters](Filters.md) | [Extensions](Extensions.md)
-
 # Logging levels
 
 Instrumentation needs to support different levels of operation, from high performance production systems through to developmental debugging.
@@ -79,3 +77,5 @@ application specific, as each application’s logging needs would be different, 
 Applications should also use a consistent Windows event log “source”. If the application is a Windows Service, then the service name should be used as
 the event log source. Otherwise, the application name (as it appears in Windows) should be used. Note that you need to install event log sources
 (as administrator) before they can be used.
+
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | Logging Levels | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)

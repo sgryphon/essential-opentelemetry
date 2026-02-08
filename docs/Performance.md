@@ -77,3 +77,5 @@ If you identify performance improvements:
 4. Submit a PR with before/after benchmark results
 
 For questions or suggestions about performance, please [open an issue](https://github.com/sgryphon/essential-opentelemetry/issues).
+
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | Performance Testing

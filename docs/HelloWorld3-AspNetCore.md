@@ -165,11 +165,8 @@ ASP.NET Core instrumentation provides many benefits automatically:
 - **Standard attributes**: HTTP method, URL, status codes are captured automatically
 - **Error tracking**: Failed requests are marked as errors in the trace data
 
-## Next Steps
+---
 
-Continue to the final tutorial: **[Adding Metrics](./HelloWorld5-Metrics.md)** to learn how to view metrics from your application.
+**Next:** [Adding Metrics](HelloWorld4-Metrics.md)
 
-## Learn More
-
-- [OpenTelemetry ASP.NET Core Instrumentation](https://github.com/open-telemetry/opentelemetry-dotnet-contrib/tree/main/src/OpenTelemetry.Instrumentation.AspNetCore)
-- [ASP.NET Core Minimal APIs](https://learn.microsoft.com/aspnet/core/fundamentals/minimal-apis)
+[Home](../README.md) | [Getting Started](./Getting-Started.md) | [Logging Levels](./Logging-Levels.md) | [Event IDs](./Event-Ids.md) | [Performance Testing](docs/Performance.md)
