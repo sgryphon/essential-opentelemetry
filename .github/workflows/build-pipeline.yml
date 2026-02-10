@@ -69,13 +69,33 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const path = './coverage-report/Summary.md';
-            if (fs.existsSync(path)) {
-              const summary = fs.readFileSync(path, 'utf8');
-              github.rest.issues.createComment({
+            const summaryPath = './coverage-report/Summary.md';
+            if (!fs.existsSync(summaryPath)) return;
+
+            const summary = fs.readFileSync(summaryPath, 'utf8');
+            const marker = '<!-- coverage-report-comment -->';
+            const body = `${marker}\n## Code Coverage Report\n\n${summary}`;
+
+            // Find an existing sticky comment to update
+            const { data: comments } = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: '## Code Coverage Report\n\n' + summary
+                body,
               });
             }
