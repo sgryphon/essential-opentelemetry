@@ -11,8 +11,8 @@ using OpenTelemetry.Trace;
 const string ServiceName = "Net60Console-Net6";
 const string FrameworkVersion = ".NET 6.0";
 
-var activitySource = new ActivitySource(ServiceName);
-var meter = new Meter(ServiceName);
+using var activitySource = new ActivitySource(ServiceName);
+using var meter = new Meter(ServiceName);
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureLogging(logging => logging.ClearProviders())
@@ -47,7 +47,7 @@ Console.WriteLine($"Running on {FrameworkVersion}");
 // Create a simple activity (span)
 using (var activity = activitySource.StartActivity("SampleOperation"))
 {
-    logger.LogInformation($"Hello world from {FrameworkVersion}");
+    logger.LogInformation("Hello world from {FrameworkVersion}", FrameworkVersion);
     requestCounter.Add(1);
 }
 

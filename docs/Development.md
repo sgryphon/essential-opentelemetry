@@ -25,7 +25,7 @@ For more details see:
 
 ## Packaging
 
-Use the `build.ps1` script to create NuGet packages locally:
+Use the `Build-Nuget.ps1` script to create NuGet packages locally:
 
 ```powershell
 # Build and test (default Release configuration)
