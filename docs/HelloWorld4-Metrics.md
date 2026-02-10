@@ -40,6 +40,10 @@ builder
         // Collect metrics from ASP.NET Core
         metrics
             .AddAspNetCoreInstrumentation()
+            // Keep instruments that start with "http.server.", and drop others
+            .AddView(instrument =>
+                instrument.Name.StartsWith("http.server.", StringComparison.Ordinal)
+                    ? null : MetricStreamConfiguration.Drop)
             .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
     });
 
@@ -48,18 +52,28 @@ var app = builder.Build();
 // Define a simple endpoint
 app.MapGet("/", (ILogger<Program> logger) =>
 {
-    logger.LogInformation("Received request to root endpoint");
+    logger.RootEndpointRequested();
     return "Hello from OpenTelemetry with Metrics!";
 });
 
 // Define another endpoint
 app.MapGet("/greet/{name}", (string name, ILogger<Program> logger) =>
 {
-    logger.LogInformation("Greeting {Name}", name);
+    logger.Greeting(name);
     return $"Hello, {name}!";
 });
 
 app.Run();
+
+// Source-generated log methods
+internal static partial class LoggerExtensions
+{
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1200, Message = "Received request to root endpoint")]
+    public static partial void RootEndpointRequested(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1500, Message = "Greeting {Name}")]
+    public static partial void Greeting(this ILogger logger, string name);
+}
 ```
 
 ## Run the Application
@@ -87,7 +101,7 @@ Every 5 seconds, you should see metrics output in the console showing HTTP reque
 
 ![ASP.NET startup](images/screen-web-metrics.png)
 
-Note that outputting individual metric counters to the console is not very interesting — you generally want to send them to an observability platform includes a time series database for statistical analysis of the metrics, such as [Prometheus](https://prometheus.io/).
+Note that outputting individual metric counters to the console may not be very interesting — you generally want to send them to an observability platform includes a time series database for statistical analysis of the metrics, such as [Prometheus](https://prometheus.io/).
 
 ## Understanding the Code
 
@@ -98,11 +112,16 @@ Note that outputting individual metric counters to the console is not very inter
 {
     metrics
         .AddAspNetCoreInstrumentation()
+        // Keep instruments that start with "http.server.", and drop others
+        .AddView(instrument =>
+            instrument.Name.StartsWith("http.server.", StringComparison.Ordinal)
+                ? null : MetricStreamConfiguration.Drop)
         .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
 })
 ```
 
 - `WithMetrics()` configures OpenTelemetry metrics collection
+- `AddView()` filters the metrics to only include those starting with `http.server.` (by returning the default null), and dropping all others
 - `AddAspNetCoreInstrumentation()` automatically collects HTTP metrics from ASP.NET Core
 - `AddColoredConsoleExporter()` exports metrics to the console every 5 seconds
 
@@ -124,10 +143,13 @@ The metrics are exported every 5 seconds (5000 milliseconds). This is configured
 
 When you make multiple requests, you'll see metrics grouped by route and HTTP method:
 
+- **time span**: Duration the metric applies to (up to the timestamp)
 - **count**: Total number of requests to this endpoint
 - **min/max**: Minimum and maximum request durations
 - **http.route**: The route pattern (e.g., `/`, `/greet/{name}`)
 - **http.response.status_code**: HTTP status code (200 for success)
+
+Time span may be either cumulative or additive, and is best processed by an observability platform.
 
 This data helps you:
 
@@ -135,7 +157,11 @@ This data helps you:
 - Spot performance issues (endpoints with high max duration)
 - Monitor application health (status codes, active requests)
 
-Metrics may be cumulative, with varying periods, or additive. For example in the screen shot the metrics at 17:34:11 are for 20s, which overlap with the 15s already reported at 17:34:06. An observability platform will correctly interpret this data for you.
+Examining the output above you can see the `duration` metrics for the `route=/greet/{name}`, having `count=1` for the first 10 seconds, then increasing to 2, then 3, as more requests are received.
+
+From the 15s mark there are also metrics for `route=/`.
+
+In this case the 15s metrics overlap with the earlier metric periods, so you would need to take the difference for that time period.
 
 ## Next Steps
 

@@ -71,10 +71,10 @@ tracerProvider.ForceFlush();
 // Source-generated log methods
 internal static partial class LoggerExtensions
 {
-    [LoggerMessage(Level = LogLevel.Information, Message = "Starting {Name}")]
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1001, Message = "Starting {Name}")]
     public static partial void OperationStarting(this ILogger logger, string name);
 
-    [LoggerMessage(Level = LogLevel.Warning, Message = "Main operation completed")]
+    [LoggerMessage(Level = LogLevel.Warning, EventId = 2001, Message = "Main operation completed")]
     public static partial void OperationCompleted(this ILogger logger);
 }
 ```
