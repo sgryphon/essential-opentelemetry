@@ -74,7 +74,7 @@ internal static partial class LoggerExtensions
     [LoggerMessage(Level = LogLevel.Information, EventId = 1001, Message = "Starting {Name}")]
     public static partial void OperationStarting(this ILogger logger, string name);
 
-    [LoggerMessage(Level = LogLevel.Warning, EventId = 2001, Message = "Main operation completed")]
+    [LoggerMessage(Level = LogLevel.Warning, EventId = 4001, Message = "Main operation completed")]
     public static partial void OperationCompleted(this ILogger logger);
 }
 ```

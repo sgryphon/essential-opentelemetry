@@ -101,7 +101,7 @@ Every 5 seconds, you should see metrics output in the console showing HTTP reque
 
 ![ASP.NET startup](images/screen-web-metrics.png)
 
-Note that outputting individual metric counters to the console may not be very interesting — you generally want to send them to an observability platform includes a time series database for statistical analysis of the metrics, such as [Prometheus](https://prometheus.io/).
+Note that outputting individual metric counters to the console may not be very interesting — you generally want to send them to an observability platform that includes a time series database for statistical analysis of the metrics, such as [Prometheus](https://prometheus.io/).
 
 ## Understanding the Code
 
