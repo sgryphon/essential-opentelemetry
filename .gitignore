@@ -42,6 +42,8 @@ pack/
 ~$*
 *~
 CodeCoverage/
+coverage/
+coverage-report/
 
 # MSBuild Binary and Structured Log
 *.binlog
