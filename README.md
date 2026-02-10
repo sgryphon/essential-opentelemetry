@@ -59,18 +59,14 @@ dotnet run --project .\examples\SimpleConsole --framework net10.0
 
 The example supports earlier frameworks, e.g. if you are still using net8.0.
 
+For more details on the project see the [Development instructions](docs/Development.md).
+
 ## Earlier related projects
 
 For earlier generations of .NET diagnostics frameworks, see the related projects:
 
 - Essential Logging, for Microsoft.Extensions.Logging: <https://github.com/sgryphon/essential-logging>
 - Essential Diagnostics, for System.Diagnostics: <https://github.com/sgryphon/essential-diagnostics>
-
-Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
-
-## Getting Started
-
-- [Continuous Integration](docs/Continuous-Integration.md) - CI/CD pipeline and testing guide
 
 ## License
 

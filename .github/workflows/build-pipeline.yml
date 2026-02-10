@@ -54,7 +54,7 @@ jobs:
       - name: Generate coverage report
         if: always()
         run: |
-          reportgenerator -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:"Html;MarkdownSummary" || true
+          dotnet tool run reportgenerator -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:"Html;MarkdownSummary" || true
 
       - name: Upload coverage report
         if: always()
