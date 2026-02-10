@@ -1,5 +1,41 @@
 # Development notes
 
+## Development tools
+
+Several .NET tools are used; restore them for use during development.
+
+```powershell
+dotnet tool restore
+```
+
+## Tests
+
+To run tests for the latest framework, use (omit `--framework` to run for all):
+
+```powershell
+dotnet test ./test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests --framework net10.0
+```
+
+A simple example application is also available:
+
+```powershell
+dotnet run --project examples/SimpleConsole/ --framework net10.0
+```
+
+## Code Coverage
+
+To generate a code coverage report locally:
+
+```powershell
+# Run tests with coverage collection
+dotnet test Essential.OpenTelemetry.slnx --configuration Release --framework net10.0 --collect:"XPlat Code Coverage" --results-directory ./coverage
+
+# Generate an HTML report (requires dotnet tool restore)
+dotnet reportgenerator -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:"Html;MarkdownSummary"
+```
+
+Then open `./coverage-report/index.html` in a browser to view the results.
+
 ## Versioning
 
 This project uses [GitVersion](https://gitversion.net/) with **Mainline** mode for semantic versioning automatically calculated from Git history.
@@ -8,7 +44,7 @@ This project uses [GitVersion](https://gitversion.net/) with **Mainline** mode f
 
 To bump versions, create Git tags on the main branch:
 
-```bash
+```powershell
 # Minor version (1.0.0 → 1.1.0)
 git tag v1.1.0
 

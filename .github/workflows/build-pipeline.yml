@@ -54,7 +54,6 @@ jobs:
       - name: Generate coverage report
         if: always()
         run: |
-          dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.4.2 || true
           reportgenerator -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:"Html;MarkdownSummary" || true
 
       - name: Upload coverage report
