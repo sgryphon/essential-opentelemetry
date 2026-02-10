@@ -53,7 +53,7 @@ The following standard values are used for the second digit:
 
 The system should be separated into up to 5 other major function areas, with values from the 4-8 range allocated.
 
-Using the first two digits for type and area leaves the last two values -- 100 different event IDs -- for specific warning or errors (usually the limiting factor) logged in each major area of the application. If this is not enough, then five digit event IDs could be used if starting with 4 or 5 (the maximum value is 2 bytes, i.e. 65535).
+Using the first two digits for type and area leaves the last two values — 100 different event IDs — for specific warning or errors (usually the limiting factor) logged in each major area of the application. If this is not enough, then five digit event IDs could be used if starting with 4 or 5 (the maximum value is 2 bytes, i.e. 65535).
 
 Usual .NET trace event types also don't cover the Success and Failure events used in security logs. Success, such as user logged in, could be classified as occasional completion of an authentication event (e.g. 2300) whereas a failed security checks (of different types) could be a set of different warning authentication event IDs (e.g. 4301, 4302, etc).
 

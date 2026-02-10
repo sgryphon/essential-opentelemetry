@@ -2,6 +2,8 @@
 
 In this tutorial, you'll add distributed tracing to your console application. Traces help you understand the flow of requests through your application and identify performance bottlenecks.
 
+This example also shows the best practice use of [compile-time logging source generation](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging/source-generation).
+
 ## What are Traces?
 
 A trace represents the journey of a request through your application. It consists of one or more spans, where each span represents a unit of work. Traces help you:
@@ -55,16 +57,26 @@ var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
 // Create a trace
 using (var activity = activitySource.StartActivity("MainOperation"))
 {
-    logger.LogInformation("Starting {Name}", "MainOperation");
+    logger.OperationStarting("MainOperation");
 
     // Simulate some work
     Thread.Sleep(100);
 
-    logger.LogInformation("Main operation completed");
+    logger.OperationCompleted();
 }
 
 // Force flush to ensure all telemetry is exported before exit
 tracerProvider.ForceFlush();
+
+// Source-generated log methods
+internal static partial class LoggerExtensions
+{
+    [LoggerMessage(Level = LogLevel.Information, Message = "Starting {Name}")]
+    public static partial void OperationStarting(this ILogger logger, string name);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Main operation completed")]
+    public static partial void OperationCompleted(this ILogger logger);
+}
 ```
 
 ## Run the Application
@@ -128,6 +140,28 @@ tracerProvider.ForceFlush();
 ```
 
 This ensures all telemetry is exported before the application exits. Without this, some telemetry might be lost in short-lived applications.
+
+### 5. Source-Generated Log Methods
+
+```csharp
+internal static partial class LoggerExtensions
+{
+    [LoggerMessage(Level = LogLevel.Information, Message = "Starting {Name}")]
+    public static partial void OperationStarting(this ILogger logger, string name);
+    ...
+}
+```
+
+The `[LoggerMessage]` attribute uses C# source generators to create high-performance logging methods at compile time. This is the recommended best practice for logging in .NET and provides:
+
+- Zero allocation
+- Compile-time validation
+- Event logging — the log event name (e.g. OperationStarting) is added as structured data, and output by the colored console logger
+- Structured logging — parameters like `{Name}` are preserved as structured data, making them searchable in telemetry backends
+
+Each method must be `partial` and defined in a `partial class`. The source generator fills in the implementation, which skips string formatting entirely when the log level is disabled.
+
+For full details, see the Microsoft documentation: [Compile-time logging source generation](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging/source-generation).
 
 ## Understanding Trace and Span IDs
 
