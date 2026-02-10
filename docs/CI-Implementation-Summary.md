@@ -28,7 +28,7 @@ A comprehensive continuous integration workflow that runs automatically on:
 - **Tools**: ReportGenerator for HTML reports and summaries
 - **Integration**: Codecov ready (requires CODECOV_TOKEN secret for upload)
 
-### 3. Documentation (`.docs/Continuous-Integration.md`)
+### 3. Documentation (`docs/Continuous-Integration.md`)
 
 Comprehensive guide covering:
 - Overview of the CI pipeline
