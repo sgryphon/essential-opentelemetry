@@ -57,18 +57,28 @@ var app = builder.Build();
 // Define a simple endpoint
 app.MapGet("/", (ILogger<Program> logger) =>
 {
-    logger.LogInformation("Received request to root endpoint");
+    logger.RootEndpointRequested();
     return "Hello from OpenTelemetry!";
 });
 
 // Define another endpoint with a parameter
 app.MapGet("/greet/{name}", (string name, ILogger<Program> logger) =>
 {
-    logger.LogInformation("Greeting {Name}", name);
+    logger.Greeting(name);
     return $"Hello, {name}!";
 });
 
 app.Run();
+
+// Source-generated log methods
+internal static partial class LoggerExtensions
+{
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1200, Message = "Received request to root endpoint")]
+    public static partial void RootEndpointRequested(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, EventId = 1500, Message = "Greeting {Name}")]
+    public static partial void Greeting(this ILogger logger, string name);
+}
 ```
 
 ## Run the Application
@@ -122,12 +132,14 @@ You don't need to manually create activities for HTTP requests – they're creat
 ```csharp
 app.MapGet("/", (ILogger<Program> logger) =>
 {
-    logger.LogInformation("Received request to root endpoint");
+    logger.RootEndpointRequested();
     return "Hello from OpenTelemetry!";
 });
 ```
 
 When you log messages during HTTP request processing, they automatically include the trace ID and span ID of the current HTTP request. This makes it easy to correlate logs with specific requests.
+
+Note that this example uses source-generated log methods via the `[LoggerMessage]` attribute, as covered in [Adding Traces](HelloWorld2-Traces.md).
 
 ### 3. Minimal API Pattern
 

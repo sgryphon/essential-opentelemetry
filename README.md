@@ -8,7 +8,7 @@ Currently this consists of a [ColoredConsoleExporter](src/Essential.OpenTelemetr
 
 This exporter comfortably replaces the default console logging, and allows you to access the benefits of OpenTelemetry auto-instrumentation and standardised distributed tracing.
 
-OpenTelemetry is widely supported by my diagnostics and application performance management providers -- this project brings that to your development console.
+OpenTelemetry is widely supported by many diagnostics and application performance management providers — this project brings that to your development console.
 
 ## Getting started with the Colored Console exporter
 
