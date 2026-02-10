@@ -10,6 +10,9 @@ This exporter comfortably replaces the default console logging, and allows you t
 
 OpenTelemetry is widely supported by many diagnostics and application performance management providers — this project brings that to your development console.
 
+[![CI](https://github.com/sgryphon/essential-opentelemetry/actions/workflows/ci.yml/badge.svg)](https://github.com/sgryphon/essential-opentelemetry/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sgryphon/essential-opentelemetry/branch/main/graph/badge.svg)](https://codecov.io/gh/sgryphon/essential-opentelemetry)
+
 ## Getting started with the Colored Console exporter
 
 1. Install the [ColoredConsole NuGet package](https://www.nuget.org/packages/Essential.OpenTelemetry.Exporter.ColoredConsole) via `dotnet` or another package manager:
@@ -62,6 +65,12 @@ For earlier generations of .NET diagnostics frameworks, see the related projects
 
 - Essential Logging, for Microsoft.Extensions.Logging: <https://github.com/sgryphon/essential-logging>
 - Essential Diagnostics, for System.Diagnostics: <https://github.com/sgryphon/essential-diagnostics>
+
+Guidance, additional exporters, and other extensions for .NET `OpenTelemetry`
+
+## Getting Started
+
+- [Continuous Integration](docs/Continuous-Integration.md) - CI/CD pipeline and testing guide
 
 ## License
 
