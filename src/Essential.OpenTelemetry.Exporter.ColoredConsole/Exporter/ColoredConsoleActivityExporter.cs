@@ -51,7 +51,7 @@ public class ColoredConsoleActivityExporter : ColoredConsoleExporter<Activity>
 
             // Build the first line details
             var activityDetails = string.Empty;
-            activityDetails += $" [{activity.OperationName}]";
+            activityDetails += $" [{activity.DisplayName}]";
 
             // Output trace ID & span ID
             if (activity.TraceId != default)

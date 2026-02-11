@@ -13,23 +13,24 @@ This exporter is part of the [Essential .NET OpenTelemetry](https://github.com/s
 
 ## Installation
 
-Install the NuGet package via `dotnet` or another package manager:
+Install the required NuGet packages via `dotnet` or another package manager:
 
-```bash
+```powershell
+dotnet add package OpenTelemetry.Extensions.Hosting
 dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
 ```
 
-## Basic usage (logging)
+## Getting started with basic logging
 
-Add the following using statements:
+For a standard .NET host application, add the following using statements:
 
 ```csharp
 using Essential.OpenTelemetry;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 ```
 
-Configure OpenTelemetry with the colored console exporter for logging, and clear the default loggers:
+Then clear the default loggers, and configure OpenTelemetry with the colored console exporter:
 
 ```csharp
 builder.Logging.ClearProviders();
@@ -40,17 +41,22 @@ builder.Services.AddOpenTelemetry()
     });
 ```
 
-## Usage (full telemetry)
+## Automatic instrumentation - ASP.NET
 
-For full telemetry support including traces and metrics, also add these using statements:
+Automatic instrumentation is available for various components, e.g. for an ASP.NET application, following on from the basic setup, above:
+
+```powershell
+dotnet add package OpenTelemetry.Instrumentation.AspNetCore
+```
+
+Then add the additional using statements:
 
 ```csharp
-using Microsoft.Extensions.DependencyInjection;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 ```
 
-Then configure the colored console exporter along with your other configuration for logs, traces, and metrics:
+And configure the colored console exporter along with the automatic instrumentation for traces and metrics:
 
 ```csharp
 builder.Logging.ClearProviders();
@@ -61,13 +67,18 @@ builder.Services.AddOpenTelemetry()
     })
     .WithTracing(tracing =>
     {
-        tracing.AddSource("YourServiceName")
-               .AddColoredConsoleExporter();
+        tracing.AddAspNetCoreInstrumentation().AddColoredConsoleExporter();
     })
     .WithMetrics(metrics =>
     {
-        metrics.AddMeter("YourServiceName")
-               .AddColoredConsoleExporter();
+        metrics
+            .AddAspNetCoreInstrumentation()
+            .AddView(instrument =>
+                instrument.Name.StartsWith("http.server.request", StringComparison.Ordinal)
+                    ? null
+                    : MetricStreamConfiguration.Drop
+            )
+            .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 60_000);
     });
 ```
 

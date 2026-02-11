@@ -40,11 +40,11 @@ builder
         // Collect metrics from ASP.NET Core
         metrics
             .AddAspNetCoreInstrumentation()
-            // Keep instruments that start with "http.server.", and drop others
+            // Keep instruments that start with "http.server.request", and drop others
             .AddView(instrument =>
-                instrument.Name.StartsWith("http.server.", StringComparison.Ordinal)
+                instrument.Name.StartsWith("http.server.request", StringComparison.Ordinal)
                     ? null : MetricStreamConfiguration.Drop)
-            .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
+            .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 30_000);
     });
 
 var app = builder.Build();
@@ -93,11 +93,10 @@ Make several requests to generate metrics, copying the port shown on start up:
 curl http://localhost:5213
 curl http://localhost:5213/greet/Alice
 curl http://localhost:5213/greet/Bob
-curl http://localhost:5213
 curl http://localhost:5213/greet/Charlie
 ```
 
-Every 5 seconds, you should see metrics output in the console showing HTTP request metrics:
+Every 30 seconds, you should see metrics output in the console showing HTTP request metrics:
 
 ![ASP.NET startup](images/screen-web-metrics.png)
 
@@ -112,18 +111,18 @@ Note that outputting individual metric counters to the console may not be very i
 {
     metrics
         .AddAspNetCoreInstrumentation()
-        // Keep instruments that start with "http.server.", and drop others
+        // Keep instruments that start with "http.server.request", and drop others
         .AddView(instrument =>
-            instrument.Name.StartsWith("http.server.", StringComparison.Ordinal)
+            instrument.Name.StartsWith("http.server.request", StringComparison.Ordinal)
                 ? null : MetricStreamConfiguration.Drop)
-        .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 5000);
+        .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 30_000);
 })
 ```
 
 - `WithMetrics()` configures OpenTelemetry metrics collection
 - `AddView()` filters the metrics to only include those starting with `http.server.` (by returning the default null), and dropping all others
 - `AddAspNetCoreInstrumentation()` automatically collects HTTP metrics from ASP.NET Core
-- `AddColoredConsoleExporter()` exports metrics to the console every 5 seconds
+- `AddColoredConsoleExporter()` exports metrics to the console every 30 seconds
 
 ### 2. Automatic Metric Collection
 
@@ -137,7 +136,7 @@ You don't need to write any code to instrument individual requests – the metri
 
 ### 3. Metric Export Interval
 
-The metrics are exported every 5 seconds (5000 milliseconds). This is configured in the `exportIntervalMilliseconds` parameter.
+The metrics are exported every 30 seconds (30_000 milliseconds). This is configured in the `exportIntervalMilliseconds` parameter.
 
 ## Understanding the Metrics
 
@@ -157,11 +156,11 @@ This data helps you:
 - Spot performance issues (endpoints with high max duration)
 - Monitor application health (status codes, active requests)
 
-Examining the output above you can see the `duration` metrics for the `route=/greet/{name}`, having `count=1` for the first 10 seconds, then increasing to 2, then 3, as more requests are received.
+Examining the output above you can see the `duration` metrics for the `route=/greet/{name}`, having `count=2` for the first 30 seconds, then increasing to 4, then 6, as more requests are received.
 
-From the 15s mark there are also metrics for `route=/`.
+From the 60s mark there are also metrics for `route=/`.
 
-In this case the 15s metrics overlap with the earlier metric periods, so you would need to take the difference for that time period.
+In this case the later metrics overlap with the earlier metric periods, so you would need to take the difference for each period.
 
 ## Next Steps
 
