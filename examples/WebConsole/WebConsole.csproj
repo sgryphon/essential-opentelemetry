@@ -3,7 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- So that Program.cs contains all the required usings, for projects that don't use implicit -->
+    <!-- <ImplicitUsings>enable</ImplicitUsings> -->
   </PropertyGroup>
 
   <ItemGroup>

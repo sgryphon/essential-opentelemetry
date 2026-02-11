@@ -6,6 +6,9 @@
   <Folder Name="/examples/Net60Console/">
     <Project Path="examples/Net60Console/Example.Net60Console.csproj" />
   </Folder>
+  <Folder Name="/examples/WebConsole/">
+    <Project Path="examples/WebConsole/WebConsole.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Essential.OpenTelemetry.Exporter.ColoredConsole/Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
   </Folder>

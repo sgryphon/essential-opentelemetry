@@ -111,9 +111,9 @@ Note that outputting individual metric counters to the console may not be very i
 {
     metrics
         .AddAspNetCoreInstrumentation()
-        // Keep instruments that start with "http.server.", and drop others
+        // Keep instruments that start with "http.server.request", and drop others
         .AddView(instrument =>
-            instrument.Name.StartsWith("http.server.", StringComparison.Ordinal)
+            instrument.Name.StartsWith("http.server.request", StringComparison.Ordinal)
                 ? null : MetricStreamConfiguration.Drop)
         .AddColoredConsoleExporter(options => { }, exportIntervalMilliseconds: 30_000);
 })

@@ -26,7 +26,8 @@ For a standard .NET host application, add the following using statements:
 
 ```csharp
 using Essential.OpenTelemetry;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 ```
 
 Then clear the default loggers, and configure OpenTelemetry with the colored console exporter:
