@@ -3,4 +3,3 @@ assembly-informational-format: "{SemVer}+{ShortSha}"
 branches: {}
 ignore:
   sha: []
-workflow: TrunkBased/preview1
