@@ -115,7 +115,7 @@ An `ActivitySource` is used to create activities (spans). The service name ident
 - `AddSource(ServiceName)` tells OpenTelemetry to collect activities from your ActivitySource
 - `AddColoredConsoleExporter()` adds the colored console exporter for traces
 
-**NOTE:** You only need to create your own activity source if you want to create custom activities. Many existing components have automatically instrumented activities, such as ASP.NET, Entity Framework, and other system components.
+**NOTE:** You only need to create your own activity source if you want to create custom activities. Many existing components have instrumentation libraries that create activities, such as ASP.NET, Entity Framework, and other system components.
 
 ### 3. Creating an Activity
 
