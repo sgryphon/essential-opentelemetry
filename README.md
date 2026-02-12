@@ -6,7 +6,7 @@ Guidance, additional exporters, and other extensions for [OpenTelemetry .NET](ht
 
 Currently this consists of a [ColoredConsoleExporter](src/Essential.OpenTelemetry.Exporter.ColoredConsole/README.md) that allows you to use OpenTelemetry from day one when building your project.
 
-This exporter comfortably replaces the default console logging, and allows you to access the benefits of OpenTelemetry auto-instrumentation and standardised distributed tracing.
+This exporter comfortably replaces the default console logging, and allows you to access the benefits of OpenTelemetry instrumentation libraries and standardised distributed tracing.
 
 OpenTelemetry is widely supported by many diagnostics and application performance management providers — this project brings that to your development console.
 

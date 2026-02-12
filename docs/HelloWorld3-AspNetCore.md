@@ -24,7 +24,7 @@ dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
 These packages provide:
 
 - **OpenTelemetry.Extensions.Hosting**: OpenTelemetry integration with the .NET hosting model
-- **OpenTelemetry.Instrumentation.AspNetCore**: Automatic instrumentation for ASP.NET Core
+- **OpenTelemetry.Instrumentation.AspNetCore**: ASP.NET Core instrumentation library
 - **Essential.OpenTelemetry.Exporter.ColoredConsole**: The colored console exporter for viewing telemetry
 
 ## Write the Code
@@ -149,9 +149,9 @@ This example uses the minimal API pattern introduced in .NET 6. The `MapGet` met
 - Uses dependency injection to provide the logger
 - Returns a response
 
-## Understanding Automatic Instrumentation
+## Understanding ASP.NET Core Instrumentation
 
-ASP.NET Core instrumentation provides many benefits automatically:
+The ASP.NET Core instrumentation library provides many benefits automatically:
 
 - **Zero-code tracing**: HTTP requests are traced without manual instrumentation
 - **Consistent span naming**: All HTTP spans follow a consistent naming pattern
