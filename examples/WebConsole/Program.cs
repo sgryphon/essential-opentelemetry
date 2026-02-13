@@ -20,7 +20,7 @@ builder
     })
     .WithTracing(tracing =>
     {
-        // ASP.NET Core instrumentation automatically creates spans for HTTP requests
+        // ASP.NET Core instrumentation creates spans for HTTP requests
         tracing.AddAspNetCoreInstrumentation().AddColoredConsoleExporter();
     })
     .WithMetrics(metrics =>

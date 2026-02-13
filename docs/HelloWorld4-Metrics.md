@@ -1,10 +1,10 @@
 # Hello World - Viewing Metrics
 
-In this tutorial, you'll see how ASP.NET Core automatically generates metrics and how to export them using the Essential OpenTelemetry colored console exporter.
+In this tutorial, you'll see how the ASP.NET instrumentation library generates metrics and how to export them using the Essential OpenTelemetry colored console exporter.
 
 ## What are Metrics?
 
-Metrics are numerical measurements that help you understand your application's behavior and performance over time. ASP.NET Core automatically tracks metrics such as:
+Metrics are numerical measurements that help you understand your application's behavior and performance over time. ASP.NET instrumentation provides metrics such as:
 
 - Request counts
 - Request durations
@@ -121,18 +121,18 @@ Note that outputting individual metric counters to the console may not be very i
 
 - `WithMetrics()` configures OpenTelemetry metrics collection
 - `AddView()` filters the metrics to only include those starting with `http.server.` (by returning the default null), and dropping all others
-- `AddAspNetCoreInstrumentation()` automatically collects HTTP metrics from ASP.NET Core
+- `AddAspNetCoreInstrumentation()` collects HTTP metrics from ASP.NET Core using the instrumentation library
 - `AddColoredConsoleExporter()` exports metrics to the console every 30 seconds
 
-### 2. Automatic Metric Collection
+### 2. Metric Collection
 
-ASP.NET Core automatically tracks:
+ASP.NET instrumentation metrics tracks:
 
 - **http.server.request.duration**: How long each request takes
 - **http.server.active_requests**: Number of requests currently being processed
 - **Request attributes**: HTTP method, status code, route
 
-You don't need to write any code to instrument individual requests – the metrics are collected automatically!
+You don't need to write any code to instrument individual requests – the metrics are collected for you by the instrumentation library!
 
 ### 3. Metric Export Interval
 

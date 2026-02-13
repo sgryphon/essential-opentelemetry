@@ -13,7 +13,7 @@ A trace represents the journey of a request through your application. It consist
 - Track distributed operations across services
 - Correlate logs with specific operations
 
-Standard W3C Trace IDs are automatically sent by .NET in HTTP requests, allowing distributed trace correlation by default.
+Standard W3C Trace IDs are sent by .NET in HTTP requests, allowing distributed trace correlation by default.
 
 ## Update Your Application
 
