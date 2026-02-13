@@ -1,6 +1,6 @@
 # Hello World - ASP.NET Core
 
-In this tutorial, you'll create an ASP.NET Core web application with OpenTelemetry. You'll discover that ASP.NET Core automatically creates traces for HTTP requests, making it easy to observe your web application.
+In this tutorial, you'll create an ASP.NET Core web application with OpenTelemetry. You'll discover that the ASP.NET instrumentation creates traces for HTTP requests, making it easy to observe your web application.
 
 ## Create a New Web Application
 
@@ -24,7 +24,7 @@ dotnet add package Essential.OpenTelemetry.Exporter.ColoredConsole
 These packages provide:
 
 - **OpenTelemetry.Extensions.Hosting**: OpenTelemetry integration with the .NET hosting model
-- **OpenTelemetry.Instrumentation.AspNetCore**: Automatic instrumentation for ASP.NET Core
+- **OpenTelemetry.Instrumentation.AspNetCore**: ASP.NET Core instrumentation library
 - **Essential.OpenTelemetry.Exporter.ColoredConsole**: The colored console exporter for viewing telemetry
 
 ## Write the Code
@@ -48,7 +48,7 @@ builder
     })
     .WithTracing(tracing =>
     {
-        // ASP.NET Core instrumentation automatically creates spans for HTTP requests
+        // ASP.NET Core instrumentation creates spans for HTTP requests
         tracing.AddAspNetCoreInstrumentation().AddColoredConsoleExporter();
     });
 
@@ -117,7 +117,7 @@ Note that spans (and trace IDs) are already provided by the ASP.NET core instrum
 tracing.AddAspNetCoreInstrumentation().AddColoredConsoleExporter();
 ```
 
-The `AddAspNetCoreInstrumentation()` method automatically instruments your ASP.NET Core application. It creates a span for every HTTP request, capturing:
+The `AddAspNetCoreInstrumentation()` method instruments your ASP.NET Core application. It creates a span for every HTTP request, capturing:
 
 - HTTP method (GET, POST, etc.)
 - URL path
@@ -125,7 +125,7 @@ The `AddAspNetCoreInstrumentation()` method automatically instruments your ASP.N
 - Response time
 - Request headers (optionally)
 
-You don't need to manually create activities for HTTP requests – they're created automatically!
+You don't need to manually create activities for HTTP requests – they're created by the instrumentation library for you!
 
 ### 2. Logging Within Request Context
 
@@ -137,7 +137,7 @@ app.MapGet("/", (ILogger<Program> logger) =>
 });
 ```
 
-When you log messages during HTTP request processing, they automatically include the trace ID and span ID of the current HTTP request. This makes it easy to correlate logs with specific requests.
+When you log messages during HTTP request processing, they include the trace ID and span ID of the current HTTP request. This makes it easy to correlate logs with specific requests.
 
 Note that this example uses source-generated log methods via the `[LoggerMessage]` attribute, as covered in [Adding Traces](HelloWorld2-Traces.md).
 
@@ -149,9 +149,9 @@ This example uses the minimal API pattern introduced in .NET 6. The `MapGet` met
 - Uses dependency injection to provide the logger
 - Returns a response
 
-## Understanding Automatic Instrumentation
+## Understanding ASP.NET Core Instrumentation
 
-ASP.NET Core instrumentation provides many benefits automatically:
+The ASP.NET Core instrumentation library provides many benefits out of the box:
 
 - **Zero-code tracing**: HTTP requests are traced without manual instrumentation
 - **Consistent span naming**: All HTTP spans follow a consistent naming pattern

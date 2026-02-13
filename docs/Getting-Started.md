@@ -24,9 +24,9 @@ Essential OpenTelemetry provides guidance, additional exporters, and extensions 
    Learn how to add distributed tracing to your console application.
 
 3. [Hello World - ASP.NET Core](HelloWorld3-AspNetCore.md) -
-   Build an ASP.NET Core web application with OpenTelemetry, and see how traces are automatically created for HTTP requests.
+   Build an ASP.NET Core web application with OpenTelemetry, and see how the ASP.NET instrumentation traces are created for HTTP requests.
 
-4. [Viewing Metrics](HelloWorld4-Metrics.md) - See how ASP.NET Core automatically generates metrics and how to view them.
+4. [Viewing Metrics](HelloWorld4-Metrics.md) - See how ASP.NET instrumentation generates metrics and how to view them.
 
 See the [SimpleConsole example](../examples/SimpleConsole) for a working example.
 

@@ -41,9 +41,9 @@ builder.Services.AddOpenTelemetry()
     });
 ```
 
-## Automatic instrumentation - ASP.NET
+## ASP.NET instrumentation
 
-Automatic instrumentation is available for various components, e.g. for an ASP.NET application, following on from the basic setup, above:
+Instrumentation libraries are available for various components, e.g. for an ASP.NET application, following on from the basic setup, above:
 
 ```powershell
 dotnet add package OpenTelemetry.Instrumentation.AspNetCore
@@ -56,7 +56,7 @@ using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
 ```
 
-And configure the colored console exporter along with the automatic instrumentation for traces and metrics:
+And configure the colored console exporter along with the ASP.NET instrumentation for traces and metrics:
 
 ```csharp
 builder.Logging.ClearProviders();

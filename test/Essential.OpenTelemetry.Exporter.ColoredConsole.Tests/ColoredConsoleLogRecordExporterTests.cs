@@ -123,7 +123,7 @@ public class CompactLogRecordFormatterTests
         // Assert
         var output = mockConsole.GetOutput();
 
-        // Should contain the automaticsource generated event name
+        // Should contain the source generated event name
         Assert.StartsWith(@"INFO [HelloFrom]", output, StringComparison.InvariantCulture);
     }
 
