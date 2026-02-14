@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
+using Serilog;
 
 namespace Essential.OpenTelemetry.Performance;
 
@@ -19,10 +20,12 @@ public class LoggingBenchmarks : BenchmarkBase
     private IHost? _standardConsoleHost;
     private IHost? _openTelemetryConsoleHost;
     private IHost? _coloredConsoleHost;
+    private IHost? _serilogConsoleHost;
     private IHost? _disabledLoggingHost;
     private ILogger<LoggingBenchmarks>? _standardLogger;
     private ILogger<LoggingBenchmarks>? _openTelemetryLogger;
     private ILogger<LoggingBenchmarks>? _coloredLogger;
+    private ILogger<LoggingBenchmarks>? _serilogLogger;
     private ILogger<LoggingBenchmarks>? _disabledLogger;
     private LoggerProvider? _openTelemetryLoggerProvider;
     private LoggerProvider? _coloredLoggerProvider;
@@ -71,6 +74,17 @@ public class LoggingBenchmarks : BenchmarkBase
         >();
         _coloredLoggerProvider = _coloredConsoleHost.Services.GetRequiredService<LoggerProvider>();
 
+        // Serilog Console Logger
+        var serilogBuilder = Host.CreateApplicationBuilder();
+        serilogBuilder.Logging.ClearProviders();
+        serilogBuilder.Services.AddSerilog(
+            new LoggerConfiguration().MinimumLevel.Information().WriteTo.Console().CreateLogger()
+        );
+        _serilogConsoleHost = serilogBuilder.Build();
+        _serilogLogger = _serilogConsoleHost.Services.GetRequiredService<
+            ILogger<LoggingBenchmarks>
+        >();
+
         // Disabled logging (to measure overhead)
         var disabledBuilder = Host.CreateApplicationBuilder();
         disabledBuilder.Logging.ClearProviders();
@@ -89,6 +103,7 @@ public class LoggingBenchmarks : BenchmarkBase
         _standardConsoleHost?.Dispose();
         _openTelemetryConsoleHost?.Dispose();
         _coloredConsoleHost?.Dispose();
+        _serilogConsoleHost?.Dispose();
         _disabledLoggingHost?.Dispose();
     }
 
@@ -119,6 +134,15 @@ public class LoggingBenchmarks : BenchmarkBase
             _coloredLogger!.LogInformation("Benchmark test message {Value}", 42);
         }
         _coloredLoggerProvider!.ForceFlush();
+    }
+
+    [Benchmark]
+    public void SerilogConsoleLogger()
+    {
+        for (int i = 0; i < Configuration.LoggingIterations; i++)
+        {
+            _serilogLogger!.LogInformation("Benchmark test message {Value}", 42);
+        }
     }
 
     [Benchmark]
