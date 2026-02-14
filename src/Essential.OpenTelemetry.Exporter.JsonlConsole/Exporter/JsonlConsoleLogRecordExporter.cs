@@ -1,9 +1,9 @@
 using System.Globalization;
-using System.Reflection;
-using System.Text;
-using System.Text.Json;
+using Google.Protobuf;
+using Google.Protobuf.WellKnownTypes;
 using OpenTelemetry;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Proto.Common.V1;
 
 namespace Essential.OpenTelemetry.Exporter;
 
@@ -14,9 +14,8 @@ namespace Essential.OpenTelemetry.Exporter;
 /// </summary>
 public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
 {
-    private static readonly PropertyInfo? SeverityProperty = typeof(LogRecord).GetProperty(
-        "Severity",
-        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+    private static readonly JsonFormatter JsonFormatter = new(
+        JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
     );
 
     private readonly JsonlConsoleOptions options;
@@ -43,137 +42,83 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
             var categoryName = logRecord.CategoryName ?? string.Empty;
             if (!scopeGroups.ContainsKey(categoryName))
             {
-                scopeGroups[categoryName] = new List<LogRecord>();
+                scopeGroups[categoryName] = new List<SdkLogRecord>();
             }
             scopeGroups[categoryName].Add(logRecord);
         }
 
         lock (output.SyncRoot)
         {
-            // Write one JSON line per batch
-            using var stream = new MemoryStream();
-            using (
-                var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false })
-            )
+            // Create OTLP LogsData message
+            var logsData = new global::OpenTelemetry.Proto.Logs.V1.LogsData();
+            var resourceLogs = new global::OpenTelemetry.Proto.Logs.V1.ResourceLogs
             {
-                writer.WriteStartObject();
-                writer.WriteStartArray("resourceLogs");
+                Resource = new global::OpenTelemetry.Proto.Resource.V1.Resource()
+            };
 
-                writer.WriteStartObject();
-
-                // Write empty resource for now (could be enhanced to read from LogRecord if available)
-                WriteResource(writer);
-
-                // Write scopeLogs
-                writer.WriteStartArray("scopeLogs");
-
-                foreach (var scopeGroup in scopeGroups)
+            // Add scope logs for each category
+            foreach (var scopeGroup in scopeGroups)
+            {
+                var scopeLogs = new global::OpenTelemetry.Proto.Logs.V1.ScopeLogs
                 {
-                    writer.WriteStartObject();
+                    Scope = new InstrumentationScope { Name = scopeGroup.Key }
+                };
 
-                    // Write scope
-                    WriteScope(writer, scopeGroup.Key);
-
-                    // Write logRecords
-                    writer.WriteStartArray("logRecords");
-                    foreach (var logRecord in scopeGroup.Value)
-                    {
-                        WriteLogRecord(writer, logRecord);
-                    }
-                    writer.WriteEndArray(); // logRecords
-
-                    writer.WriteEndObject(); // scopeLogs item
+                // Convert each LogRecord to OTLP LogRecord
+                foreach (var logRecord in scopeGroup.Value)
+                {
+                    var otlpLogRecord = ConvertToOtlpLogRecord(logRecord);
+                    scopeLogs.LogRecords.Add(otlpLogRecord);
                 }
 
-                writer.WriteEndArray(); // scopeLogs
-
-                writer.WriteEndObject(); // resourceLogs item
-
-                writer.WriteEndArray(); // resourceLogs
-                writer.WriteEndObject(); // root
+                resourceLogs.ScopeLogs.Add(scopeLogs);
             }
 
-            var jsonLine = Encoding.UTF8.GetString(stream.ToArray());
+            logsData.ResourceLogs.Add(resourceLogs);
+
+            // Serialize to JSON using Google.Protobuf JsonFormatter
+            var jsonLine = JsonFormatter.Format(logsData);
             output.WriteLine(jsonLine);
         }
 
         return ExportResult.Success;
     }
 
-    private static void WriteResource(Utf8JsonWriter writer)
+    private static global::OpenTelemetry.Proto.Logs.V1.LogRecord ConvertToOtlpLogRecord(global::OpenTelemetry.Logs.LogRecord logRecord)
     {
-        writer.WriteStartObject("resource");
-        writer.WriteStartArray("attributes");
-        // Empty attributes array for now
-        writer.WriteEndArray(); // attributes
-        writer.WriteEndObject(); // resource
-    }
-
-    private static void WriteScope(Utf8JsonWriter writer, string categoryName)
-    {
-        writer.WriteStartObject("scope");
-
-        if (!string.IsNullOrEmpty(categoryName))
-        {
-            writer.WriteString("name", categoryName);
-        }
-
-        writer.WriteEndObject(); // scope
-    }
-
-    private static void WriteLogRecord(Utf8JsonWriter writer, LogRecord logRecord)
-    {
-        writer.WriteStartObject();
-
-        // timeUnixNano - convert DateTime to Unix nanoseconds
+        // Convert DateTime to Unix nanoseconds
         var timestampUnixNano =
-            ((DateTimeOffset)logRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
-        writer.WriteString(
-            "timeUnixNano",
-            timestampUnixNano.ToString(CultureInfo.InvariantCulture)
-        );
+            (ulong)((DateTimeOffset)logRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
 
-        // observedTimeUnixNano (optional - same as timestamp if not set)
-        writer.WriteString(
-            "observedTimeUnixNano",
-            timestampUnixNano.ToString(CultureInfo.InvariantCulture)
-        );
-
-        // severityNumber
-        var severity = GetSeverityNumber(logRecord);
-        if (severity != 0)
+        var otlpLogRecord = new global::OpenTelemetry.Proto.Logs.V1.LogRecord
         {
-            writer.WriteNumber("severityNumber", severity);
+            TimeUnixNano = timestampUnixNano,
+            ObservedTimeUnixNano = timestampUnixNano
+        };
+
+        // Set severity
+        if (logRecord.Severity.HasValue)
+        {
+            otlpLogRecord.SeverityNumber = (global::OpenTelemetry.Proto.Logs.V1.SeverityNumber)(int)logRecord.Severity.Value;
+            otlpLogRecord.SeverityText = GetSeverityText((int)logRecord.Severity.Value);
         }
 
-        // severityText
-        var severityText = GetSeverityText(severity);
-        if (!string.IsNullOrEmpty(severityText))
-        {
-            writer.WriteString("severityText", severityText);
-        }
-
-        // body
+        // Set body
         var body = GetBody(logRecord);
         if (!string.IsNullOrEmpty(body))
         {
-            writer.WriteStartObject("body");
-            writer.WriteString("stringValue", body);
-            writer.WriteEndObject();
+            otlpLogRecord.Body = new AnyValue { StringValue = body };
         }
-
-        // attributes
-        writer.WriteStartArray("attributes");
 
         // Add event ID as attributes if present
         if (logRecord.EventId.Id != 0)
         {
-            WriteAttribute(writer, "event.id", logRecord.EventId.Id);
+            otlpLogRecord.Attributes.Add(CreateKeyValue("event.id", logRecord.EventId.Id));
         }
 
         if (!string.IsNullOrEmpty(logRecord.EventId.Name))
         {
-            WriteAttribute(writer, "event.name", logRecord.EventId.Name);
+            otlpLogRecord.Attributes.Add(CreateKeyValue("event.name", logRecord.EventId.Name));
         }
 
         // Add attributes from the log record
@@ -181,95 +126,101 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
         {
             foreach (var attribute in logRecord.Attributes)
             {
-                WriteAttribute(writer, attribute.Key, attribute.Value);
+                otlpLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
             }
         }
 
-        writer.WriteEndArray(); // attributes
-
-        // droppedAttributesCount (always 0 for now)
-        writer.WriteNumber("droppedAttributesCount", 0);
-
-        // traceId
+        // Set trace context
         if (logRecord.TraceId != default)
         {
-            writer.WriteString("traceId", logRecord.TraceId.ToHexString());
+            // Convert ActivityTraceId to byte array
+            Span<byte> traceIdBytes = stackalloc byte[16];
+            logRecord.TraceId.CopyTo(traceIdBytes);
+            otlpLogRecord.TraceId = ByteString.CopyFrom(traceIdBytes);
         }
 
-        // spanId
         if (logRecord.SpanId != default)
         {
-            writer.WriteString("spanId", logRecord.SpanId.ToHexString());
+            // Convert ActivitySpanId to byte array
+            Span<byte> spanIdBytes = stackalloc byte[8];
+            logRecord.SpanId.CopyTo(spanIdBytes);
+            otlpLogRecord.SpanId = ByteString.CopyFrom(spanIdBytes);
         }
 
-        writer.WriteEndObject(); // logRecord
+        if (logRecord.TraceFlags != default)
+        {
+            otlpLogRecord.Flags = (uint)logRecord.TraceFlags;
+        }
+
+        // Set event name if available
+        if (!string.IsNullOrEmpty(logRecord.EventId.Name))
+        {
+            otlpLogRecord.EventName = logRecord.EventId.Name;
+        }
+
+        return otlpLogRecord;
     }
 
-    private static void WriteAttribute(Utf8JsonWriter writer, string key, object? value)
+    private static KeyValue CreateKeyValue(string key, object? value)
     {
-        writer.WriteStartObject();
-        writer.WriteString("key", key);
-
-        writer.WriteStartObject("value");
+        var keyValue = new KeyValue { Key = key, Value = new AnyValue() };
 
         switch (value)
         {
             case null:
-                writer.WriteNull("stringValue");
+                keyValue.Value.StringValue = string.Empty;
                 break;
             case string s:
-                writer.WriteString("stringValue", s);
+                keyValue.Value.StringValue = s;
                 break;
             case bool b:
-                writer.WriteBoolean("boolValue", b);
+                keyValue.Value.BoolValue = b;
                 break;
-            case byte b:
-                writer.WriteNumber("intValue", b);
+            case byte by:
+                keyValue.Value.IntValue = by;
                 break;
             case sbyte sb:
-                writer.WriteNumber("intValue", sb);
+                keyValue.Value.IntValue = sb;
                 break;
-            case short s:
-                writer.WriteNumber("intValue", s);
+            case short sh:
+                keyValue.Value.IntValue = sh;
                 break;
             case ushort us:
-                writer.WriteNumber("intValue", us);
+                keyValue.Value.IntValue = us;
                 break;
             case int i:
-                writer.WriteNumber("intValue", i);
+                keyValue.Value.IntValue = i;
                 break;
             case uint ui:
-                writer.WriteNumber("intValue", ui);
+                keyValue.Value.IntValue = (long)ui;
                 break;
             case long l:
-                writer.WriteNumber("intValue", l);
+                keyValue.Value.IntValue = l;
                 break;
             case ulong ul:
-                // Write as string to avoid overflow
-                writer.WriteString("intValue", ul.ToString(CultureInfo.InvariantCulture));
+                // Use string for ulong to avoid overflow
+                keyValue.Value.StringValue = ul.ToString(CultureInfo.InvariantCulture);
                 break;
             case float f:
-                writer.WriteNumber("doubleValue", f);
+                keyValue.Value.DoubleValue = f;
                 break;
             case double d:
-                writer.WriteNumber("doubleValue", d);
+                keyValue.Value.DoubleValue = d;
                 break;
             case decimal dec:
-                // Write as string to preserve precision
-                writer.WriteString("stringValue", dec.ToString(CultureInfo.InvariantCulture));
+                // Use string for decimal to preserve precision
+                keyValue.Value.StringValue = dec.ToString(CultureInfo.InvariantCulture);
                 break;
             default:
                 // For other types, convert to string
-                writer.WriteString("stringValue", value.ToString());
+                keyValue.Value.StringValue = value.ToString() ?? string.Empty;
                 break;
         }
 
-        writer.WriteEndObject(); // value
-
-        writer.WriteEndObject(); // attribute
+        return keyValue;
     }
 
-    private static string GetBody(LogRecord logRecord)
+    private static string GetBody(global::OpenTelemetry.Logs.LogRecord logRecord)
     {
         // Use FormattedMessage if available
         var message = logRecord.FormattedMessage;
@@ -289,18 +240,6 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
         }
 
         return message ?? string.Empty;
-    }
-
-    private static int GetSeverityNumber(LogRecord logRecord)
-    {
-        // Get the internal Severity property via reflection
-        var severityValue = SeverityProperty?.GetValue(logRecord);
-        if (severityValue != null)
-        {
-            return (int)severityValue;
-        }
-
-        return 0;
     }
 
     private static string GetSeverityText(int severityNumber)
