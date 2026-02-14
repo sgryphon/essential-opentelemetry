@@ -54,6 +54,9 @@ New to OpenTelemetry? Check out our [Getting Started Guide](docs/Getting-Started
 Or for a simple example application, just clone this repository and run:
 
 ```powershell
+git clone https://github.com/sgryphon/essential-opentelemetry.git
+cd essential-opentelemetry
+git submodule update --init --recursive
 dotnet run --project .\examples\SimpleConsole --framework net10.0
 ```
 
