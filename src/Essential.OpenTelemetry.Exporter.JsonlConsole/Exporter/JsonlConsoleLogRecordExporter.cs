@@ -12,10 +12,11 @@ namespace Essential.OpenTelemetry.Exporter;
 /// </summary>
 public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.Logs.LogRecord>
 {
-    private static readonly PropertyInfo? SeverityProperty = typeof(global::OpenTelemetry.Logs.LogRecord).GetProperty(
-        "Severity",
-        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-    );
+    private static readonly PropertyInfo? SeverityProperty =
+        typeof(global::OpenTelemetry.Logs.LogRecord).GetProperty(
+            "Severity",
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+        );
 
     private static readonly JsonFormatter JsonFormatter = new(
         JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
@@ -56,7 +57,7 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
             var logsData = new global::OpenTelemetry.Proto.Logs.V1.LogsData();
             var resourceLogs = new global::OpenTelemetry.Proto.Logs.V1.ResourceLogs
             {
-                Resource = new global::OpenTelemetry.Proto.Resource.V1.Resource()
+                Resource = new global::OpenTelemetry.Proto.Resource.V1.Resource(),
             };
 
             // Add scope logs for each category
@@ -64,7 +65,10 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
             {
                 var scopeLogs = new global::OpenTelemetry.Proto.Logs.V1.ScopeLogs
                 {
-                    Scope = new global::OpenTelemetry.Proto.Common.V1.InstrumentationScope { Name = scopeGroup.Key }
+                    Scope = new global::OpenTelemetry.Proto.Common.V1.InstrumentationScope
+                    {
+                        Name = scopeGroup.Key,
+                    },
                 };
 
                 // Convert each SDK LogRecord to OTLP proto LogRecord
@@ -87,7 +91,9 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         return ExportResult.Success;
     }
 
-    private static global::OpenTelemetry.Proto.Logs.V1.LogRecord ConvertToOtlpLogRecord(global::OpenTelemetry.Logs.LogRecord sdkLogRecord)
+    private static global::OpenTelemetry.Proto.Logs.V1.LogRecord ConvertToOtlpLogRecord(
+        global::OpenTelemetry.Logs.LogRecord sdkLogRecord
+    )
     {
         // Convert DateTime to Unix nanoseconds
         var timestampUnixNano =
@@ -96,7 +102,7 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         var protoLogRecord = new global::OpenTelemetry.Proto.Logs.V1.LogRecord
         {
             TimeUnixNano = timestampUnixNano,
-            ObservedTimeUnixNano = timestampUnixNano
+            ObservedTimeUnixNano = timestampUnixNano,
         };
 
         // Set severity
@@ -104,7 +110,8 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         if (severityValue != null)
         {
             var severityInt = (int)severityValue;
-            protoLogRecord.SeverityNumber = (global::OpenTelemetry.Proto.Logs.V1.SeverityNumber)severityInt;
+            protoLogRecord.SeverityNumber =
+                (global::OpenTelemetry.Proto.Logs.V1.SeverityNumber)severityInt;
             protoLogRecord.SeverityText = GetSeverityText(severityInt);
         }
 
@@ -112,7 +119,10 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         var body = GetBody(sdkLogRecord);
         if (!string.IsNullOrEmpty(body))
         {
-            protoLogRecord.Body = new global::OpenTelemetry.Proto.Common.V1.AnyValue { StringValue = body };
+            protoLogRecord.Body = new global::OpenTelemetry.Proto.Common.V1.AnyValue
+            {
+                StringValue = body,
+            };
         }
 
         // Add event ID as attributes if present
@@ -166,12 +176,15 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         return protoLogRecord;
     }
 
-    private static global::OpenTelemetry.Proto.Common.V1.KeyValue CreateKeyValue(string key, object? value)
+    private static global::OpenTelemetry.Proto.Common.V1.KeyValue CreateKeyValue(
+        string key,
+        object? value
+    )
     {
         var keyValue = new global::OpenTelemetry.Proto.Common.V1.KeyValue
         {
             Key = key,
-            Value = new global::OpenTelemetry.Proto.Common.V1.AnyValue()
+            Value = new global::OpenTelemetry.Proto.Common.V1.AnyValue(),
         };
 
         switch (value)
