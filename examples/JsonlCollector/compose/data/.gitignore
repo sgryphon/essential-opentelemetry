@@ -1,0 +1,4 @@
+# Ignore input/output data files
+*.jsonl
+input/
+output/
