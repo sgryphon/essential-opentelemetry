@@ -1,10 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Essential.OpenTelemetry;
-using Essential.System;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Logs;
 using Xunit;
 
 namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;

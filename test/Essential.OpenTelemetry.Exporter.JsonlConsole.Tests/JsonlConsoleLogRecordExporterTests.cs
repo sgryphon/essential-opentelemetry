@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Engine.ClientProtocol;
 using OpenTelemetry.Logs;
 using Xunit;
 
@@ -39,24 +40,20 @@ public class JsonlConsoleLogRecordExporterTests
         var root = doc.RootElement;
 
         // Check structure
-        Assert.True(root.TryGetProperty("resourceLogs", out var resourceLogs));
-        Assert.Equal(JsonValueKind.Array, resourceLogs.ValueKind);
-        Assert.True(resourceLogs.GetArrayLength() > 0);
+        var resourceLogs = root.GetProperty("resourceLogs");
+        Assert.Equal(1, resourceLogs.GetArrayLength());
 
-        var resourceLog = resourceLogs[0];
-        Assert.True(resourceLog.TryGetProperty("scopeLogs", out var scopeLogs));
-        Assert.Equal(JsonValueKind.Array, scopeLogs.ValueKind);
-        Assert.True(scopeLogs.GetArrayLength() > 0);
+        var scopeLogs = resourceLogs[0].GetProperty("scopeLogs");
+        Assert.Equal(1, scopeLogs.GetArrayLength());
 
-        var scopeLog = scopeLogs[0];
-        Assert.True(scopeLog.TryGetProperty("logRecords", out var logRecords));
-        Assert.Equal(JsonValueKind.Array, logRecords.ValueKind);
-        Assert.Single(logRecords.EnumerateArray());
+        var logRecords = scopeLogs[0].GetProperty("logRecords");
+        Assert.Equal(1, logRecords.GetArrayLength());
 
         var logRecord = logRecords[0];
-        Assert.True(logRecord.TryGetProperty("body", out var body));
-        Assert.True(body.TryGetProperty("stringValue", out var stringValue));
-        Assert.Equal("Test log message", stringValue.GetString());
+        Assert.Equal(
+            "Test log message",
+            logRecord.GetProperty("body").GetProperty("stringValue").GetString()
+        );
     }
 
     [Fact]
@@ -87,32 +84,9 @@ public class JsonlConsoleLogRecordExporterTests
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
-        Assert.True(logRecord.TryGetProperty("severityNumber", out var severityNumber));
         // SeverityNumber is an enum - per OTLP spec, enums are serialized as strings in JSON
-        // but the JsonFormatter may serialize as number for int-based enums. Let's handle both.
-        int sevNum;
-        if (severityNumber.ValueKind == JsonValueKind.String)
-        {
-            // Parse enum string like "SEVERITY_NUMBER_WARN" or just the number as string
-            var sevStr = severityNumber.GetString();
-            if (!int.TryParse(sevStr, out sevNum))
-            {
-                // It's an enum name, we need to map it
-                Assert.True(
-                    sevStr != null && (sevStr.Contains("WARN") || sevStr.Contains("Warn")),
-                    $"Expected Warn severity, got {sevStr}"
-                );
-                return; // Skip numeric check since we verified the enum name
-            }
-        }
-        else
-        {
-            sevNum = severityNumber.GetInt32();
-        }
-        Assert.True(sevNum >= 13 && sevNum <= 16, $"Expected Warn range (13-16), got {sevNum}"); // Warn range
-
-        Assert.True(logRecord.TryGetProperty("severityText", out var severityText));
-        Assert.Equal("Warn", severityText.GetString());
+        Assert.Equal("SEVERITY_NUMBER_WARN", logRecord.GetProperty("severityNumber").GetString());
+        Assert.Equal("Warn", logRecord.GetProperty("severityText").GetString());
     }
 
     [Fact]
@@ -143,33 +117,23 @@ public class JsonlConsoleLogRecordExporterTests
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
+        Console.WriteLine("OUTPUT: {0}", mockOutput.Lines[0]);
+
+        // Event Name
+        Assert.Equal("TestEvent", logRecord.GetProperty("eventName").ToString());
+
         // Event ID should be in attributes
-        var attributes = logRecord.GetProperty("attributes");
-        bool foundEventId = false;
-        bool foundEventName = false;
-
-        foreach (var attr in attributes.EnumerateArray())
-        {
-            var key = attr.GetProperty("key").GetString();
-            if (key == "event.id")
-            {
-                foundEventId = true;
-                // intValue is int64 in protobuf, serialized as string in JSON per OTLP spec
-                var intValueStr = attr.GetProperty("value").GetProperty("intValue").GetString();
-                Assert.Equal("42", intValueStr);
-            }
-            else if (key == "event.name")
-            {
-                foundEventName = true;
-                Assert.Equal(
-                    "TestEvent",
-                    attr.GetProperty("value").GetProperty("stringValue").GetString()
-                );
-            }
-        }
-
-        Assert.True(foundEventId);
-        Assert.True(foundEventName);
+        var attributes = logRecord
+            .GetProperty("attributes")
+            .EnumerateArray()
+            .ToDictionary(x => x.GetProperty("key").ToString());
+        attributes.TryGetValue("event.id", out var eventIdAttribute);
+        // intValue is int64 in protobuf, serialized as string in JSON per OTLP spec
+        Assert.Equal(JsonValueKind.Object, eventIdAttribute.ValueKind);
+        Assert.Equal(
+            "42",
+            eventIdAttribute.GetProperty("value").GetProperty("intValue").GetString()
+        );
     }
 
     [Fact]
@@ -209,32 +173,22 @@ public class JsonlConsoleLogRecordExporterTests
         Assert.Contains("123", body);
 
         // Check attributes contain the structured data
-        var attributes = logRecord.GetProperty("attributes");
-        bool foundUserName = false;
-        bool foundUserId = false;
+        var attributes = logRecord
+            .GetProperty("attributes")
+            .EnumerateArray()
+            .ToDictionary(x => x.GetProperty("key").ToString());
 
-        foreach (var attr in attributes.EnumerateArray())
-        {
-            var key = attr.GetProperty("key").GetString();
-            if (key == "UserName")
-            {
-                foundUserName = true;
-                Assert.Equal(
-                    "Alice",
-                    attr.GetProperty("value").GetProperty("stringValue").GetString()
-                );
-            }
-            else if (key == "UserId")
-            {
-                foundUserId = true;
-                // intValue is int64 in protobuf, serialized as string in JSON per OTLP spec
-                var intValueStr = attr.GetProperty("value").GetProperty("intValue").GetString();
-                Assert.Equal("123", intValueStr);
-            }
-        }
+        attributes.TryGetValue("UserName", out var userNameAttribute);
+        Assert.Equal(
+            "Alice",
+            userNameAttribute.GetProperty("value").GetProperty("stringValue").GetString()
+        );
 
-        Assert.True(foundUserName);
-        Assert.True(foundUserId);
+        attributes.TryGetValue("UserId", out var userIdAttribute);
+        Assert.Equal(
+            "123",
+            userIdAttribute.GetProperty("value").GetProperty("intValue").GetString()
+        );
     }
 
     [Fact]

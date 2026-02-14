@@ -1,6 +1,4 @@
-using System.Diagnostics.Metrics;
-using Essential.OpenTelemetry;
-using Essential.System;
+﻿using System.Diagnostics.Metrics;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
