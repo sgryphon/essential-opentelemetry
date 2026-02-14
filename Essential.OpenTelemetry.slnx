@@ -3,6 +3,9 @@
   <Folder Name="/examples/SimpleConsole/">
     <Project Path="examples/SimpleConsole/Example.SimpleConsole.csproj" />
   </Folder>
+  <Folder Name="/examples/JsonlConsole/">
+    <Project Path="examples/JsonlConsole/Example.JsonlConsole.csproj" />
+  </Folder>
   <Folder Name="/examples/Net60Console/">
     <Project Path="examples/Net60Console/Example.Net60Console.csproj" />
   </Folder>

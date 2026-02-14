@@ -82,8 +82,8 @@ public class JsonlConsoleLogRecordExporterTests
 
         // Assert
         var doc = JsonDocument.Parse(mockOutput.Lines[0]);
-        var logRecord = doc.RootElement
-            .GetProperty("resourceLogs")[0]
+        var logRecord = doc
+            .RootElement.GetProperty("resourceLogs")[0]
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
@@ -117,8 +117,8 @@ public class JsonlConsoleLogRecordExporterTests
 
         // Assert
         var doc = JsonDocument.Parse(mockOutput.Lines[0]);
-        var logRecord = doc.RootElement
-            .GetProperty("resourceLogs")[0]
+        var logRecord = doc
+            .RootElement.GetProperty("resourceLogs")[0]
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
@@ -138,7 +138,10 @@ public class JsonlConsoleLogRecordExporterTests
             else if (key == "event.name")
             {
                 foundEventName = true;
-                Assert.Equal("TestEvent", attr.GetProperty("value").GetProperty("stringValue").GetString());
+                Assert.Equal(
+                    "TestEvent",
+                    attr.GetProperty("value").GetProperty("stringValue").GetString()
+                );
             }
         }
 
@@ -172,8 +175,8 @@ public class JsonlConsoleLogRecordExporterTests
 
         // Assert
         var doc = JsonDocument.Parse(mockOutput.Lines[0]);
-        var logRecord = doc.RootElement
-            .GetProperty("resourceLogs")[0]
+        var logRecord = doc
+            .RootElement.GetProperty("resourceLogs")[0]
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
@@ -193,7 +196,10 @@ public class JsonlConsoleLogRecordExporterTests
             if (key == "UserName")
             {
                 foundUserName = true;
-                Assert.Equal("Alice", attr.GetProperty("value").GetProperty("stringValue").GetString());
+                Assert.Equal(
+                    "Alice",
+                    attr.GetProperty("value").GetProperty("stringValue").GetString()
+                );
             }
             else if (key == "UserId")
             {
@@ -235,18 +241,14 @@ public class JsonlConsoleLogRecordExporterTests
 
         // Check first line
         var doc1 = JsonDocument.Parse(mockOutput.Lines[0]);
-        var scopeLogs1 = doc1.RootElement
-            .GetProperty("resourceLogs")[0]
-            .GetProperty("scopeLogs");
+        var scopeLogs1 = doc1.RootElement.GetProperty("resourceLogs")[0].GetProperty("scopeLogs");
         Assert.Single(scopeLogs1.EnumerateArray());
         var scope1Name = scopeLogs1[0].GetProperty("scope").GetProperty("name").GetString();
         Assert.Equal("Scope1", scope1Name);
 
         // Check second line
         var doc2 = JsonDocument.Parse(mockOutput.Lines[1]);
-        var scopeLogs2 = doc2.RootElement
-            .GetProperty("resourceLogs")[0]
-            .GetProperty("scopeLogs");
+        var scopeLogs2 = doc2.RootElement.GetProperty("resourceLogs")[0].GetProperty("scopeLogs");
         Assert.Single(scopeLogs2.EnumerateArray());
         var scope2Name = scopeLogs2[0].GetProperty("scope").GetProperty("name").GetString();
         Assert.Equal("Scope2", scope2Name);
@@ -322,8 +324,8 @@ public class JsonlConsoleLogRecordExporterTests
 
         // Assert
         var doc = JsonDocument.Parse(mockOutput.Lines[0]);
-        var logRecord = doc.RootElement
-            .GetProperty("resourceLogs")[0]
+        var logRecord = doc
+            .RootElement.GetProperty("resourceLogs")[0]
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 

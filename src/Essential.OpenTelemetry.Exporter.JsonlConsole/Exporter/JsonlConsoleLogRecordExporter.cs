@@ -52,7 +52,9 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
         {
             // Write one JSON line per batch
             using var stream = new MemoryStream();
-            using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false }))
+            using (
+                var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false })
+            )
             {
                 writer.WriteStartObject();
                 writer.WriteStartArray("resourceLogs");
@@ -124,11 +126,18 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
         writer.WriteStartObject();
 
         // timeUnixNano - convert DateTime to Unix nanoseconds
-        var timestampUnixNano = ((DateTimeOffset)logRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
-        writer.WriteString("timeUnixNano", timestampUnixNano.ToString(CultureInfo.InvariantCulture));
+        var timestampUnixNano =
+            ((DateTimeOffset)logRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
+        writer.WriteString(
+            "timeUnixNano",
+            timestampUnixNano.ToString(CultureInfo.InvariantCulture)
+        );
 
         // observedTimeUnixNano (optional - same as timestamp if not set)
-        writer.WriteString("observedTimeUnixNano", timestampUnixNano.ToString(CultureInfo.InvariantCulture));
+        writer.WriteString(
+            "observedTimeUnixNano",
+            timestampUnixNano.ToString(CultureInfo.InvariantCulture)
+        );
 
         // severityNumber
         var severity = GetSeverityNumber(logRecord);
