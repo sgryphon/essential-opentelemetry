@@ -1,7 +1,11 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using Google.Protobuf;
 using OpenTelemetry;
+using ProtoCommon = OpenTelemetry.Proto.Common.V1;
+using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
+using ProtoResource = OpenTelemetry.Proto.Resource.V1;
+using SdkLogs = OpenTelemetry.Logs;
 
 namespace Essential.OpenTelemetry.Exporter;
 
@@ -10,13 +14,12 @@ namespace Essential.OpenTelemetry.Exporter;
 /// Outputs log records in OTLP protobuf JSON format compatible with the
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
 /// </summary>
-public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.Logs.LogRecord>
+public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 {
-    private static readonly PropertyInfo? SeverityProperty =
-        typeof(global::OpenTelemetry.Logs.LogRecord).GetProperty(
-            "Severity",
-            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-        );
+    private static readonly PropertyInfo? SeverityProperty = typeof(SdkLogs.LogRecord).GetProperty(
+        "Severity",
+        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+    );
 
     private static readonly JsonFormatter JsonFormatter = new(
         JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
@@ -34,19 +37,19 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
     }
 
     /// <inheritdoc/>
-    public override ExportResult Export(in Batch<global::OpenTelemetry.Logs.LogRecord> batch)
+    public override ExportResult Export(in Batch<SdkLogs.LogRecord> batch)
     {
         var output = this.options.Output;
 
         // Group log records by scope (category)
-        var scopeGroups = new Dictionary<string, List<global::OpenTelemetry.Logs.LogRecord>>();
+        var scopeGroups = new Dictionary<string, List<SdkLogs.LogRecord>>();
 
         foreach (var sdkLogRecord in batch)
         {
             var categoryName = sdkLogRecord.CategoryName ?? string.Empty;
             if (!scopeGroups.ContainsKey(categoryName))
             {
-                scopeGroups[categoryName] = new List<global::OpenTelemetry.Logs.LogRecord>();
+                scopeGroups[categoryName] = new List<SdkLogs.LogRecord>();
             }
             scopeGroups[categoryName].Add(sdkLogRecord);
         }
@@ -54,21 +57,18 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         lock (output.SyncRoot)
         {
             // Create OTLP LogsData message
-            var logsData = new global::OpenTelemetry.Proto.Logs.V1.LogsData();
-            var resourceLogs = new global::OpenTelemetry.Proto.Logs.V1.ResourceLogs
+            var logsData = new ProtoLogs.LogsData();
+            var resourceLogs = new ProtoLogs.ResourceLogs
             {
-                Resource = new global::OpenTelemetry.Proto.Resource.V1.Resource(),
+                Resource = new ProtoResource.Resource(),
             };
 
             // Add scope logs for each category
             foreach (var scopeGroup in scopeGroups)
             {
-                var scopeLogs = new global::OpenTelemetry.Proto.Logs.V1.ScopeLogs
+                var scopeLogs = new ProtoLogs.ScopeLogs
                 {
-                    Scope = new global::OpenTelemetry.Proto.Common.V1.InstrumentationScope
-                    {
-                        Name = scopeGroup.Key,
-                    },
+                    Scope = new ProtoCommon.InstrumentationScope { Name = scopeGroup.Key },
                 };
 
                 // Convert each SDK LogRecord to OTLP proto LogRecord
@@ -91,15 +91,13 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         return ExportResult.Success;
     }
 
-    private static global::OpenTelemetry.Proto.Logs.V1.LogRecord ConvertToOtlpLogRecord(
-        global::OpenTelemetry.Logs.LogRecord sdkLogRecord
-    )
+    private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
     {
         // Convert DateTime to Unix nanoseconds
         var timestampUnixNano =
             (ulong)((DateTimeOffset)sdkLogRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
 
-        var protoLogRecord = new global::OpenTelemetry.Proto.Logs.V1.LogRecord
+        var protoLogRecord = new ProtoLogs.LogRecord
         {
             TimeUnixNano = timestampUnixNano,
             ObservedTimeUnixNano = timestampUnixNano,
@@ -110,8 +108,7 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         if (severityValue != null)
         {
             var severityInt = (int)severityValue;
-            protoLogRecord.SeverityNumber =
-                (global::OpenTelemetry.Proto.Logs.V1.SeverityNumber)severityInt;
+            protoLogRecord.SeverityNumber = (ProtoLogs.SeverityNumber)severityInt;
             protoLogRecord.SeverityText = GetSeverityText(severityInt);
         }
 
@@ -119,10 +116,7 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         var body = GetBody(sdkLogRecord);
         if (!string.IsNullOrEmpty(body))
         {
-            protoLogRecord.Body = new global::OpenTelemetry.Proto.Common.V1.AnyValue
-            {
-                StringValue = body,
-            };
+            protoLogRecord.Body = new ProtoCommon.AnyValue { StringValue = body };
         }
 
         // Add event ID as attributes if present
@@ -176,16 +170,9 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         return protoLogRecord;
     }
 
-    private static global::OpenTelemetry.Proto.Common.V1.KeyValue CreateKeyValue(
-        string key,
-        object? value
-    )
+    private static ProtoCommon.KeyValue CreateKeyValue(string key, object? value)
     {
-        var keyValue = new global::OpenTelemetry.Proto.Common.V1.KeyValue
-        {
-            Key = key,
-            Value = new global::OpenTelemetry.Proto.Common.V1.AnyValue(),
-        };
+        var keyValue = new ProtoCommon.KeyValue { Key = key, Value = new ProtoCommon.AnyValue() };
 
         switch (value)
         {
@@ -242,7 +229,7 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.
         return keyValue;
     }
 
-    private static string GetBody(global::OpenTelemetry.Logs.LogRecord sdkLogRecord)
+    private static string GetBody(SdkLogs.LogRecord sdkLogRecord)
     {
         // Use FormattedMessage if available
         var message = sdkLogRecord.FormattedMessage;
