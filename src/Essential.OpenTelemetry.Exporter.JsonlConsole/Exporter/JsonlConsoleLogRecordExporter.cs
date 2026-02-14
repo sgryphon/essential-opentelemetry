@@ -1,9 +1,8 @@
 using System.Globalization;
 using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using OpenTelemetry;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Proto.Common.V1;
+using OtelSdk = OpenTelemetry.Logs;
+using OtelProto = OpenTelemetry.Proto;
 
 namespace Essential.OpenTelemetry.Exporter;
 
@@ -12,7 +11,7 @@ namespace Essential.OpenTelemetry.Exporter;
 /// Outputs log records in OTLP protobuf JSON format compatible with the
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
 /// </summary>
-public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
+public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
 {
     private static readonly JsonFormatter JsonFormatter = new(
         JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
@@ -30,45 +29,45 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
     }
 
     /// <inheritdoc/>
-    public override ExportResult Export(in Batch<LogRecord> batch)
+    public override ExportResult Export(in Batch<OtelSdk.LogRecord> batch)
     {
         var output = this.options.Output;
 
         // Group log records by scope (category)
-        var scopeGroups = new Dictionary<string, List<LogRecord>>();
+        var scopeGroups = new Dictionary<string, List<OtelSdk.LogRecord>>();
 
-        foreach (var logRecord in batch)
+        foreach (var sdkLogRecord in batch)
         {
-            var categoryName = logRecord.CategoryName ?? string.Empty;
+            var categoryName = sdkLogRecord.CategoryName ?? string.Empty;
             if (!scopeGroups.ContainsKey(categoryName))
             {
-                scopeGroups[categoryName] = new List<SdkLogRecord>();
+                scopeGroups[categoryName] = new List<OtelSdk.LogRecord>();
             }
-            scopeGroups[categoryName].Add(logRecord);
+            scopeGroups[categoryName].Add(sdkLogRecord);
         }
 
         lock (output.SyncRoot)
         {
             // Create OTLP LogsData message
-            var logsData = new global::OpenTelemetry.Proto.Logs.V1.LogsData();
-            var resourceLogs = new global::OpenTelemetry.Proto.Logs.V1.ResourceLogs
+            var logsData = new OtelProto.Logs.V1.LogsData();
+            var resourceLogs = new OtelProto.Logs.V1.ResourceLogs
             {
-                Resource = new global::OpenTelemetry.Proto.Resource.V1.Resource()
+                Resource = new OtelProto.Resource.V1.Resource()
             };
 
             // Add scope logs for each category
             foreach (var scopeGroup in scopeGroups)
             {
-                var scopeLogs = new global::OpenTelemetry.Proto.Logs.V1.ScopeLogs
+                var scopeLogs = new OtelProto.Logs.V1.ScopeLogs
                 {
-                    Scope = new InstrumentationScope { Name = scopeGroup.Key }
+                    Scope = new OtelProto.Common.V1.InstrumentationScope { Name = scopeGroup.Key }
                 };
 
-                // Convert each LogRecord to OTLP LogRecord
-                foreach (var logRecord in scopeGroup.Value)
+                // Convert each SDK LogRecord to OTLP proto LogRecord
+                foreach (var sdkLogRecord in scopeGroup.Value)
                 {
-                    var otlpLogRecord = ConvertToOtlpLogRecord(logRecord);
-                    scopeLogs.LogRecords.Add(otlpLogRecord);
+                    var protoLogRecord = ConvertToOtlpLogRecord(sdkLogRecord);
+                    scopeLogs.LogRecords.Add(protoLogRecord);
                 }
 
                 resourceLogs.ScopeLogs.Add(scopeLogs);
@@ -84,86 +83,90 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
         return ExportResult.Success;
     }
 
-    private static global::OpenTelemetry.Proto.Logs.V1.LogRecord ConvertToOtlpLogRecord(global::OpenTelemetry.Logs.LogRecord logRecord)
+    private static OtelProto.Logs.V1.LogRecord ConvertToOtlpLogRecord(OtelSdk.LogRecord sdkLogRecord)
     {
         // Convert DateTime to Unix nanoseconds
         var timestampUnixNano =
-            (ulong)((DateTimeOffset)logRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
+            (ulong)((DateTimeOffset)sdkLogRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
 
-        var otlpLogRecord = new global::OpenTelemetry.Proto.Logs.V1.LogRecord
+        var protoLogRecord = new OtelProto.Logs.V1.LogRecord
         {
             TimeUnixNano = timestampUnixNano,
             ObservedTimeUnixNano = timestampUnixNano
         };
 
         // Set severity
-        if (logRecord.Severity.HasValue)
+        if (sdkLogRecord.Severity.HasValue)
         {
-            otlpLogRecord.SeverityNumber = (global::OpenTelemetry.Proto.Logs.V1.SeverityNumber)(int)logRecord.Severity.Value;
-            otlpLogRecord.SeverityText = GetSeverityText((int)logRecord.Severity.Value);
+            protoLogRecord.SeverityNumber = (OtelProto.Logs.V1.SeverityNumber)(int)sdkLogRecord.Severity.Value;
+            protoLogRecord.SeverityText = GetSeverityText((int)sdkLogRecord.Severity.Value);
         }
 
         // Set body
-        var body = GetBody(logRecord);
+        var body = GetBody(sdkLogRecord);
         if (!string.IsNullOrEmpty(body))
         {
-            otlpLogRecord.Body = new AnyValue { StringValue = body };
+            protoLogRecord.Body = new OtelProto.Common.V1.AnyValue { StringValue = body };
         }
 
         // Add event ID as attributes if present
-        if (logRecord.EventId.Id != 0)
+        if (sdkLogRecord.EventId.Id != 0)
         {
-            otlpLogRecord.Attributes.Add(CreateKeyValue("event.id", logRecord.EventId.Id));
+            protoLogRecord.Attributes.Add(CreateKeyValue("event.id", sdkLogRecord.EventId.Id));
         }
 
-        if (!string.IsNullOrEmpty(logRecord.EventId.Name))
+        if (!string.IsNullOrEmpty(sdkLogRecord.EventId.Name))
         {
-            otlpLogRecord.Attributes.Add(CreateKeyValue("event.name", logRecord.EventId.Name));
+            protoLogRecord.Attributes.Add(CreateKeyValue("event.name", sdkLogRecord.EventId.Name));
         }
 
         // Add attributes from the log record
-        if (logRecord.Attributes != null)
+        if (sdkLogRecord.Attributes != null)
         {
-            foreach (var attribute in logRecord.Attributes)
+            foreach (var attribute in sdkLogRecord.Attributes)
             {
-                otlpLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
+                protoLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
             }
         }
 
         // Set trace context
-        if (logRecord.TraceId != default)
+        if (sdkLogRecord.TraceId != default)
         {
             // Convert ActivityTraceId to byte array
             Span<byte> traceIdBytes = stackalloc byte[16];
-            logRecord.TraceId.CopyTo(traceIdBytes);
-            otlpLogRecord.TraceId = ByteString.CopyFrom(traceIdBytes);
+            sdkLogRecord.TraceId.CopyTo(traceIdBytes);
+            protoLogRecord.TraceId = ByteString.CopyFrom(traceIdBytes);
         }
 
-        if (logRecord.SpanId != default)
+        if (sdkLogRecord.SpanId != default)
         {
             // Convert ActivitySpanId to byte array
             Span<byte> spanIdBytes = stackalloc byte[8];
-            logRecord.SpanId.CopyTo(spanIdBytes);
-            otlpLogRecord.SpanId = ByteString.CopyFrom(spanIdBytes);
+            sdkLogRecord.SpanId.CopyTo(spanIdBytes);
+            protoLogRecord.SpanId = ByteString.CopyFrom(spanIdBytes);
         }
 
-        if (logRecord.TraceFlags != default)
+        if (sdkLogRecord.TraceFlags != default)
         {
-            otlpLogRecord.Flags = (uint)logRecord.TraceFlags;
+            protoLogRecord.Flags = (uint)sdkLogRecord.TraceFlags;
         }
 
         // Set event name if available
-        if (!string.IsNullOrEmpty(logRecord.EventId.Name))
+        if (!string.IsNullOrEmpty(sdkLogRecord.EventId.Name))
         {
-            otlpLogRecord.EventName = logRecord.EventId.Name;
+            protoLogRecord.EventName = sdkLogRecord.EventId.Name;
         }
 
-        return otlpLogRecord;
+        return protoLogRecord;
     }
 
-    private static KeyValue CreateKeyValue(string key, object? value)
+    private static OtelProto.Common.V1.KeyValue CreateKeyValue(string key, object? value)
     {
-        var keyValue = new KeyValue { Key = key, Value = new AnyValue() };
+        var keyValue = new OtelProto.Common.V1.KeyValue
+        {
+            Key = key,
+            Value = new OtelProto.Common.V1.AnyValue()
+        };
 
         switch (value)
         {
@@ -220,23 +223,23 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
         return keyValue;
     }
 
-    private static string GetBody(global::OpenTelemetry.Logs.LogRecord logRecord)
+    private static string GetBody(OtelSdk.LogRecord sdkLogRecord)
     {
         // Use FormattedMessage if available
-        var message = logRecord.FormattedMessage;
+        var message = sdkLogRecord.FormattedMessage;
 
         // Otherwise try State
         if (string.IsNullOrEmpty(message))
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            message = logRecord.State?.ToString();
+            message = sdkLogRecord.State?.ToString();
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
         // Otherwise fall back to Body
         if (string.IsNullOrEmpty(message))
         {
-            message = logRecord.Body?.ToString() ?? string.Empty;
+            message = sdkLogRecord.Body?.ToString() ?? string.Empty;
         }
 
         return message ?? string.Empty;
