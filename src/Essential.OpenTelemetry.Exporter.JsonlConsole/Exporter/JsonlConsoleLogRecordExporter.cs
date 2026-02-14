@@ -1,8 +1,7 @@
 using System.Globalization;
+using System.Reflection;
 using Google.Protobuf;
 using OpenTelemetry;
-using OtelSdk = OpenTelemetry.Logs;
-using OtelProto = OpenTelemetry.Proto;
 
 namespace Essential.OpenTelemetry.Exporter;
 
@@ -11,8 +10,13 @@ namespace Essential.OpenTelemetry.Exporter;
 /// Outputs log records in OTLP protobuf JSON format compatible with the
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
 /// </summary>
-public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
+public class JsonlConsoleLogRecordExporter : BaseExporter<global::OpenTelemetry.Logs.LogRecord>
 {
+    private static readonly PropertyInfo? SeverityProperty = typeof(global::OpenTelemetry.Logs.LogRecord).GetProperty(
+        "Severity",
+        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+    );
+
     private static readonly JsonFormatter JsonFormatter = new(
         JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
     );
@@ -29,19 +33,19 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
     }
 
     /// <inheritdoc/>
-    public override ExportResult Export(in Batch<OtelSdk.LogRecord> batch)
+    public override ExportResult Export(in Batch<global::OpenTelemetry.Logs.LogRecord> batch)
     {
         var output = this.options.Output;
 
         // Group log records by scope (category)
-        var scopeGroups = new Dictionary<string, List<OtelSdk.LogRecord>>();
+        var scopeGroups = new Dictionary<string, List<global::OpenTelemetry.Logs.LogRecord>>();
 
         foreach (var sdkLogRecord in batch)
         {
             var categoryName = sdkLogRecord.CategoryName ?? string.Empty;
             if (!scopeGroups.ContainsKey(categoryName))
             {
-                scopeGroups[categoryName] = new List<OtelSdk.LogRecord>();
+                scopeGroups[categoryName] = new List<global::OpenTelemetry.Logs.LogRecord>();
             }
             scopeGroups[categoryName].Add(sdkLogRecord);
         }
@@ -49,18 +53,18 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
         lock (output.SyncRoot)
         {
             // Create OTLP LogsData message
-            var logsData = new OtelProto.Logs.V1.LogsData();
-            var resourceLogs = new OtelProto.Logs.V1.ResourceLogs
+            var logsData = new global::OpenTelemetry.Proto.Logs.V1.LogsData();
+            var resourceLogs = new global::OpenTelemetry.Proto.Logs.V1.ResourceLogs
             {
-                Resource = new OtelProto.Resource.V1.Resource()
+                Resource = new global::OpenTelemetry.Proto.Resource.V1.Resource()
             };
 
             // Add scope logs for each category
             foreach (var scopeGroup in scopeGroups)
             {
-                var scopeLogs = new OtelProto.Logs.V1.ScopeLogs
+                var scopeLogs = new global::OpenTelemetry.Proto.Logs.V1.ScopeLogs
                 {
-                    Scope = new OtelProto.Common.V1.InstrumentationScope { Name = scopeGroup.Key }
+                    Scope = new global::OpenTelemetry.Proto.Common.V1.InstrumentationScope { Name = scopeGroup.Key }
                 };
 
                 // Convert each SDK LogRecord to OTLP proto LogRecord
@@ -83,30 +87,32 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
         return ExportResult.Success;
     }
 
-    private static OtelProto.Logs.V1.LogRecord ConvertToOtlpLogRecord(OtelSdk.LogRecord sdkLogRecord)
+    private static global::OpenTelemetry.Proto.Logs.V1.LogRecord ConvertToOtlpLogRecord(global::OpenTelemetry.Logs.LogRecord sdkLogRecord)
     {
         // Convert DateTime to Unix nanoseconds
         var timestampUnixNano =
             (ulong)((DateTimeOffset)sdkLogRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
 
-        var protoLogRecord = new OtelProto.Logs.V1.LogRecord
+        var protoLogRecord = new global::OpenTelemetry.Proto.Logs.V1.LogRecord
         {
             TimeUnixNano = timestampUnixNano,
             ObservedTimeUnixNano = timestampUnixNano
         };
 
         // Set severity
-        if (sdkLogRecord.Severity.HasValue)
+        var severityValue = SeverityProperty?.GetValue(sdkLogRecord);
+        if (severityValue != null)
         {
-            protoLogRecord.SeverityNumber = (OtelProto.Logs.V1.SeverityNumber)(int)sdkLogRecord.Severity.Value;
-            protoLogRecord.SeverityText = GetSeverityText((int)sdkLogRecord.Severity.Value);
+            var severityInt = (int)severityValue;
+            protoLogRecord.SeverityNumber = (global::OpenTelemetry.Proto.Logs.V1.SeverityNumber)severityInt;
+            protoLogRecord.SeverityText = GetSeverityText(severityInt);
         }
 
         // Set body
         var body = GetBody(sdkLogRecord);
         if (!string.IsNullOrEmpty(body))
         {
-            protoLogRecord.Body = new OtelProto.Common.V1.AnyValue { StringValue = body };
+            protoLogRecord.Body = new global::OpenTelemetry.Proto.Common.V1.AnyValue { StringValue = body };
         }
 
         // Add event ID as attributes if present
@@ -160,12 +166,12 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
         return protoLogRecord;
     }
 
-    private static OtelProto.Common.V1.KeyValue CreateKeyValue(string key, object? value)
+    private static global::OpenTelemetry.Proto.Common.V1.KeyValue CreateKeyValue(string key, object? value)
     {
-        var keyValue = new OtelProto.Common.V1.KeyValue
+        var keyValue = new global::OpenTelemetry.Proto.Common.V1.KeyValue
         {
             Key = key,
-            Value = new OtelProto.Common.V1.AnyValue()
+            Value = new global::OpenTelemetry.Proto.Common.V1.AnyValue()
         };
 
         switch (value)
@@ -223,7 +229,7 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<OtelSdk.LogRecord>
         return keyValue;
     }
 
-    private static string GetBody(OtelSdk.LogRecord sdkLogRecord)
+    private static string GetBody(global::OpenTelemetry.Logs.LogRecord sdkLogRecord)
     {
         // Use FormattedMessage if available
         var message = sdkLogRecord.FormattedMessage;
