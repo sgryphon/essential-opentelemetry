@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
@@ -95,11 +95,7 @@ public class JsonlConsoleLogRecordExporterTests
         {
             // Parse enum string like "SEVERITY_NUMBER_WARN" or just the number as string
             var sevStr = severityNumber.GetString();
-            if (int.TryParse(sevStr, out sevNum))
-            {
-                // It's a numeric string
-            }
-            else
+            if (!int.TryParse(sevStr, out sevNum))
             {
                 // It's an enum name, we need to map it
                 Assert.True(

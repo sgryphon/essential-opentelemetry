@@ -119,15 +119,16 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
             protoLogRecord.Body = new ProtoCommon.AnyValue { StringValue = body };
         }
 
-        // Add event ID as attributes if present
+        // Set event name if available
+        if (!string.IsNullOrEmpty(sdkLogRecord.EventId.Name))
+        {
+            protoLogRecord.EventName = sdkLogRecord.EventId.Name;
+        }
+
+        // Add event ID as attribute if present
         if (sdkLogRecord.EventId.Id != 0)
         {
             protoLogRecord.Attributes.Add(CreateKeyValue("event.id", sdkLogRecord.EventId.Id));
-        }
-
-        if (!string.IsNullOrEmpty(sdkLogRecord.EventId.Name))
-        {
-            protoLogRecord.Attributes.Add(CreateKeyValue("event.name", sdkLogRecord.EventId.Name));
         }
 
         // Add attributes from the log record
@@ -159,12 +160,6 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         if (sdkLogRecord.TraceFlags != default)
         {
             protoLogRecord.Flags = (uint)sdkLogRecord.TraceFlags;
-        }
-
-        // Set event name if available
-        if (!string.IsNullOrEmpty(sdkLogRecord.EventId.Name))
-        {
-            protoLogRecord.EventName = sdkLogRecord.EventId.Name;
         }
 
         return protoLogRecord;
