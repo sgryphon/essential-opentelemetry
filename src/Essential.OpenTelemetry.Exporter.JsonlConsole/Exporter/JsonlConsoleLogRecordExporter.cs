@@ -245,7 +245,8 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
                 writer.WriteNumber("intValue", l);
                 break;
             case ulong ul:
-                writer.WriteNumber("intValue", (long)ul);
+                // Write as string to avoid overflow
+                writer.WriteString("intValue", ul.ToString(CultureInfo.InvariantCulture));
                 break;
             case float f:
                 writer.WriteNumber("doubleValue", f);
@@ -254,7 +255,8 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<LogRecord>
                 writer.WriteNumber("doubleValue", d);
                 break;
             case decimal dec:
-                writer.WriteNumber("doubleValue", (double)dec);
+                // Write as string to preserve precision
+                writer.WriteString("stringValue", dec.ToString(CultureInfo.InvariantCulture));
                 break;
             default:
                 // For other types, convert to string
