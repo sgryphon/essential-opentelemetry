@@ -1,10 +1,10 @@
-# Essential OpenTelemetry JSONL Console Exporter
+# Essential OpenTelemetry OTLP File Exporter
 
-JSONL (JSON Lines) console exporter for OpenTelemetry .NET that outputs OpenTelemetry log signals to console in JSONL format compatible with the OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
+OTLP File exporter for OpenTelemetry .NET that outputs OpenTelemetry log signals to stdout (console) or files in JSONL format compatible with the OpenTelemetry Protocol File Exporter specification and OTLP JSON File Receiver.
 
 ## Overview
 
-This exporter outputs telemetry data in JSON Lines format to the console, with each line being a valid JSON object representing an OpenTelemetry log signal in OTLP protobuf JSON format. This format is compatible with:
+This exporter implements the [OpenTelemetry Protocol File Exporter specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/file-exporter.md), outputting telemetry data in JSON Lines format to stdout (console). Each line is a valid JSON object representing an OpenTelemetry log signal in OTLP protobuf JSON format. This format is compatible with:
 
 - [OpenTelemetry Collector File Exporter](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/exporter/fileexporter)
 - [OTLP JSON File Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/otlpjsonfilereceiver)
@@ -21,7 +21,7 @@ This exporter outputs telemetry data in JSON Lines format to the console, with e
 ## Installation
 
 ```bash
-dotnet add package Essential.OpenTelemetry.Exporter.JsonlConsole
+dotnet add package Essential.OpenTelemetry.Exporter.OtlpFile
 ```
 
 ## Usage
@@ -33,11 +33,11 @@ using Essential.OpenTelemetry;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 
-// Configure logging with JSONL console exporter
+// Configure logging with OTLP file exporter
 using var loggerFactory = LoggerFactory.Create(logging =>
     logging.AddOpenTelemetry(options =>
     {
-        options.AddJsonlConsoleExporter();
+        options.AddOtlpFileExporter();
     })
 );
 
@@ -58,7 +58,7 @@ builder
     .Services.AddOpenTelemetry()
     .WithLogging(logging =>
     {
-        logging.AddJsonlConsoleExporter();
+        logging.AddOtlpFileExporter();
     });
 
 var host = builder.Build();
