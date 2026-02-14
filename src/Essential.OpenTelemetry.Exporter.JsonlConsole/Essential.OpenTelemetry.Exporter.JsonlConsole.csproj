@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net9.0;net8.0;netstandard2.1;netstandard2.0</TargetFrameworks>
+    <Description>JSONL Console exporter for OpenTelemetry .NET</Description>
+    <RootNamespace>Essential.OpenTelemetry</RootNamespace>
+    <ReferenceSystemTextJsonPackages>true</ReferenceSystemTextJsonPackages>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'netstandard2.1'">
+    <LangVersion>10.0</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Label="NuGet Package Metadata">
+    <PackageId>Essential.OpenTelemetry.Exporter.JsonlConsole</PackageId>
+    <Title>Essential OpenTelemetry JSONL Console Exporter</Title>
+    <Authors>Gryphon Technology Pty Ltd</Authors>
+    <Company>Gryphon Technology Pty Ltd</Company>
+    <Product>Essential .NET OpenTelemetry</Product>
+    <Copyright>Copyright (C) 2026 Gryphon Technology Pty Ltd</Copyright>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/sgryphon/essential-opentelemetry</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/sgryphon/essential-opentelemetry</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>opentelemetry;diagnostics;logging;tracing;metrics;console;exporter;jsonl;dotnet</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>diagnostics-logo-64.png</PackageIcon>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>$(NoWarn),CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <None Include="..\..\docs\images\diagnostics-logo-64.png" Pack="true" PackagePath="" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry" Version="1.15.0" />
+  </ItemGroup>
+  <!-- Microsoft.Extensions.Hosting version should match the target framework version -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net10.0'))">
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Essential.OpenTelemetry.Exporter.JsonlConsole.Tests" />
+  </ItemGroup>
+</Project>

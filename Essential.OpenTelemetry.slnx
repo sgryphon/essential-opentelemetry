@@ -11,10 +11,14 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/Essential.OpenTelemetry.Exporter.ColoredConsole/Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
+    <Project Path="src/Essential.OpenTelemetry.Exporter.JsonlConsole/Essential.OpenTelemetry.Exporter.JsonlConsole.csproj" />
   </Folder>
   <Folder Name="/test/" />
   <Folder Name="/test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/">
     <Project Path="test/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests/Essential.OpenTelemetry.Exporter.ColoredConsole.Tests.csproj" />
+  </Folder>
+  <Folder Name="/test/Essential.OpenTelemetry.Exporter.JsonlConsole.Tests/">
+    <Project Path="test/Essential.OpenTelemetry.Exporter.JsonlConsole.Tests/Essential.OpenTelemetry.Exporter.JsonlConsole.Tests.csproj" />
   </Folder>
   <Folder Name="/test/Essential.OpenTelemetry.Performance/">
     <Project Path="test/Essential.OpenTelemetry.Performance/Essential.OpenTelemetry.Performance.csproj" />
