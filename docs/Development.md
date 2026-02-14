@@ -1,5 +1,13 @@
 # Development notes
 
+## Getting the code
+
+This repository uses a git submodule for OpenTelemetry proto files. After cloning the repository, initialize the submodule:
+
+```powershell
+git submodule update --init --recursive
+```
+
 ## Development tools
 
 Several .NET tools are used; restore them for use during development.
