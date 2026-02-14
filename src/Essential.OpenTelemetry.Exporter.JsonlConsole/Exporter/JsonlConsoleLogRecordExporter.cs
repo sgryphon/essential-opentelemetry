@@ -93,9 +93,11 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 
     private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
     {
-        // Convert DateTime to Unix nanoseconds
-        var timestampUnixNano =
-            (ulong)((DateTimeOffset)sdkLogRecord.Timestamp).ToUnixTimeMilliseconds() * 1_000_000;
+        // Convert DateTimeOffset to Unix nanoseconds
+        var unixTimeTicks =
+            ((DateTimeOffset)sdkLogRecord.Timestamp).ToUniversalTime().Ticks
+            - DateTimeOffset.UnixEpoch.Ticks;
+        var timestampUnixNano = (ulong)unixTimeTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
 
         var protoLogRecord = new ProtoLogs.LogRecord
         {
