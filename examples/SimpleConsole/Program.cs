@@ -55,10 +55,17 @@ Console.WriteLine($"Running on {FrameworkVersion}");
 // Create a simple activity (span)
 using (var activity = activitySource.StartActivity("SampleOperation"))
 {
-    logger.LogInformation($"Hello world from {FrameworkVersion}");
+    logger.HelloWorld(FrameworkVersion);
     requestCounter.Add(1);
 }
 
 // Force flush to ensure all telemetry is exported before exit
 meterProvider.ForceFlush();
 tracerProvider.ForceFlush();
+
+// Source-generated log methods
+internal static partial class LoggerExtensions
+{
+    [LoggerMessage(Level = LogLevel.Information, Message = "Hello world from {FrameworkVersion}")]
+    public static partial void HelloWorld(this ILogger logger, string frameworkVersion);
+}
