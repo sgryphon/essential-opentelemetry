@@ -43,7 +43,7 @@ jobs:
         run: dotnet build Essential.OpenTelemetry.slnx --no-restore --configuration Release
 
       - name: Run tests with coverage
-        run: dotnet test Essential.OpenTelemetry.slnx --no-build --configuration Release --verbosity normal --collect:"XPlat Code Coverage" --results-directory ./coverage
+        run: dotnet test Essential.OpenTelemetry.slnx --no-build --configuration Release --verbosity normal --settings coverage.runsettings --results-directory ./coverage
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -55,7 +55,7 @@ jobs:
       - name: Generate coverage report
         if: always()
         run: |
-          dotnet tool run reportgenerator -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:"Html;MarkdownSummary" || true
+          dotnet tool run reportgenerator -reports:"./coverage/**/coverage.cobertura.xml" -targetdir:"./coverage-report" -reporttypes:"Html;MarkdownSummary" -assemblyfilters:"+Essential.*" || true
 
       - name: Upload coverage report
         if: always()
