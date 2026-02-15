@@ -26,7 +26,6 @@ processors:
 exporters:
   # Debug exporter for troubleshooting
   debug:
-    verbosity: detailed
     sampling_initial: 5
     sampling_thereafter: 1
 
@@ -39,6 +38,8 @@ exporters:
   # OTLP file exporter - writes telemetry to files
   file:
     path: /data/output/telemetry.jsonl
+    create_directory: true
+    flush_interval: 5s
 
 service:
   pipelines:
@@ -46,6 +47,3 @@ service:
       receivers: [otlpjsonfile, otlp]
       processors: [batch]
       exporters: [debug, otlp_grpc]
-  telemetry:
-    logs:
-      level: debug

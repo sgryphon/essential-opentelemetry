@@ -134,8 +134,10 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         {
             var severityInt = (int)severityValue;
             protoLogRecord.SeverityNumber = (ProtoLogs.SeverityNumber)severityInt;
-            protoLogRecord.SeverityText = GetSeverityText(severityInt);
         }
+
+        // Original string representation of the severity as it is known at the source
+        protoLogRecord.SeverityText = sdkLogRecord.LogLevel.ToString();
 
         // Set body
         var body = GetBody(sdkLogRecord);
