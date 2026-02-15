@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Description>Unit test project for JSONL Console Exporter for OpenTelemetry</Description>
+    <Description>Unit test project for OTLP File Exporter for OpenTelemetry</Description>
     <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -28,6 +28,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Essential.OpenTelemetry.Exporter.JsonlConsole\Essential.OpenTelemetry.Exporter.JsonlConsole.csproj" />
+    <ProjectReference Include="..\..\src\Essential.OpenTelemetry.Exporter.OtlpFile\Essential.OpenTelemetry.Exporter.OtlpFile.csproj" />
   </ItemGroup>
 </Project>

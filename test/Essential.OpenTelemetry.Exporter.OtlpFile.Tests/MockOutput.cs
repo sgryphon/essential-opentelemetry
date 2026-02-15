@@ -1,6 +1,6 @@
 using Essential.System;
 
-namespace Essential.OpenTelemetry.Exporter.JsonlConsole.Tests;
+namespace Essential.OpenTelemetry.Exporter.OtlpFile.Tests;
 
 /// <summary>
 /// Mock implementation of IOutput for testing.

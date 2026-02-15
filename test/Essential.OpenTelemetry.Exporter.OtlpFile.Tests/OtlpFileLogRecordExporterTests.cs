@@ -5,10 +5,10 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Engine.ClientProtocol;
 using OpenTelemetry.Logs;
 using Xunit;
 
-namespace Essential.OpenTelemetry.Exporter.JsonlConsole.Tests;
+namespace Essential.OpenTelemetry.Exporter.OtlpFile.Tests;
 
-[Collection("JsonlConsoleTests")]
-public class JsonlConsoleLogRecordExporterTests
+[Collection("OtlpFileTests")]
+public class OtlpFileLogRecordExporterTests
 {
     [Fact]
     public void BasicLogExportTest()
@@ -18,7 +18,7 @@ public class JsonlConsoleLogRecordExporterTests
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
-                options.AddJsonlConsoleExporter(configure =>
+                options.AddOtlpFileExporter(configure =>
                 {
                     configure.Output = mockOutput;
                 });
@@ -26,7 +26,7 @@ public class JsonlConsoleLogRecordExporterTests
         );
 
         // Act
-        var logger = loggerFactory.CreateLogger<JsonlConsoleLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
 #pragma warning disable CA1848
         logger.LogInformation("Test log message");
 #pragma warning restore CA1848
@@ -64,7 +64,7 @@ public class JsonlConsoleLogRecordExporterTests
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
-                options.AddJsonlConsoleExporter(configure =>
+                options.AddOtlpFileExporter(configure =>
                 {
                     configure.Output = mockOutput;
                 });
@@ -72,7 +72,7 @@ public class JsonlConsoleLogRecordExporterTests
         );
 
         // Act
-        var logger = loggerFactory.CreateLogger<JsonlConsoleLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
 #pragma warning disable CA1848
         logger.LogWarning("Warning message");
 #pragma warning restore CA1848
@@ -97,7 +97,7 @@ public class JsonlConsoleLogRecordExporterTests
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
-                options.AddJsonlConsoleExporter(configure =>
+                options.AddOtlpFileExporter(configure =>
                 {
                     configure.Output = mockOutput;
                 });
@@ -105,7 +105,7 @@ public class JsonlConsoleLogRecordExporterTests
         );
 
         // Act
-        var logger = loggerFactory.CreateLogger<JsonlConsoleLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
 #pragma warning disable CA1848
         logger.Log(LogLevel.Information, new EventId(42, "TestEvent"), "Event message");
 #pragma warning restore CA1848
@@ -145,7 +145,7 @@ public class JsonlConsoleLogRecordExporterTests
             logging.AddOpenTelemetry(options =>
             {
                 options.IncludeFormattedMessage = true;
-                options.AddJsonlConsoleExporter(configure =>
+                options.AddOtlpFileExporter(configure =>
                 {
                     configure.Output = mockOutput;
                 });
@@ -153,7 +153,7 @@ public class JsonlConsoleLogRecordExporterTests
         );
 
         // Act
-        var logger = loggerFactory.CreateLogger<JsonlConsoleLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
         var userName = "Alice";
         var userId = 123;
 #pragma warning disable CA1848
@@ -199,7 +199,7 @@ public class JsonlConsoleLogRecordExporterTests
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
-                options.AddJsonlConsoleExporter(configure =>
+                options.AddOtlpFileExporter(configure =>
                 {
                     configure.Output = mockOutput;
                 });
@@ -241,7 +241,7 @@ public class JsonlConsoleLogRecordExporterTests
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
-                options.AddJsonlConsoleExporter(configure =>
+                options.AddOtlpFileExporter(configure =>
                 {
                     configure.Output = mockOutput;
                 });
@@ -249,7 +249,7 @@ public class JsonlConsoleLogRecordExporterTests
         );
 
         // Act
-        var logger = loggerFactory.CreateLogger<JsonlConsoleLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
 #pragma warning disable CA1848
         logger.LogInformation("Message 1");
         logger.LogInformation("Message 2");
@@ -286,7 +286,7 @@ public class JsonlConsoleLogRecordExporterTests
                 .SetMinimumLevel(LogLevel.Trace)
                 .AddOpenTelemetry(options =>
                 {
-                    options.AddJsonlConsoleExporter(configure =>
+                    options.AddOtlpFileExporter(configure =>
                     {
                         configure.Output = mockOutput;
                     });
@@ -294,7 +294,7 @@ public class JsonlConsoleLogRecordExporterTests
         );
 
         // Act
-        var logger = loggerFactory.CreateLogger<JsonlConsoleLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
 #pragma warning disable CA1848
 #pragma warning disable CA2254
         logger.Log(logLevel, "Test message");
