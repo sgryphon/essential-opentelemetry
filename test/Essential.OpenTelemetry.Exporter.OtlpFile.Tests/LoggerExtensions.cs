@@ -11,7 +11,7 @@ internal static partial class LoggerExtensions
     public static partial void OperationError(
         this ILogger logger,
         Exception ex,
-        string orderid,
+        string orderId,
         decimal amount
     );
 }
