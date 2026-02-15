@@ -12,7 +12,7 @@ namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 /// Threading tests for ColoredConsoleLogRecordExporter.
 /// </summary>
 [Collection("ColoredConsoleTests")]
-public class ThreadingTests
+public class ThreadingTests(ITestContextAccessor tc)
 {
 #if NETCOREAPP2_1_OR_GREATER
     private static readonly Func<string, string, StringComparison, bool> Contains = (
@@ -99,21 +99,30 @@ public class ThreadingTests
 
         Console.WriteLine($"Start: {getUtcNow():HH:mm:ss.fff}");
 
-        var t1 = Task.Run(async () =>
-        {
-            await Task.Delay(400);
-            loggerInfo.TestLog($"Info message second {getUtcNow():HH:mm:ss.fff}");
-        });
-        var t2 = Task.Run(async () =>
-        {
-            await Task.Delay(0);
-            loggerWarn.TestWarn($"Warning message first {getUtcNow():HH:mm:ss.fff}");
-        });
-        var t3 = Task.Run(async () =>
-        {
-            await Task.Delay(800);
-            loggerFail.TestError($"Error message third {getUtcNow():HH:mm:ss.fff}");
-        });
+        var t1 = Task.Run(
+            async () =>
+            {
+                await Task.Delay(400, tc.Current.CancellationToken);
+                loggerInfo.TestLog($"Info message second {getUtcNow():HH:mm:ss.fff}");
+            },
+            tc.Current.CancellationToken
+        );
+        var t2 = Task.Run(
+            async () =>
+            {
+                await Task.Delay(0, tc.Current.CancellationToken);
+                loggerWarn.TestWarn($"Warning message first {getUtcNow():HH:mm:ss.fff}");
+            },
+            tc.Current.CancellationToken
+        );
+        var t3 = Task.Run(
+            async () =>
+            {
+                await Task.Delay(800, tc.Current.CancellationToken);
+                loggerFail.TestError($"Error message third {getUtcNow():HH:mm:ss.fff}");
+            },
+            tc.Current.CancellationToken
+        );
 
         await Task.WhenAll(t1, t2, t3);
 

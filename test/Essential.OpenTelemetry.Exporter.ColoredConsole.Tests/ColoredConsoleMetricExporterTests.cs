@@ -7,7 +7,7 @@ using Xunit;
 namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 
 [Collection("ColoredConsoleTests")]
-public class ColoredConsoleMetricExporterTests
+public class ColoredConsoleMetricExporterTests(ITestContextAccessor tc)
 {
     [Fact]
     public async Task BasicMetricOutputTest()
@@ -34,7 +34,7 @@ public class ColoredConsoleMetricExporterTests
         var counter = meter.CreateCounter<int>("counter", "things", "A count of things");
 
         counter?.Add(10);
-        await Task.Delay(150);
+        await Task.Delay(150, tc.Current.CancellationToken);
 
         // Assert
         var output = mockConsole.GetOutput();
@@ -75,7 +75,7 @@ public class ColoredConsoleMetricExporterTests
         var counter = meter.CreateCounter<int>("counter", "things", "A count of things");
 
         counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
-        await Task.Delay(150);
+        await Task.Delay(150, tc.Current.CancellationToken);
 
         // Assert
         var output = mockConsole.GetOutput();
@@ -115,22 +115,22 @@ public class ColoredConsoleMetricExporterTests
         // Act
         var counter = meter.CreateCounter<int>("counter", "things", "A count of things");
 
-        await Task.Delay(600);
+        await Task.Delay(600, tc.Current.CancellationToken);
 
         counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
-        await Task.Delay(50);
+        await Task.Delay(50, tc.Current.CancellationToken);
 
         counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
-        await Task.Delay(350);
+        await Task.Delay(350, tc.Current.CancellationToken);
 
-        await Task.Delay(600);
+        await Task.Delay(600, tc.Current.CancellationToken);
         counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
-        await Task.Delay(50);
+        await Task.Delay(50, tc.Current.CancellationToken);
 
         counter?.Add(100, new KeyValuePair<string, object?>("tag1", "value1"));
-        await Task.Delay(350);
+        await Task.Delay(350, tc.Current.CancellationToken);
 
-        await Task.Delay(600);
+        await Task.Delay(600, tc.Current.CancellationToken);
 
         // Assert
         var output = mockConsole.GetOutput();
@@ -182,7 +182,7 @@ public class ColoredConsoleMetricExporterTests
         histogram?.Record(100, new KeyValuePair<string, object?>("tag1", "value1"));
         histogram?.Record(150, new KeyValuePair<string, object?>("tag1", "value1"));
 
-        await Task.Delay(150);
+        await Task.Delay(150, tc.Current.CancellationToken);
 
         // Assert
         var output = mockConsole.GetOutput();
@@ -227,7 +227,7 @@ public class ColoredConsoleMetricExporterTests
         var counter = meter.CreateCounter<int>("counter", "things", "A count of things");
 
         counter?.Add(10);
-        await Task.Delay(150);
+        await Task.Delay(150, tc.Current.CancellationToken);
 
         // Assert
         var output = mockConsole.GetOutput();
@@ -262,7 +262,7 @@ public class ColoredConsoleMetricExporterTests
         var counter = meter.CreateCounter<int>("counter");
 
         counter?.Add(10);
-        await Task.Delay(150);
+        await Task.Delay(150, tc.Current.CancellationToken);
 
         // Assert
         var output = mockConsole.GetOutput();

@@ -16,6 +16,20 @@ namespace Essential.OpenTelemetry.Exporter;
 /// </summary>
 public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 {
+#if NETSTANDARD2_1_OR_GREATER
+    private static readonly long UnixEpochTicks = DateTimeOffset.UnixEpoch.Ticks;
+#else
+    private static readonly long UnixEpochTicks = new DateTimeOffset(
+        1970,
+        1,
+        1,
+        0,
+        0,
+        0,
+        TimeSpan.Zero
+    ).Ticks;
+#endif
+
     private static readonly PropertyInfo? SeverityProperty = typeof(SdkLogs.LogRecord).GetProperty(
         "Severity",
         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
@@ -94,10 +108,9 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
     private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
     {
         // Convert DateTimeOffset to Unix nanoseconds
-        var unixTimeTicks =
-            ((DateTimeOffset)sdkLogRecord.Timestamp).ToUniversalTime().Ticks
-            - DateTimeOffset.UnixEpoch.Ticks;
-        var timestampUnixNano = (ulong)unixTimeTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
+        var unixTicks =
+            ((DateTimeOffset)sdkLogRecord.Timestamp).ToUniversalTime().Ticks - UnixEpochTicks;
+        var timestampUnixNano = (ulong)unixTicks * 1_000_000 / TimeSpan.TicksPerMillisecond;
 
         var protoLogRecord = new ProtoLogs.LogRecord
         {
