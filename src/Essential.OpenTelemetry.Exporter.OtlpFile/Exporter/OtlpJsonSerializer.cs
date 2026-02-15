@@ -42,7 +42,7 @@ internal static class OtlpJsonSerializer
     /// <param name="output">The stream to write the JSON output to.</param>
     internal static void SerializeLogsData(ProtoLogs.LogsData logsData, Stream output)
     {
-        using (var writer = new Utf8JsonWriter(output))
+        using (var writer = new Utf8JsonWriter(output, options: default, leaveOpen: true))
         {
             WriteLogsData(writer, logsData);
         }
