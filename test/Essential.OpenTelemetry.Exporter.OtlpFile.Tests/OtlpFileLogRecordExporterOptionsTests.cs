@@ -111,6 +111,8 @@ public class OtlpFileLogRecordExporterOptionsTests
 
         // Assert - should export successfully with nested scopes
         Assert.Single(mockOutput.Lines);
+        Console.WriteLine("OUTPUT: " + mockOutput.Lines[0]);
+
         var doc = JsonDocument.Parse(mockOutput.Lines[0]);
         var logRecord = doc
             .RootElement.GetProperty("resourceLogs")[0]
@@ -141,7 +143,7 @@ public class OtlpFileLogRecordExporterOptionsTests
         );
         Assert.Equal(
             "REQ-123",
-            attributes["Requestion"].GetProperty("value").GetProperty("stringValue").GetString()
+            attributes["RequestId"].GetProperty("value").GetProperty("stringValue").GetString()
         );
     }
 }

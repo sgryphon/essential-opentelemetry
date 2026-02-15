@@ -87,7 +87,7 @@ public class OtlpFileLogRecordExporterTests
             .GetProperty("logRecords")[0];
 
         Assert.Equal(13, logRecord.GetProperty("severityNumber").GetInt32());
-        Assert.Equal("Warn", logRecord.GetProperty("severityText").GetString());
+        Assert.Equal("Warning", logRecord.GetProperty("severityText").GetString());
     }
 
     [Fact]
@@ -168,10 +168,9 @@ public class OtlpFileLogRecordExporterTests
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
-        // Check body contains the original template (not formatted message)
-        // per OTLP format, parameter values are in attributes
+        // Include formatted option is enabled
         var body = logRecord.GetProperty("body").GetProperty("stringValue").GetString();
-        Assert.Equal("User {UserName} with ID {UserId} logged in", body);
+        Assert.Equal("User Alice with ID 123 logged in", body);
 
         // Check attributes contain the structured data
         var attributes = logRecord
@@ -272,13 +271,17 @@ public class OtlpFileLogRecordExporterTests
     }
 
     [Theory]
-    [InlineData(LogLevel.Trace, "Trace")]
-    [InlineData(LogLevel.Debug, "Debug")]
-    [InlineData(LogLevel.Information, "Info")]
-    [InlineData(LogLevel.Warning, "Warn")]
-    [InlineData(LogLevel.Error, "Error")]
-    [InlineData(LogLevel.Critical, "Fatal")]
-    public void SeverityLevelMappingTest(LogLevel logLevel, string expectedSeverityText)
+    [InlineData(LogLevel.Trace, "Trace", 1)]
+    [InlineData(LogLevel.Debug, "Debug", 5)]
+    [InlineData(LogLevel.Information, "Information", 9)]
+    [InlineData(LogLevel.Warning, "Warning", 13)]
+    [InlineData(LogLevel.Error, "Error", 17)]
+    [InlineData(LogLevel.Critical, "Critical", 21)]
+    public void SeverityLevelMappingTest(
+        LogLevel logLevel,
+        string expectedSeverityText,
+        int expectedSeverityNumber
+    )
     {
         // Arrange
         var mockOutput = new MockConsole();
@@ -311,6 +314,9 @@ public class OtlpFileLogRecordExporterTests
 
         Assert.True(logRecord.TryGetProperty("severityText", out var severityText));
         Assert.Equal(expectedSeverityText, severityText.GetString());
+
+        Assert.True(logRecord.TryGetProperty("severityNumber", out var severityNumber));
+        Assert.Equal(expectedSeverityNumber, severityNumber.GetInt32());
     }
 
     [Fact]
@@ -518,6 +524,7 @@ public class OtlpFileLogRecordExporterTests
         //               "severityText": "Error",
         Assert.Equal("Error", logRecord.GetProperty("severityText").GetString());
 
+        // NOTE: IncludeFormattedMessage option is not set, so body contains the placeholders
         //               "body": {
         //                 "stringValue": "Exception caught while processing order {OrderId} for {Amount:C}"
         //               },
