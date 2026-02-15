@@ -55,12 +55,20 @@ builder
         // {
         //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
         // });
+        // logging.AddConsoleExporter();
         logging.AddOtlpFileExporter();
     })
     .WithTracing(tracing =>
     {
         tracing.AddSource(serviceName);
     });
+
+// Configure logging options
+builder.Services.Configure<OpenTelemetryLoggerOptions>(options =>
+{
+    options.IncludeFormattedMessage = true;
+    options.IncludeScopes = true;
+});
 
 var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
@@ -77,7 +85,13 @@ using (var activity = activitySource.StartActivity("OrderProcessing"))
     activity?.SetTag("order.id", "ORD-789");
     activity?.SetTag("order.amount", 150.00);
 
-    logger.ProcessingOrder("ORD-789", 150.00m);
+    using (logger.BeginScope("Request {RequestId}", "REQ-123"))
+    {
+        using (logger.BeginScope("Inner Scope"))
+        {
+            logger.ProcessingOrder("ORD-789", 150);
+        }
+    }
     logger.ResourceRunningLow("disk space");
 }
 

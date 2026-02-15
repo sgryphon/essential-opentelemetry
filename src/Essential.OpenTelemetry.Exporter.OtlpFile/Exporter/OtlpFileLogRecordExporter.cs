@@ -134,8 +134,10 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         {
             var severityInt = (int)severityValue;
             protoLogRecord.SeverityNumber = (ProtoLogs.SeverityNumber)severityInt;
-            protoLogRecord.SeverityText = GetSeverityText(severityInt);
         }
+
+        // Original string representation of the severity as it is known at the source
+        protoLogRecord.SeverityText = sdkLogRecord.LogLevel.ToString();
 
         // Set body
         var body = GetBody(sdkLogRecord);
@@ -164,6 +166,11 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
                 protoLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
             }
         }
+
+        // Add scope attributes if present
+        // When IncludeScopes is enabled, scope values are added as regular attributes,
+        // matching the OpenTelemetry Collector file exporter behavior.
+        sdkLogRecord.ForEachScope(ProcessScope, protoLogRecord);
 
         // Add exception attributes if present
         if (sdkLogRecord.Exception != null)
@@ -263,41 +270,36 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         return keyValue;
     }
 
+    private static void ProcessScope(
+        SdkLogs.LogRecordScope scope,
+        ProtoLogs.LogRecord protoLogRecord
+    )
+    {
+        foreach (var attribute in scope)
+        {
+            // Skip the format string scope entries (e.g. "{OriginalFormat}" from BeginScope)
+            if (attribute.Key == "{OriginalFormat}")
+            {
+                continue;
+            }
+
+            protoLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
+        }
+    }
+
     private static string GetBody(SdkLogs.LogRecord sdkLogRecord)
     {
-        // For OTLP format, prefer the Body property which contains the original
-        // message template/format string. Parameter values are in attributes.
-        var message = sdkLogRecord.Body;
+        // If options.IncludeFormattedMessage is set,
+        // then we want to send the formatted message as Body
+        // (and OriginalFormat will be an attribute)
+        var message = sdkLogRecord.FormattedMessage;
 
-        // Fall back to FormattedMessage if Body is not available
+        // Fall back to Body if FormattedMessage is not available
         if (string.IsNullOrEmpty(message))
         {
-            message = sdkLogRecord.FormattedMessage;
-        }
-
-        // Fall back to State.ToString() as last resort
-        if (string.IsNullOrEmpty(message))
-        {
-#pragma warning disable CS0618 // Type or member is obsolete
-            message = sdkLogRecord.State?.ToString();
-#pragma warning restore CS0618 // Type or member is obsolete
+            message = sdkLogRecord.Body;
         }
 
         return message ?? string.Empty;
-    }
-
-    private static string GetSeverityText(int severityNumber)
-    {
-        // Map OpenTelemetry severity numbers to text
-        return severityNumber switch
-        {
-            >= 1 and <= 4 => "Trace",
-            >= 5 and <= 8 => "Debug",
-            >= 9 and <= 12 => "Info",
-            >= 13 and <= 16 => "Warn",
-            >= 17 and <= 20 => "Error",
-            >= 21 and <= 24 => "Fatal",
-            _ => string.Empty,
-        };
     }
 }
