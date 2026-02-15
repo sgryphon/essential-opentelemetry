@@ -1,6 +1,7 @@
 ﻿// OtlpFile Exporter example for OpenTelemetry Collector verification
 // This example outputs logs in OTLP file format that can be consumed by the OTel Collector
 using System.Diagnostics;
+using System.Net;
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -30,7 +31,7 @@ logger.DebugMessage();
 logger.CriticalSystemFailure("payment-service");
 
 // Structured logging with multiple attributes
-logger.UserLoggedIn("Alice", "192.168.1.100", DateTime.UtcNow);
+logger.UserLoggedIn("Alice", IPAddress.Parse("fdbe:4f24:c288:3b1b::4"), DateTimeOffset.UtcNow);
 
 // Log within an activity to include trace context
 using (var activity = activitySource.StartActivity("OrderProcessing"))

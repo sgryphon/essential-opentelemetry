@@ -9,6 +9,14 @@ receivers:
     # Start from the beginning of the file
     start_at: beginning
 
+  # Standard OTLP receiver (gRPC and HTTP)
+  otlp:
+    protocols:
+      grpc:
+        endpoint: "[::]:4317"
+      http:
+        endpoint: "[::]:4318"
+
 processors:
   # Batch processor for efficiency
   batch:
@@ -28,12 +36,24 @@ exporters:
     tls:
       insecure: true
 
+  # OTLP file exporter - writes telemetry to files
+  file:
+    path: /data/output/telemetry.jsonl
+
 service:
   pipelines:
     logs:
-      receivers: [otlpjsonfile]
+      receivers: [otlpjsonfile, otlp]
       processors: [batch]
-      exporters: [debug, otlp]
+      exporters: [debug, otlp, file]
+    traces:
+      receivers: [otlpjsonfile, otlp]
+      processors: [batch]
+      exporters: [debug, otlp, file]
+    metrics:
+      receivers: [otlpjsonfile, otlp]
+      processors: [batch]
+      exporters: [debug, otlp, file]
   telemetry:
     logs:
       level: debug

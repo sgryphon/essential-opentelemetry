@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Net;
+using Microsoft.Extensions.Logging;
 
 internal static partial class LoggerExtensions
 {
@@ -17,8 +18,8 @@ internal static partial class LoggerExtensions
     public static partial void UserLoggedIn(
         this ILogger logger,
         string userName,
-        string ipAddress,
-        DateTime timestamp
+        IPAddress ipAddress,
+        DateTimeOffset timestamp
     );
 
     [LoggerMessage(
