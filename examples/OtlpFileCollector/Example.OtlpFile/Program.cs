@@ -36,7 +36,7 @@ builder
     .Services.AddOpenTelemetry()
     .ConfigureResource(resource =>
         resource
-            .AddService(serviceName, serviceVersion)
+            .AddService(serviceName, serviceVersion: serviceVersion)
             .AddAttributes(
                 new KeyValuePair<string, object>[]
                 {

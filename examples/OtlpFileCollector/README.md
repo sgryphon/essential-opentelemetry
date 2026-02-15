@@ -49,7 +49,7 @@ The dashboard is configured for anonymous access, so you can navigate directly t
 
 ### 3. Run the Sample Application
 
-From the example directory, run the application and redirect output to a file:
+From the `examples/OtlpFileCollector` directory, run the application and redirect output to a file:
 
 ```powershell
 dotnet run --project Example.OtlpFile > logs.jsonl
@@ -108,7 +108,7 @@ podman logs otlpfilecollector_aspire-dashboard_1
 To stop and remove the containers:
 
 ```powershell
-podman-compose down
+podman compose down
 ```
 
 ## Reference output
@@ -137,7 +137,7 @@ Configuring the standard OTLP exporter to send to the OpenTelemetry Collector, a
             "value": { "stringValue": "Example.OtlpFile" }
           },
           {
-            "key": "service.namespace",
+            "key": "service.version",
             "value": {
               "stringValue": "1.0.0+a39edcd73d16166f5105ff3e08aae50d9a30f736"
             }
