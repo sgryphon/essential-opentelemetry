@@ -292,7 +292,8 @@ public class OtlpFileActivityExporter : BaseExporter<Activity>
     private static ulong DateTimeToUnixNano(DateTime dateTime)
     {
         var unixTicks = dateTime.ToUniversalTime().Ticks - UnixEpochTicks;
-        return (ulong)unixTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
+        // Convert ticks to nanoseconds: 1 tick = 100 nanoseconds
+        return (ulong)unixTicks * 100;
     }
 
     private static ProtoTrace.Span.Types.SpanKind ConvertActivityKindToSpanKind(ActivityKind kind)
