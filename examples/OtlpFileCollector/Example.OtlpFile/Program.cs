@@ -27,7 +27,7 @@ var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
 // Log with different severity levels
-logger.LogTrace("This is a trace message for detailed debugging");
+logger.LogDebug("This is a debug message for debugging");
 logger.LogCritical("Critical system failure in {Component}", "payment-service");
 
 // Structured logging with multiple attributes
