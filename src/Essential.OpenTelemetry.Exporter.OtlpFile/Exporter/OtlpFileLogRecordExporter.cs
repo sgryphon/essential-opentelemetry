@@ -2,6 +2,7 @@
 using System.Reflection;
 using Google.Protobuf;
 using OpenTelemetry;
+using OpenTelemetry.Resources;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
 using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
 using ProtoResource = OpenTelemetry.Proto.Resource.V1;
@@ -11,8 +12,9 @@ namespace Essential.OpenTelemetry.Exporter;
 
 /// <summary>
 /// OTLP file exporter for OpenTelemetry logs.
-/// Outputs log records in OTLP protobuf JSON format compatible with the
+/// Outputs log records in OTLP JSON Protobuf Encoding format compatible with the
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
+/// See <see cref="OtlpJsonSerializer"/> for serialization details.
 /// </summary>
 public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 {
@@ -35,10 +37,6 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
     );
 
-    private static readonly JsonFormatter JsonFormatter = new(
-        JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
-    );
-
     private readonly OtlpFileOptions options;
 
     /// <summary>
@@ -53,7 +51,7 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<SdkLogs.LogRecord> batch)
     {
-        var output = this.options.Output;
+        var console = this.options.Console;
 
         // Group log records by scope (category)
         var scopeGroups = new Dictionary<string, List<SdkLogs.LogRecord>>();
@@ -68,14 +66,11 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
             scopeGroups[categoryName].Add(sdkLogRecord);
         }
 
-        lock (output.SyncRoot)
+        lock (console.SyncRoot)
         {
             // Create OTLP LogsData message
             var logsData = new ProtoLogs.LogsData();
-            var resourceLogs = new ProtoLogs.ResourceLogs
-            {
-                Resource = new ProtoResource.Resource(),
-            };
+            var resourceLogs = new ProtoLogs.ResourceLogs { Resource = CreateProtoResource() };
 
             // Add scope logs for each category
             foreach (var scopeGroup in scopeGroups)
@@ -97,12 +92,27 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 
             logsData.ResourceLogs.Add(resourceLogs);
 
-            // Serialize to JSON using Google.Protobuf JsonFormatter
-            var jsonLine = JsonFormatter.Format(logsData);
-            output.WriteLine(jsonLine);
+            // Serialize directly to output stream in OTLP JSON Protobuf Encoding
+            var stream = console.OpenStandardOutput();
+            OtlpJsonSerializer.SerializeLogsData(logsData, stream);
         }
 
         return ExportResult.Success;
+    }
+
+    private ProtoResource.Resource CreateProtoResource()
+    {
+        var protoResource = new ProtoResource.Resource();
+        var resource = this.ParentProvider?.GetResource();
+        if (resource != null)
+        {
+            foreach (var attribute in resource.Attributes)
+            {
+                protoResource.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
+            }
+        }
+
+        return protoResource;
     }
 
     private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
@@ -153,6 +163,20 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
             {
                 protoLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
             }
+        }
+
+        // Add exception attributes if present
+        if (sdkLogRecord.Exception != null)
+        {
+            protoLogRecord.Attributes.Add(
+                CreateKeyValue("exception.type", sdkLogRecord.Exception.GetType().FullName)
+            );
+            protoLogRecord.Attributes.Add(
+                CreateKeyValue("exception.message", sdkLogRecord.Exception.Message)
+            );
+            protoLogRecord.Attributes.Add(
+                CreateKeyValue("exception.stacktrace", sdkLogRecord.Exception.ToString())
+            );
         }
 
         // Set trace context
@@ -241,21 +265,22 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 
     private static string GetBody(SdkLogs.LogRecord sdkLogRecord)
     {
-        // Use FormattedMessage if available
-        var message = sdkLogRecord.FormattedMessage;
+        // For OTLP format, prefer the Body property which contains the original
+        // message template/format string. Parameter values are in attributes.
+        var message = sdkLogRecord.Body;
 
-        // Otherwise try State
+        // Fall back to FormattedMessage if Body is not available
+        if (string.IsNullOrEmpty(message))
+        {
+            message = sdkLogRecord.FormattedMessage;
+        }
+
+        // Fall back to State.ToString() as last resort
         if (string.IsNullOrEmpty(message))
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             message = sdkLogRecord.State?.ToString();
 #pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        // Otherwise fall back to Body
-        if (string.IsNullOrEmpty(message))
-        {
-            message = sdkLogRecord.Body?.ToString() ?? string.Empty;
         }
 
         return message ?? string.Empty;

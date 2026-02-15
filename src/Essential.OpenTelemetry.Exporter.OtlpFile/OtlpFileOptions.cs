@@ -1,4 +1,4 @@
-using Essential.System;
+﻿using Essential.System;
 
 namespace Essential.OpenTelemetry;
 
@@ -7,11 +7,11 @@ namespace Essential.OpenTelemetry;
 /// </summary>
 public class OtlpFileOptions
 {
-    // By default use a shared system output, so that exporters can synchronise on the same lock
-    private static readonly SystemOutput sharedSystemOutput = new();
+    // By default use a shared system console, so that exporters can synchronise on the same lock
+    private static readonly SystemConsole sharedSystemConsole = new();
 
     /// <summary>
-    /// Gets or sets the output to use for writing. Defaults to SystemOutput (stdout).
+    /// Gets or sets the output to use for writing. Defaults to SystemConsole (stdout).
     /// </summary>
-    internal IOutput Output { get; set; } = sharedSystemOutput;
+    internal IConsole Console { get; set; } = sharedSystemConsole;
 }
