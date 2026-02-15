@@ -82,10 +82,7 @@ public class OtlpFileLogRecordExporter : OtlpFileExporter<SdkLogs.LogRecord>
 
     private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
     {
-        // Convert DateTimeOffset to Unix nanoseconds
-        var unixTicks =
-            ((DateTimeOffset)sdkLogRecord.Timestamp).ToUniversalTime().Ticks - UnixEpochTicks;
-        var timestampUnixNano = (ulong)unixTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
+        var timestampUnixNano = DateTimeOffsetToUnixNano(sdkLogRecord.Timestamp);
 
         var protoLogRecord = new ProtoLogs.LogRecord
         {

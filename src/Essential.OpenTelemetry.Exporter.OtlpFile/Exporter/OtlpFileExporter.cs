@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using Google.Protobuf;
 using OpenTelemetry;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
@@ -133,14 +133,14 @@ public abstract class OtlpFileExporter<T> : BaseExporter<T>
     }
 
     /// <summary>
-    /// Converts a DateTime to Unix nanoseconds.
+    /// Converts a DateTimeOffset to Unix nanoseconds.
     /// </summary>
-    /// <param name="dateTime">The DateTime to convert.</param>
+    /// <param name="dateTimeOffset">The DateTimeOffset to convert.</param>
     /// <returns>The Unix timestamp in nanoseconds.</returns>
-    protected static ulong DateTimeToUnixNano(DateTime dateTime)
+    protected static ulong DateTimeOffsetToUnixNano(DateTimeOffset dateTimeOffset)
     {
-        var unixTicks = dateTime.ToUniversalTime().Ticks - UnixEpochTicks;
+        var unixTicks = dateTimeOffset.ToUniversalTime().Ticks - UnixEpochTicks;
         // Convert ticks to nanoseconds: 1 tick = 100 nanoseconds
-        return (ulong)unixTicks * 100;
+        return (ulong)unixTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
     }
 }

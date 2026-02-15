@@ -81,8 +81,8 @@ public class OtlpFileActivityExporter : OtlpFileExporter<Activity>
     private static ProtoTrace.Span ConvertToOtlpSpan(Activity activity)
     {
         // Convert timestamps to Unix nanoseconds
-        var startTimeUnixNano = DateTimeToUnixNano(activity.StartTimeUtc);
-        var endTimeUnixNano = DateTimeToUnixNano(activity.StartTimeUtc + activity.Duration);
+        var startTimeUnixNano = DateTimeOffsetToUnixNano(activity.StartTimeUtc);
+        var endTimeUnixNano = DateTimeOffsetToUnixNano(activity.StartTimeUtc + activity.Duration);
 
         var protoSpan = new ProtoTrace.Span
         {
@@ -140,7 +140,7 @@ public class OtlpFileActivityExporter : OtlpFileExporter<Activity>
             var protoEvent = new ProtoTrace.Span.Types.Event
             {
                 Name = activityEvent.Name,
-                TimeUnixNano = DateTimeToUnixNano(activityEvent.Timestamp.UtcDateTime),
+                TimeUnixNano = DateTimeOffsetToUnixNano(activityEvent.Timestamp.UtcDateTime),
             };
 
             foreach (var tag in activityEvent.Tags)
