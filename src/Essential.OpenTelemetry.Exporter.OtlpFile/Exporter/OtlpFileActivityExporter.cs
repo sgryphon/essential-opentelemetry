@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Google.Protobuf;
 using OpenTelemetry;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
-using ProtoResource = OpenTelemetry.Proto.Resource.V1;
 using ProtoTrace = OpenTelemetry.Proto.Trace.V1;
 
 namespace Essential.OpenTelemetry.Exporter;
@@ -13,37 +12,19 @@ namespace Essential.OpenTelemetry.Exporter;
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
 /// See <see cref="OtlpJsonSerializer"/> for serialization details.
 /// </summary>
-public class OtlpFileActivityExporter : BaseExporter<Activity>
+public class OtlpFileActivityExporter : OtlpFileExporter<Activity>
 {
-#if NETSTANDARD2_1_OR_GREATER
-    private static readonly long UnixEpochTicks = DateTimeOffset.UnixEpoch.Ticks;
-#else
-    private static readonly long UnixEpochTicks = new DateTimeOffset(
-        1970,
-        1,
-        1,
-        0,
-        0,
-        0,
-        TimeSpan.Zero
-    ).Ticks;
-#endif
-
-    private readonly OtlpFileOptions options;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="OtlpFileActivityExporter"/> class.
     /// </summary>
     /// <param name="options">Configuration options for the exporter.</param>
     public OtlpFileActivityExporter(OtlpFileOptions options)
-    {
-        this.options = options ?? new OtlpFileOptions();
-    }
+        : base(options) { }
 
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<Activity> batch)
     {
-        var console = this.options.Console;
+        var console = this.Options.Console;
 
         // Group activities by instrumentation scope
         var scopeGroups = new Dictionary<string, List<Activity>>();
@@ -95,21 +76,6 @@ public class OtlpFileActivityExporter : BaseExporter<Activity>
         }
 
         return ExportResult.Success;
-    }
-
-    private ProtoResource.Resource CreateProtoResource()
-    {
-        var protoResource = new ProtoResource.Resource();
-        var resource = this.ParentProvider?.GetResource();
-        if (resource != null)
-        {
-            foreach (var attribute in resource.Attributes)
-            {
-                protoResource.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
-            }
-        }
-
-        return protoResource;
     }
 
     private static ProtoTrace.Span ConvertToOtlpSpan(Activity activity)
@@ -236,64 +202,6 @@ public class OtlpFileActivityExporter : BaseExporter<Activity>
         }
 
         return protoSpan;
-    }
-
-    private static ProtoCommon.KeyValue CreateKeyValue(string key, object? value)
-    {
-        var keyValue = new ProtoCommon.KeyValue { Key = key, Value = new ProtoCommon.AnyValue() };
-
-        switch (value)
-        {
-            case null:
-                keyValue.Value.StringValue = string.Empty;
-                break;
-            case string s:
-                keyValue.Value.StringValue = s;
-                break;
-            case bool b:
-                keyValue.Value.BoolValue = b;
-                break;
-            case byte by:
-                keyValue.Value.IntValue = by;
-                break;
-            case sbyte sb:
-                keyValue.Value.IntValue = sb;
-                break;
-            case short sh:
-                keyValue.Value.IntValue = sh;
-                break;
-            case ushort us:
-                keyValue.Value.IntValue = us;
-                break;
-            case int i:
-                keyValue.Value.IntValue = i;
-                break;
-            case uint ui:
-                keyValue.Value.IntValue = (long)ui;
-                break;
-            case long l:
-                keyValue.Value.IntValue = l;
-                break;
-            case float f:
-                keyValue.Value.DoubleValue = f;
-                break;
-            case double d:
-                keyValue.Value.DoubleValue = d;
-                break;
-            default:
-                // For other types, convert to string
-                keyValue.Value.StringValue = value.ToString() ?? string.Empty;
-                break;
-        }
-
-        return keyValue;
-    }
-
-    private static ulong DateTimeToUnixNano(DateTime dateTime)
-    {
-        var unixTicks = dateTime.ToUniversalTime().Ticks - UnixEpochTicks;
-        // Convert ticks to nanoseconds: 1 tick = 100 nanoseconds
-        return (ulong)unixTicks * 100;
     }
 
     private static ProtoTrace.Span.Types.SpanKind ConvertActivityKindToSpanKind(ActivityKind kind)
