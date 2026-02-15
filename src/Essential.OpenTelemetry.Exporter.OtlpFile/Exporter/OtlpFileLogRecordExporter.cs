@@ -10,11 +10,11 @@ using SdkLogs = OpenTelemetry.Logs;
 namespace Essential.OpenTelemetry.Exporter;
 
 /// <summary>
-/// JSONL console exporter for OpenTelemetry logs.
+/// OTLP file exporter for OpenTelemetry logs.
 /// Outputs log records in OTLP protobuf JSON format compatible with the
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
 /// </summary>
-public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
+public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 {
 #if NETSTANDARD2_1_OR_GREATER
     private static readonly long UnixEpochTicks = DateTimeOffset.UnixEpoch.Ticks;
@@ -39,15 +39,15 @@ public class JsonlConsoleLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
     );
 
-    private readonly JsonlConsoleOptions options;
+    private readonly OtlpFileOptions options;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="JsonlConsoleLogRecordExporter"/> class.
+    /// Initializes a new instance of the <see cref="OtlpFileLogRecordExporter"/> class.
     /// </summary>
     /// <param name="options">Configuration options for the exporter.</param>
-    public JsonlConsoleLogRecordExporter(JsonlConsoleOptions options)
+    public OtlpFileLogRecordExporter(OtlpFileOptions options)
     {
-        this.options = options ?? new JsonlConsoleOptions();
+        this.options = options ?? new OtlpFileOptions();
     }
 
     /// <inheritdoc/>

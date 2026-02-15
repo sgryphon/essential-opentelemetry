@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net10.0;net9.0;net8.0;netstandard2.1;netstandard2.0</TargetFrameworks>
-    <Description>JSONL Console exporter for OpenTelemetry .NET</Description>
+    <Description>OTLP File exporter for OpenTelemetry .NET</Description>
     <RootNamespace>Essential.OpenTelemetry</RootNamespace>
     <ReferenceSystemTextJsonPackages>true</ReferenceSystemTextJsonPackages>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -11,8 +11,8 @@
     <LangVersion>10.0</LangVersion>
   </PropertyGroup>
   <PropertyGroup Label="NuGet Package Metadata">
-    <PackageId>Essential.OpenTelemetry.Exporter.JsonlConsole</PackageId>
-    <Title>Essential OpenTelemetry JSONL Console Exporter</Title>
+    <PackageId>Essential.OpenTelemetry.Exporter.OtlpFile</PackageId>
+    <Title>Essential OpenTelemetry OTLP File Exporter</Title>
     <Authors>Gryphon Technology Pty Ltd</Authors>
     <Company>Gryphon Technology Pty Ltd</Company>
     <Product>Essential .NET OpenTelemetry</Product>
@@ -21,7 +21,7 @@
     <PackageProjectUrl>https://github.com/sgryphon/essential-opentelemetry</PackageProjectUrl>
     <RepositoryUrl>https://github.com/sgryphon/essential-opentelemetry</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>opentelemetry;diagnostics;logging;tracing;metrics;console;exporter;jsonl;dotnet</PackageTags>
+    <PackageTags>opentelemetry;diagnostics;logging;tracing;metrics;console;exporter;jsonl;otlp;file;dotnet</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>diagnostics-logo-64.png</PackageIcon>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -72,6 +72,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <InternalsVisibleTo Include="Essential.OpenTelemetry.Exporter.JsonlConsole.Tests" />
+    <InternalsVisibleTo Include="Essential.OpenTelemetry.Exporter.OtlpFile.Tests" />
   </ItemGroup>
 </Project>

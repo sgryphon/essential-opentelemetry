@@ -3,9 +3,9 @@ using Essential.System;
 namespace Essential.OpenTelemetry;
 
 /// <summary>
-/// Options for the JSONL console exporter.
+/// Options for the OTLP file exporter.
 /// </summary>
-public class JsonlConsoleOptions
+public class OtlpFileOptions
 {
     // By default use a shared system output, so that exporters can synchronise on the same lock
     private static readonly SystemOutput sharedSystemOutput = new();

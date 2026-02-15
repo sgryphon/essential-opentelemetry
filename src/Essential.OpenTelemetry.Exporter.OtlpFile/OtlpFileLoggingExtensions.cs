@@ -1,4 +1,4 @@
-using Essential.OpenTelemetry.Exporter;
+﻿using Essential.OpenTelemetry.Exporter;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OpenTelemetry;
@@ -7,41 +7,41 @@ using OpenTelemetry.Logs;
 namespace Essential.OpenTelemetry;
 
 /// <summary>
-/// Extension methods for registering the JSONL console exporter with OpenTelemetry logging.
+/// Extension methods for registering the OTLP file exporter with OpenTelemetry logging.
 /// </summary>
-public static class JsonlConsoleLoggingExtensions
+public static class OtlpFileLoggingExtensions
 {
     /// <summary>
-    /// Adds JSONL Console exporter with LoggerProviderBuilder.
+    /// Adds OTLP File exporter with LoggerProviderBuilder.
     /// </summary>
     /// <param name="loggerProviderBuilder"><see cref="LoggerProviderBuilder"/>.</param>
     /// <returns>The supplied instance of <see cref="LoggerProviderBuilder"/> to chain the calls.</returns>
-    public static LoggerProviderBuilder AddJsonlConsoleExporter(
+    public static LoggerProviderBuilder AddOtlpFileExporter(
         this LoggerProviderBuilder loggerProviderBuilder
-    ) => AddJsonlConsoleExporter(loggerProviderBuilder, name: null, configure: null);
+    ) => AddOtlpFileExporter(loggerProviderBuilder, name: null, configure: null);
 
     /// <summary>
-    /// Adds JSONL Console exporter with LoggerProviderBuilder.
+    /// Adds OTLP File exporter with LoggerProviderBuilder.
     /// </summary>
     /// <param name="loggerProviderBuilder"><see cref="LoggerProviderBuilder"/>.</param>
-    /// <param name="configure">Callback action for configuring <see cref="JsonlConsoleOptions"/>.</param>
+    /// <param name="configure">Callback action for configuring <see cref="OtlpFileOptions"/>.</param>
     /// <returns>The supplied instance of <see cref="LoggerProviderBuilder"/> to chain the calls.</returns>
-    public static LoggerProviderBuilder AddJsonlConsoleExporter(
+    public static LoggerProviderBuilder AddOtlpFileExporter(
         this LoggerProviderBuilder loggerProviderBuilder,
-        Action<JsonlConsoleOptions> configure
-    ) => AddJsonlConsoleExporter(loggerProviderBuilder, name: null, configure);
+        Action<OtlpFileOptions> configure
+    ) => AddOtlpFileExporter(loggerProviderBuilder, name: null, configure);
 
     /// <summary>
-    /// Adds JSONL Console exporter with LoggerProviderBuilder.
+    /// Adds OTLP File exporter with LoggerProviderBuilder.
     /// </summary>
     /// <param name="loggerProviderBuilder"><see cref="LoggerProviderBuilder"/>.</param>
     /// <param name="name">Optional name which is used when retrieving options.</param>
-    /// <param name="configure">Optional callback action for configuring <see cref="JsonlConsoleOptions"/>.</param>
+    /// <param name="configure">Optional callback action for configuring <see cref="OtlpFileOptions"/>.</param>
     /// <returns>The supplied instance of <see cref="LoggerProviderBuilder"/> to chain the calls.</returns>
-    public static LoggerProviderBuilder AddJsonlConsoleExporter(
+    public static LoggerProviderBuilder AddOtlpFileExporter(
         this LoggerProviderBuilder loggerProviderBuilder,
         string? name,
-        Action<JsonlConsoleOptions>? configure
+        Action<OtlpFileOptions>? configure
     )
     {
         if (loggerProviderBuilder == null)
@@ -58,33 +58,33 @@ public static class JsonlConsoleLoggingExtensions
 
         return loggerProviderBuilder.AddProcessor(sp =>
         {
-            var options = sp.GetRequiredService<IOptionsMonitor<JsonlConsoleOptions>>().Get(name);
+            var options = sp.GetRequiredService<IOptionsMonitor<OtlpFileOptions>>().Get(name);
 
-            return new SimpleLogRecordExportProcessor(new JsonlConsoleLogRecordExporter(options));
+            return new SimpleLogRecordExportProcessor(new OtlpFileLogRecordExporter(options));
         });
     }
 
     /// <summary>
-    /// Adds JSONL Console exporter with OpenTelemetryLoggerOptions.
+    /// Adds OTLP File exporter with OpenTelemetryLoggerOptions.
     /// </summary>
     /// <param name="loggerOptions"><see cref="OpenTelemetryLoggerOptions"/>.</param>
-    /// <param name="configure">Callback action for configuring <see cref="JsonlConsoleOptions"/>.</param>
+    /// <param name="configure">Callback action for configuring <see cref="OtlpFileOptions"/>.</param>
     /// <returns>The supplied instance of <see cref="OpenTelemetryLoggerOptions"/> to chain the calls.</returns>
-    public static OpenTelemetryLoggerOptions AddJsonlConsoleExporter(
+    public static OpenTelemetryLoggerOptions AddOtlpFileExporter(
         this OpenTelemetryLoggerOptions loggerOptions,
-        Action<JsonlConsoleOptions>? configure
+        Action<OtlpFileOptions>? configure
     )
     {
         if (loggerOptions == null)
             throw new ArgumentNullException(nameof(loggerOptions));
 
-        var jsonlConsoleOptions = new JsonlConsoleOptions();
-        configure?.Invoke(jsonlConsoleOptions);
+        var otlpFileOptions = new OtlpFileOptions();
+        configure?.Invoke(otlpFileOptions);
 
         return loggerOptions.AddProcessor(sp =>
         {
             return new SimpleLogRecordExportProcessor(
-                new JsonlConsoleLogRecordExporter(jsonlConsoleOptions)
+                new OtlpFileLogRecordExporter(otlpFileOptions)
             );
         });
     }
