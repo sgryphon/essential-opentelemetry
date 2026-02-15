@@ -51,7 +51,7 @@ New to OpenTelemetry? Check out our [Getting Started Guide](docs/Getting-Started
 - [Event IDs](docs/Event-Ids.md) - How to use events.
 - [Performance Testing](docs/Performance.md) - Performance benchmarks and comparisons.
 
-Or for a simple example application, just clone this repository and run:
+Or for a simple example application, just clone this repository (with submodules) and run:
 
 ```powershell
 dotnet run --project .\examples\SimpleConsole --framework net10.0

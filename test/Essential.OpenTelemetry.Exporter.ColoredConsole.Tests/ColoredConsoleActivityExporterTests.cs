@@ -7,7 +7,7 @@ using Xunit;
 namespace Essential.OpenTelemetry.Exporter.ColoredConsole.Tests;
 
 [Collection("ColoredConsoleTests")]
-public class ColoredConsoleActivityExporterTests
+public class ColoredConsoleActivityExporterTests(ITestContextAccessor tc)
 {
     [Fact]
     public async Task BasicActivityOutputTest()
@@ -31,7 +31,7 @@ public class ColoredConsoleActivityExporterTests
         {
             traceId = activity1?.TraceId.ToHexString();
 
-            await Task.Delay(100);
+            await Task.Delay(100, tc.Current.CancellationToken);
         }
 
         // Assert
@@ -67,15 +67,15 @@ public class ColoredConsoleActivityExporterTests
         {
             traceId = activity1?.TraceId.ToHexString();
 
-            await Task.Delay(100);
+            await Task.Delay(100, tc.Current.CancellationToken);
 
             using var activitySource2 = new ActivitySource("InnerActivitySource");
             using (var activity2 = activitySource2.StartActivity("InnerActivity"))
             {
-                await Task.Delay(200);
+                await Task.Delay(200, tc.Current.CancellationToken);
             }
 
-            await Task.Delay(400);
+            await Task.Delay(400, tc.Current.CancellationToken);
         }
 
         // Assert
@@ -115,7 +115,7 @@ public class ColoredConsoleActivityExporterTests
         {
             using (var activity1 = activitySource.StartActivity("TestActivity"))
             {
-                await Task.Delay(100);
+                await Task.Delay(100, tc.Current.CancellationToken);
                 activity1?.SetStatus(ActivityStatusCode.Error, "Failed");
             }
         }
