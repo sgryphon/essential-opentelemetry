@@ -7,6 +7,7 @@ using Essential.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Resources;
 
 var assembly = Assembly.GetExecutingAssembly();
@@ -21,7 +22,15 @@ var serviceVersion =
 
 var activitySource = new ActivitySource(serviceName);
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = Host.CreateApplicationBuilder(
+    new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory }
+);
+
+// If you are using the OTLP exporter, you can enable this to debug connection issues
+// var otelDebugListener = new OpenTelemetryDebugEventListener(
+//     new OpenTelemetryDebugOptions() { DebugOtlp = true }
+// );
+
 builder.Logging.ClearProviders();
 builder
     .Services.AddOpenTelemetry()
@@ -41,6 +50,11 @@ builder
     )
     .WithLogging(logging =>
     {
+        // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
+        // logging.AddOtlpExporter(otlpOptions =>
+        // {
+        //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
+        // });
         logging.AddOtlpFileExporter();
     })
     .WithTracing(tracing =>
@@ -76,3 +90,6 @@ catch (Exception ex)
 {
     logger.OperationError(ex, "test-operation");
 }
+
+// Flush provider
+host.Services.GetRequiredService<LoggerProvider>().ForceFlush();

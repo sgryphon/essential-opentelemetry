@@ -111,6 +111,169 @@ To stop and remove the containers:
 podman-compose down
 ```
 
+## Reference output
+
+Configuring the standard OTLP exporter to send to the OpenTelemetry Collector, and then have the Collector export to a file output, gets file contents similar to the following.
+
+- Multiple log records in one line
+- Resource details included
+- severityNumber is numeric (not string enum)
+- Body does not have attributes inserted
+- Exception includes stack trace
+
+```json
+{
+  "resourceLogs": [
+    {
+      "resource": {
+        "attributes": [
+          { "key": "host.name", "value": { "stringValue": "TAR-VALON" } },
+          {
+            "key": "deployment.environment.name",
+            "value": { "stringValue": "production" }
+          },
+          {
+            "key": "service.name",
+            "value": { "stringValue": "Example.OtlpFile" }
+          },
+          {
+            "key": "service.namespace",
+            "value": {
+              "stringValue": "1.0.0+a39edcd73d16166f5105ff3e08aae50d9a30f736"
+            }
+          },
+          {
+            "key": "service.instance.id",
+            "value": { "stringValue": "38700bd8-eff0-4695-8d6e-6288aea65d46" }
+          },
+          {
+            "key": "telemetry.sdk.name",
+            "value": { "stringValue": "opentelemetry" }
+          },
+          {
+            "key": "telemetry.sdk.language",
+            "value": { "stringValue": "dotnet" }
+          },
+          {
+            "key": "telemetry.sdk.version",
+            "value": { "stringValue": "1.15.0" }
+          }
+        ]
+      },
+      "scopeLogs": [
+        {
+          "scope": { "name": "Program" },
+          "logRecords": [
+            {
+              "timeUnixNano": "1771125740586979900",
+              "observedTimeUnixNano": "1771125740586979900",
+              "severityNumber": 5,
+              "severityText": "Debug",
+              "body": {
+                "stringValue": "This is a debug message for debugging"
+              },
+              "eventName": "DebugMessage"
+            },
+            {
+              "timeUnixNano": "1771125740663833200",
+              "observedTimeUnixNano": "1771125740663833200",
+              "severityNumber": 21,
+              "severityText": "Critical",
+              "body": {
+                "stringValue": "Critical system failure in {Component}"
+              },
+              "attributes": [
+                {
+                  "key": "Component",
+                  "value": { "stringValue": "payment-service" }
+                }
+              ],
+              "eventName": "CriticalSystemFailure"
+            },
+            {
+              "timeUnixNano": "1771125740702455200",
+              "observedTimeUnixNano": "1771125740702455200",
+              "severityNumber": 9,
+              "severityText": "Information",
+              "body": {
+                "stringValue": "User {UserName} logged in from {IpAddress} at {Timestamp}"
+              },
+              "attributes": [
+                { "key": "UserName", "value": { "stringValue": "Alice" } },
+                {
+                  "key": "IpAddress",
+                  "value": { "stringValue": "fdbe:4f24:c288:3b1b::4" }
+                },
+                {
+                  "key": "Timestamp",
+                  "value": { "stringValue": "02/15/2026 03:22:20 +00:00" }
+                }
+              ],
+              "eventName": "UserLoggedIn"
+            },
+            {
+              "timeUnixNano": "1771125740728441800",
+              "observedTimeUnixNano": "1771125740728441800",
+              "severityNumber": 9,
+              "severityText": "Information",
+              "body": {
+                "stringValue": "Processing order {OrderId} for {Amount:C}"
+              },
+              "attributes": [
+                { "key": "OrderId", "value": { "stringValue": "ORD-789" } },
+                { "key": "Amount", "value": { "stringValue": "150.00" } }
+              ],
+              "eventName": "ProcessingOrder"
+            },
+            {
+              "timeUnixNano": "1771125740732785100",
+              "observedTimeUnixNano": "1771125740732785100",
+              "severityNumber": 13,
+              "severityText": "Warning",
+              "body": { "stringValue": "{Resource} is running low" },
+              "attributes": [
+                { "key": "Resource", "value": { "stringValue": "disk space" } }
+              ],
+              "eventName": "ResourceRunningLow"
+            },
+            {
+              "timeUnixNano": "1771125740795465800",
+              "observedTimeUnixNano": "1771125740795465800",
+              "severityNumber": 17,
+              "severityText": "Error",
+              "body": {
+                "stringValue": "Exception caught while processing {Operation}"
+              },
+              "attributes": [
+                {
+                  "key": "exception.type",
+                  "value": { "stringValue": "InvalidOperationException" }
+                },
+                {
+                  "key": "exception.message",
+                  "value": { "stringValue": "Simulated exception for testing" }
+                },
+                {
+                  "key": "exception.stacktrace",
+                  "value": {
+                    "stringValue": "System.InvalidOperationException: Simulated exception for testing\r\n   at Program.<Main>$(String[] args) in C:\\Code\\essential-opentelemetry\\examples\\OtlpFileCollector\\Example.OtlpFile\\Program.cs:line 87"
+                  }
+                },
+                {
+                  "key": "Operation",
+                  "value": { "stringValue": "test-operation" }
+                }
+              ],
+              "eventName": "OperationError"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
 ## References
 
 - [OpenTelemetry Protocol File Exporter Specification](https://opentelemetry.io/docs/specs/otel/protocol/file-exporter/)

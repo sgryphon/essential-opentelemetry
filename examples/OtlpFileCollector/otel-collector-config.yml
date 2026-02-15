@@ -31,7 +31,7 @@ exporters:
     sampling_thereafter: 1
 
   # OTLP exporter to Aspire Dashboard
-  otlp:
+  otlp_grpc:
     endpoint: aspire-dashboard:18889
     tls:
       insecure: true
@@ -45,15 +45,7 @@ service:
     logs:
       receivers: [otlpjsonfile, otlp]
       processors: [batch]
-      exporters: [debug, otlp, file]
-    traces:
-      receivers: [otlpjsonfile, otlp]
-      processors: [batch]
-      exporters: [debug, otlp, file]
-    metrics:
-      receivers: [otlpjsonfile, otlp]
-      processors: [batch]
-      exporters: [debug, otlp, file]
+      exporters: [debug, otlp_grpc]
   telemetry:
     logs:
       level: debug
