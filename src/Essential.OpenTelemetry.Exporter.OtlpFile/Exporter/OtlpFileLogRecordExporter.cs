@@ -290,7 +290,7 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
     private static string GetBody(SdkLogs.LogRecord sdkLogRecord)
     {
         // If options.IncludeFormattedMessage is set,
-        // the we want to send the formatted message as Body
+        // then we want to send the formatted message as Body
         // (and OriginalFormat will be an attribute)
         var message = sdkLogRecord.FormattedMessage;
 
