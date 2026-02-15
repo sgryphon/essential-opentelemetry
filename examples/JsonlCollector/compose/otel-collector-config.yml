@@ -1,0 +1,39 @@
+# OpenTelemetry Collector Configuration for JSONL Log Verification
+# This configuration reads JSONL logs from a file and exports them to the Aspire Dashboard
+
+receivers:
+  # OTLP JSON File receiver - reads JSONL formatted logs
+  otlpjsonfile:
+    include:
+      - /data/input/*.jsonl
+    # Start from the beginning of the file
+    start_at: beginning
+
+processors:
+  # Batch processor for efficiency
+  batch:
+    timeout: 10s
+    send_batch_size: 100
+
+exporters:
+  # Debug exporter for troubleshooting
+  debug:
+    verbosity: detailed
+    sampling_initial: 5
+    sampling_thereafter: 1
+
+  # OTLP exporter to Aspire Dashboard
+  otlp:
+    endpoint: aspire-dashboard:18889
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlpjsonfile]
+      processors: [batch]
+      exporters: [debug, otlp]
+  telemetry:
+    logs:
+      level: debug
