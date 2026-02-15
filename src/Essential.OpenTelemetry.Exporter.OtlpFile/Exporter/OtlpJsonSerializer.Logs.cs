@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
 
@@ -40,11 +40,8 @@ internal static partial class OtlpJsonSerializer
     )
     {
         writer.WriteStartObject();
-        if (resourceLogs.Resource != null)
-        {
-            writer.WritePropertyName("resource");
-            WriteResource(writer, resourceLogs.Resource);
-        }
+
+        WriteResource(writer, resourceLogs.Resource);
 
         if (resourceLogs.ScopeLogs.Count > 0)
         {

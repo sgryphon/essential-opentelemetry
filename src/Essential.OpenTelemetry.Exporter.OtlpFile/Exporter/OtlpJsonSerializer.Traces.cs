@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using ProtoTrace = OpenTelemetry.Proto.Trace.V1;
 
@@ -19,6 +19,8 @@ internal static partial class OtlpJsonSerializer
 
     private static void WriteTracesData(Utf8JsonWriter writer, ProtoTrace.TracesData tracesData)
     {
+        // Extract out to WriteOtlpData<T, TResource, TScope, TItem> with names & accessors,
+        // e.g. T => RepeatedField<TResource>, TResource => (Resource, RepeatedField<TSpan>, schema)
         writer.WriteStartObject();
         if (tracesData.ResourceSpans.Count > 0)
         {
@@ -40,11 +42,8 @@ internal static partial class OtlpJsonSerializer
     )
     {
         writer.WriteStartObject();
-        if (resourceSpans.Resource != null)
-        {
-            writer.WritePropertyName("resource");
-            WriteResource(writer, resourceSpans.Resource);
-        }
+
+        WriteResource(writer, resourceSpans.Resource);
 
         if (resourceSpans.ScopeSpans.Count > 0)
         {

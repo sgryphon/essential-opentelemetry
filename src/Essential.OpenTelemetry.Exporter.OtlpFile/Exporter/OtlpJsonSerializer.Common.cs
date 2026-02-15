@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using Google.Protobuf;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
@@ -113,11 +113,18 @@ internal static partial class OtlpJsonSerializer
         }
     }
 
-    private static void WriteResource(Utf8JsonWriter writer, ProtoResource.Resource resource)
+    /// <summary>
+    /// Conditionally write a resource
+    /// </summary>
+    private static void WriteResource(Utf8JsonWriter writer, ProtoResource.Resource? resource)
     {
-        writer.WriteStartObject();
-        WriteAttributes(writer, resource.Attributes);
-        writer.WriteEndObject();
+        if (resource != null)
+        {
+            writer.WritePropertyName("resource");
+            writer.WriteStartObject();
+            WriteAttributes(writer, resource.Attributes);
+            writer.WriteEndObject();
+        }
     }
 
     private static void WriteInstrumentationScope(
