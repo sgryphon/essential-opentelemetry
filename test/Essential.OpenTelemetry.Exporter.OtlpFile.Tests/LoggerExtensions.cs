@@ -5,7 +5,7 @@ namespace Essential.OpenTelemetry.Exporter.OtlpFile.Tests;
 internal static partial class LoggerExtensions
 {
     [LoggerMessage(
-        LogLevel.Critical,
+        LogLevel.Error,
         "Exception caught while processing order {OrderId} for {Amount:C}"
     )]
     public static partial void OperationError(

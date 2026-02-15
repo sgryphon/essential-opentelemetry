@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Engine.ClientProtocol;
@@ -85,8 +86,7 @@ public class OtlpFileLogRecordExporterTests
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
-        // SeverityNumber is an enum - per OTLP spec, enums are serialized as strings in JSON
-        Assert.Equal("SEVERITY_NUMBER_WARN", logRecord.GetProperty("severityNumber").GetString());
+        Assert.Equal(13, logRecord.GetProperty("severityNumber").GetInt32());
         Assert.Equal("Warn", logRecord.GetProperty("severityText").GetString());
     }
 
@@ -168,10 +168,10 @@ public class OtlpFileLogRecordExporterTests
             .GetProperty("scopeLogs")[0]
             .GetProperty("logRecords")[0];
 
-        // Check formatted message in body
+        // Check body contains the original template (not formatted message)
+        // per OTLP format, parameter values are in attributes
         var body = logRecord.GetProperty("body").GetProperty("stringValue").GetString();
-        Assert.Contains("Alice", body);
-        Assert.Contains("123", body);
+        Assert.Equal("User {UserName} with ID {UserId} logged in", body);
 
         // Check attributes contain the structured data
         var attributes = logRecord
@@ -340,8 +340,19 @@ public class OtlpFileLogRecordExporterTests
             })
         );
 
-        // Act
+        // Act - create an Activity to provide trace context
+        using var activitySource = new ActivitySource("TestSource");
+        using var activityListener = new ActivityListener
+        {
+            ShouldListenTo = _ => true,
+            Sample = (ref ActivityCreationOptions<ActivityContext> _) =>
+                ActivitySamplingResult.AllDataAndRecorded,
+        };
+        ActivitySource.AddActivityListener(activityListener);
+
         var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
+
+        using var activity = activitySource.StartActivity("TestOperation");
 
         try
         {
@@ -349,7 +360,7 @@ public class OtlpFileLogRecordExporterTests
         }
         catch (Exception ex)
         {
-            logger.OperationError(ex, "ORD-789", 150);
+            logger.OperationError(ex, "ORD-789", 150.00m);
         }
 
         // Assert
@@ -474,15 +485,39 @@ public class OtlpFileLogRecordExporterTests
         );
 
         //           "logRecords": [
-        var logRecords = resourceLogs[0].GetProperty("logRecords");
+        var logRecords = scopeLogs[0].GetProperty("logRecords");
         Assert.Equal(1, logRecords.GetArrayLength());
+
+        var logRecord = logRecords[0];
 
         //             {
         //               "timeUnixNano": "1771125740795465800",
         //               "observedTimeUnixNano": "1771125740795465800",
+        //               "traceId": "base64-encoded-trace-id",
+        Assert.True(
+            logRecord.TryGetProperty("traceId", out var traceIdElement),
+            "traceId should be present when Activity is active"
+        );
+        Assert.False(
+            string.IsNullOrEmpty(traceIdElement.GetString()),
+            "traceId should not be empty"
+        );
+
+        //               "spanId": "base64-encoded-span-id",
+        Assert.True(
+            logRecord.TryGetProperty("spanId", out var spanIdElement),
+            "spanId should be present when Activity is active"
+        );
+        Assert.False(string.IsNullOrEmpty(spanIdElement.GetString()), "spanId should not be empty");
+
+        //               "flags": 1,
+        Assert.True(
+            logRecord.TryGetProperty("flags", out var flagsElement),
+            "flags should be present when Activity is sampled"
+        );
+        Assert.Equal(1, flagsElement.GetInt32());
 
         //               "severityNumber": 17,
-        var logRecord = logRecords[0];
         Assert.Equal(17, logRecord.GetProperty("severityNumber").GetInt32());
 
         //               "severityText": "Error",
@@ -507,11 +542,8 @@ public class OtlpFileLogRecordExporterTests
         //                   "value": { "stringValue": "InvalidOperationException" }
         //                 },
         Assert.Equal(
-            "InvalidOperationException",
-            resourceAttributes["exception.type"]
-                .GetProperty("value")
-                .GetProperty("stringValue")
-                .GetString()
+            "System.InvalidOperationException",
+            attributes["exception.type"].GetProperty("value").GetProperty("stringValue").GetString()
         );
 
         //                 {
@@ -520,7 +552,7 @@ public class OtlpFileLogRecordExporterTests
         //                 },
         Assert.Equal(
             "Simulated exception for testing",
-            resourceAttributes["exception.message"]
+            attributes["exception.message"]
                 .GetProperty("value")
                 .GetProperty("stringValue")
                 .GetString()
@@ -533,8 +565,8 @@ public class OtlpFileLogRecordExporterTests
         //                   }
         //                 },
         Assert.StartsWith(
-            "System.InvalidOperationException: Simulated exception for testing\r\n   at ",
-            resourceAttributes["exception.stacktrace"]
+            "System.InvalidOperationException: Simulated exception for testing",
+            attributes["exception.stacktrace"]
                 .GetProperty("value")
                 .GetProperty("stringValue")
                 .GetString()
@@ -543,16 +575,13 @@ public class OtlpFileLogRecordExporterTests
         //                 { "key": "OrderId", "value": { "stringValue": "ORD-789" } },
         Assert.Equal(
             "ORD-789",
-            resourceAttributes["OrderId"]
-                .GetProperty("value")
-                .GetProperty("stringValue")
-                .GetString()
+            attributes["OrderId"].GetProperty("value").GetProperty("stringValue").GetString()
         );
 
         //                 { "key": "Amount", "value": { "stringValue": "150.00" } }
         Assert.Equal(
             "150.00",
-            resourceAttributes["Amount"].GetProperty("value").GetProperty("stringValue").GetString()
+            attributes["Amount"].GetProperty("value").GetProperty("stringValue").GetString()
         );
 
         //               ],

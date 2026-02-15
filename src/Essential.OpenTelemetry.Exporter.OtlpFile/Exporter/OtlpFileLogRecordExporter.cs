@@ -2,6 +2,7 @@
 using System.Reflection;
 using Google.Protobuf;
 using OpenTelemetry;
+using OpenTelemetry.Resources;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
 using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
 using ProtoResource = OpenTelemetry.Proto.Resource.V1;
@@ -35,8 +36,12 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
     );
 
+    // OTLP JSON Protobuf encoding mandates enum fields use integer values,
+    // per https://opentelemetry.io/docs/specs/otlp/#json-protobuf-encoding
     private static readonly JsonFormatter JsonFormatter = new(
-        JsonFormatter.Settings.Default.WithPreserveProtoFieldNames(false)
+        JsonFormatter
+            .Settings.Default.WithPreserveProtoFieldNames(false)
+            .WithFormatEnumsAsIntegers(true)
     );
 
     private readonly OtlpFileOptions options;
@@ -72,10 +77,7 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         {
             // Create OTLP LogsData message
             var logsData = new ProtoLogs.LogsData();
-            var resourceLogs = new ProtoLogs.ResourceLogs
-            {
-                Resource = new ProtoResource.Resource(),
-            };
+            var resourceLogs = new ProtoLogs.ResourceLogs { Resource = CreateProtoResource() };
 
             // Add scope logs for each category
             foreach (var scopeGroup in scopeGroups)
@@ -103,6 +105,21 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         }
 
         return ExportResult.Success;
+    }
+
+    private ProtoResource.Resource CreateProtoResource()
+    {
+        var protoResource = new ProtoResource.Resource();
+        var resource = this.ParentProvider?.GetResource();
+        if (resource != null)
+        {
+            foreach (var attribute in resource.Attributes)
+            {
+                protoResource.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
+            }
+        }
+
+        return protoResource;
     }
 
     private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
@@ -153,6 +170,20 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
             {
                 protoLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
             }
+        }
+
+        // Add exception attributes if present
+        if (sdkLogRecord.Exception != null)
+        {
+            protoLogRecord.Attributes.Add(
+                CreateKeyValue("exception.type", sdkLogRecord.Exception.GetType().FullName)
+            );
+            protoLogRecord.Attributes.Add(
+                CreateKeyValue("exception.message", sdkLogRecord.Exception.Message)
+            );
+            protoLogRecord.Attributes.Add(
+                CreateKeyValue("exception.stacktrace", sdkLogRecord.Exception.ToString())
+            );
         }
 
         // Set trace context
@@ -241,21 +272,22 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 
     private static string GetBody(SdkLogs.LogRecord sdkLogRecord)
     {
-        // Use FormattedMessage if available
-        var message = sdkLogRecord.FormattedMessage;
+        // For OTLP format, prefer the Body property which contains the original
+        // message template/format string. Parameter values are in attributes.
+        var message = sdkLogRecord.Body;
 
-        // Otherwise try State
+        // Fall back to FormattedMessage if Body is not available
+        if (string.IsNullOrEmpty(message))
+        {
+            message = sdkLogRecord.FormattedMessage;
+        }
+
+        // Fall back to State.ToString() as last resort
         if (string.IsNullOrEmpty(message))
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             message = sdkLogRecord.State?.ToString();
 #pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        // Otherwise fall back to Body
-        if (string.IsNullOrEmpty(message))
-        {
-            message = sdkLogRecord.Body?.ToString() ?? string.Empty;
         }
 
         return message ?? string.Empty;
