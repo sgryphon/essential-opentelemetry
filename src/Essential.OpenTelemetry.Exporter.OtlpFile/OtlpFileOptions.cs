@@ -11,7 +11,7 @@ public class OtlpFileOptions
     private static readonly SystemConsole sharedSystemConsole = new();
 
     /// <summary>
-    /// Gets or sets the output to use for writing. Defaults to SystemOutput (stdout).
+    /// Gets or sets the output to use for writing. Defaults to SystemConsole (stdout).
     /// </summary>
     internal IConsole Console { get; set; } = sharedSystemConsole;
 }
