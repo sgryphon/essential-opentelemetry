@@ -12,8 +12,9 @@ namespace Essential.OpenTelemetry.Exporter;
 
 /// <summary>
 /// OTLP file exporter for OpenTelemetry logs.
-/// Outputs log records in OTLP protobuf JSON format compatible with the
+/// Outputs log records in OTLP JSON Protobuf Encoding format compatible with the
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
+/// See <see cref="OtlpJsonSerializer"/> for serialization details.
 /// </summary>
 public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 {
@@ -34,14 +35,6 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
     private static readonly PropertyInfo? SeverityProperty = typeof(SdkLogs.LogRecord).GetProperty(
         "Severity",
         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
-    );
-
-    // OTLP JSON Protobuf encoding mandates enum fields use integer values,
-    // per https://opentelemetry.io/docs/specs/otlp/#json-protobuf-encoding
-    private static readonly JsonFormatter JsonFormatter = new(
-        JsonFormatter
-            .Settings.Default.WithPreserveProtoFieldNames(false)
-            .WithFormatEnumsAsIntegers(true)
     );
 
     private readonly OtlpFileOptions options;
@@ -99,8 +92,8 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 
             logsData.ResourceLogs.Add(resourceLogs);
 
-            // Serialize to JSON using Google.Protobuf JsonFormatter
-            var jsonLine = JsonFormatter.Format(logsData);
+            // Serialize to OTLP JSON Protobuf Encoding using custom Utf8JsonWriter
+            var jsonLine = OtlpJsonSerializer.SerializeLogsData(logsData);
             output.WriteLine(jsonLine);
         }
 

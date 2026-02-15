@@ -493,29 +493,24 @@ public class OtlpFileLogRecordExporterTests
         //             {
         //               "timeUnixNano": "1771125740795465800",
         //               "observedTimeUnixNano": "1771125740795465800",
-        //               "traceId": "base64-encoded-trace-id",
+        //               "traceId": "hex-encoded-trace-id",
+        //               Per OTLP JSON Protobuf Encoding, trace_id is lowercase hex, 32 chars (16 bytes)
         Assert.True(
             logRecord.TryGetProperty("traceId", out var traceIdElement),
             "traceId should be present when Activity is active"
         );
-        Assert.False(
-            string.IsNullOrEmpty(traceIdElement.GetString()),
-            "traceId should not be empty"
-        );
+        Assert.Matches("^[0-9a-f]{32}$", traceIdElement.GetString());
 
-        //               "spanId": "base64-encoded-span-id",
+        //               "spanId": "hex-encoded-span-id",
+        //               Per OTLP JSON Protobuf Encoding, span_id is lowercase hex, 16 chars (8 bytes)
         Assert.True(
             logRecord.TryGetProperty("spanId", out var spanIdElement),
             "spanId should be present when Activity is active"
         );
-        Assert.False(string.IsNullOrEmpty(spanIdElement.GetString()), "spanId should not be empty");
+        Assert.Matches("^[0-9a-f]{16}$", spanIdElement.GetString());
 
         //               "flags": 1,
-        Assert.True(
-            logRecord.TryGetProperty("flags", out var flagsElement),
-            "flags should be present when Activity is sampled"
-        );
-        Assert.Equal(1, flagsElement.GetInt32());
+        Assert.Equal(1, logRecord.GetProperty("flags").GetInt32());
 
         //               "severityNumber": 17,
         Assert.Equal(17, logRecord.GetProperty("severityNumber").GetInt32());
