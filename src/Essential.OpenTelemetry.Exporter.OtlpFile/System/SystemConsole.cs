@@ -1,9 +1,9 @@
-namespace Essential.System;
+﻿namespace Essential.System;
 
 /// <summary>
 /// System output implementation that writes to standard output (console).
 /// </summary>
-internal sealed class SystemOutput : IOutput
+internal sealed class SystemConsole : IConsole
 {
     private readonly object syncRoot = new();
 
@@ -11,8 +11,8 @@ internal sealed class SystemOutput : IOutput
     public object SyncRoot => this.syncRoot;
 
     /// <inheritdoc/>
-    public void WriteLine(string value)
+    public Stream OpenStandardOutput()
     {
-        Console.WriteLine(value);
+        return Console.OpenStandardOutput();
     }
 }

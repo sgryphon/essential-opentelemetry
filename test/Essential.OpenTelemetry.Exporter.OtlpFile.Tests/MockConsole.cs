@@ -1,3 +1,4 @@
+﻿using System.Text;
 using Essential.System;
 
 namespace Essential.OpenTelemetry.Exporter.OtlpFile.Tests;
@@ -5,22 +6,26 @@ namespace Essential.OpenTelemetry.Exporter.OtlpFile.Tests;
 /// <summary>
 /// Mock implementation of IOutput for testing.
 /// </summary>
-internal sealed class MockOutput : IOutput
+internal sealed class MockConsole : IConsole
 {
-    private readonly List<string> lines = new();
+    private readonly MemoryStream memoryStream = new();
 
     /// <summary>
     /// Gets the lines that were written to the output.
     /// </summary>
-    public IReadOnlyList<string> Lines => this.lines;
+    public IReadOnlyList<string> Lines =>
+        Encoding
+            .UTF8.GetString(this.memoryStream.ToArray())
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
 
     /// <inheritdoc/>
     public object SyncRoot { get; } = new();
 
     /// <inheritdoc/>
-    public void WriteLine(string value)
+    public Stream OpenStandardOutput()
     {
-        this.lines.Add(value);
+        return this.memoryStream;
     }
 
     /// <summary>
@@ -29,6 +34,6 @@ internal sealed class MockOutput : IOutput
     /// <returns>The combined output string.</returns>
     public string GetOutput()
     {
-        return string.Join(Environment.NewLine, this.lines);
+        return Encoding.UTF8.GetString(this.memoryStream.ToArray()).TrimEnd('\n');
     }
 }

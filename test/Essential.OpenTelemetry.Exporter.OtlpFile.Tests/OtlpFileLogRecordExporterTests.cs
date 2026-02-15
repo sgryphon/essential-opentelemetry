@@ -16,13 +16,13 @@ public class OtlpFileLogRecordExporterTests
     public void BasicLogExportTest()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );
@@ -62,13 +62,13 @@ public class OtlpFileLogRecordExporterTests
     public void LogWithSeverityTest()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );
@@ -94,13 +94,13 @@ public class OtlpFileLogRecordExporterTests
     public void LogWithEventIdTest()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );
@@ -141,14 +141,14 @@ public class OtlpFileLogRecordExporterTests
     public void LogWithStructuredDataTest()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
                 options.IncludeFormattedMessage = true;
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );
@@ -196,13 +196,13 @@ public class OtlpFileLogRecordExporterTests
     public void MultipleScopesTest()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );
@@ -238,13 +238,13 @@ public class OtlpFileLogRecordExporterTests
     public void JsonlFormatTest()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );
@@ -281,7 +281,7 @@ public class OtlpFileLogRecordExporterTests
     public void SeverityLevelMappingTest(LogLevel logLevel, string expectedSeverityText)
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging
                 .SetMinimumLevel(LogLevel.Trace)
@@ -289,7 +289,7 @@ public class OtlpFileLogRecordExporterTests
                 {
                     options.AddOtlpFileExporter(configure =>
                     {
-                        configure.Output = mockOutput;
+                        configure.Console = mockOutput;
                     });
                 })
         );
@@ -317,7 +317,7 @@ public class OtlpFileLogRecordExporterTests
     public void CheckExportAgainstCollector()
     {
         // Arrange
-        var mockOutput = new MockOutput();
+        var mockOutput = new MockConsole();
         using var loggerFactory = LoggerFactory.Create(logging =>
             logging.AddOpenTelemetry(options =>
             {
@@ -335,7 +335,7 @@ public class OtlpFileLogRecordExporterTests
                 );
                 options.AddOtlpFileExporter(configure =>
                 {
-                    configure.Output = mockOutput;
+                    configure.Console = mockOutput;
                 });
             })
         );

@@ -32,20 +32,23 @@ namespace Essential.OpenTelemetry.Exporter;
 /// </remarks>
 internal static class OtlpJsonSerializer
 {
+    private static readonly byte[] NewLineBytes = new byte[] { (byte)'\n' };
+
     /// <summary>
-    /// Serializes the given <see cref="ProtoLogs.LogsData"/> to an OTLP JSON Protobuf Encoding string.
+    /// Serializes the given <see cref="ProtoLogs.LogsData"/> to the specified output stream
+    /// in OTLP JSON Protobuf Encoding format, followed by a newline.
     /// </summary>
     /// <param name="logsData">The logs data to serialize.</param>
-    /// <returns>A JSON string in OTLP JSON Protobuf Encoding format.</returns>
-    internal static string SerializeLogsData(ProtoLogs.LogsData logsData)
+    /// <param name="output">The stream to write the JSON output to.</param>
+    internal static void SerializeLogsData(ProtoLogs.LogsData logsData, Stream output)
     {
-        using var stream = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(stream))
+        using (var writer = new Utf8JsonWriter(output))
         {
             WriteLogsData(writer, logsData);
         }
 
-        return global::System.Text.Encoding.UTF8.GetString(stream.ToArray());
+        output.Write(NewLineBytes, 0, NewLineBytes.Length);
+        output.Flush();
     }
 
     private static void WriteLogsData(Utf8JsonWriter writer, ProtoLogs.LogsData logsData)

@@ -1,9 +1,9 @@
-namespace Essential.System;
+﻿namespace Essential.System;
 
 /// <summary>
 /// Interface for output operations to support JSONL export and testing.
 /// </summary>
-internal interface IOutput
+internal interface IConsole
 {
     /// <summary>
     /// Gets an object that can be used to synchronize access to the IOutput.
@@ -11,8 +11,8 @@ internal interface IOutput
     object SyncRoot { get; }
 
     /// <summary>
-    /// Writes the specified string value followed by a line terminator to the output.
+    /// Opens the standard output stream.
     /// </summary>
-    /// <param name="value">The string to write.</param>
-    void WriteLine(string value);
+    /// <returns>The standard output stream.</returns>
+    Stream OpenStandardOutput();
 }

@@ -51,7 +51,7 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<SdkLogs.LogRecord> batch)
     {
-        var output = this.options.Output;
+        var console = this.options.Console;
 
         // Group log records by scope (category)
         var scopeGroups = new Dictionary<string, List<SdkLogs.LogRecord>>();
@@ -66,7 +66,7 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
             scopeGroups[categoryName].Add(sdkLogRecord);
         }
 
-        lock (output.SyncRoot)
+        lock (console.SyncRoot)
         {
             // Create OTLP LogsData message
             var logsData = new ProtoLogs.LogsData();
@@ -92,9 +92,9 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
 
             logsData.ResourceLogs.Add(resourceLogs);
 
-            // Serialize to OTLP JSON Protobuf Encoding using custom Utf8JsonWriter
-            var jsonLine = OtlpJsonSerializer.SerializeLogsData(logsData);
-            output.WriteLine(jsonLine);
+            // Serialize directly to output stream in OTLP JSON Protobuf Encoding
+            var stream = console.OpenStandardOutput();
+            OtlpJsonSerializer.SerializeLogsData(logsData, stream);
         }
 
         return ExportResult.Success;
