@@ -374,21 +374,59 @@ public class OtlpFileLogRecordExporterTests
         //     {
         //       "resource": {
         //         "attributes": [
+        var resourceAttributes = resourceLogs[0]
+            .GetProperty("resource")
+            .GetProperty("attributes")
+            .EnumerateArray()
+            .ToDictionary(x => x.GetProperty("key").ToString());
+
         //           { "key": "host.name", "value": { "stringValue": "TAR-VALON" } },
+        Assert.Equal(
+            "test-host",
+            resourceAttributes["host.name"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //           {
         //             "key": "deployment.environment.name",
         //             "value": { "stringValue": "production" }
         //           },
+        Assert.Equal(
+            "test",
+            resourceAttributes["deployment.environment.name"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //           {
         //             "key": "service.name",
         //             "value": { "stringValue": "Example.OtlpFile" }
         //           },
+        Assert.Equal(
+            "test-service-name",
+            resourceAttributes["service.name"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //           {
         //             "key": "service.version",
         //             "value": {
         //               "stringValue": "1.0.0+a39edcd73d16166f5105ff3e08aae50d9a30f736"
         //             }
         //           },
+        Assert.Equal(
+            "v1.2.3-test",
+            resourceAttributes["service.version"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //           {
         //             "key": "service.instance.id",
         //             "value": { "stringValue": "38700bd8-eff0-4695-8d6e-6288aea65d46" }
@@ -397,10 +435,26 @@ public class OtlpFileLogRecordExporterTests
         //             "key": "telemetry.sdk.name",
         //             "value": { "stringValue": "opentelemetry" }
         //           },
+        Assert.Equal(
+            "opentelemetry",
+            resourceAttributes["telemetry.sdk.name"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //           {
         //             "key": "telemetry.sdk.language",
         //             "value": { "stringValue": "dotnet" }
         //           },
+        Assert.Equal(
+            "dotnet",
+            resourceAttributes["telemetry.sdk.language"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //           {
         //             "key": "telemetry.sdk.version",
         //             "value": { "stringValue": "1.15.0" }
@@ -411,20 +465,29 @@ public class OtlpFileLogRecordExporterTests
         //       "scopeLogs": [
         var scopeLogs = resourceLogs[0].GetProperty("scopeLogs");
         Assert.Equal(1, scopeLogs.GetArrayLength());
+
         //         {
         //           "scope": { "name": "Program" },
+        Assert.EndsWith(
+            "OtlpFileLogRecordExporterTests",
+            scopeLogs[0].GetProperty("scope").GetProperty("name").GetString()
+        );
+
         //           "logRecords": [
-        var logRecords = scopeLogs[0].GetProperty("logRecords");
+        var logRecords = resourceLogs[0].GetProperty("logRecords");
         Assert.Equal(1, logRecords.GetArrayLength());
 
         //             {
         //               "timeUnixNano": "1771125740795465800",
         //               "observedTimeUnixNano": "1771125740795465800",
+
         //               "severityNumber": 17,
         var logRecord = logRecords[0];
         Assert.Equal(17, logRecord.GetProperty("severityNumber").GetInt32());
 
         //               "severityText": "Error",
+        Assert.Equal("Error", logRecord.GetProperty("severityText").GetString());
+
         //               "body": {
         //                 "stringValue": "Exception caught while processing order {OrderId} for {Amount:C}"
         //               },
@@ -434,24 +497,68 @@ public class OtlpFileLogRecordExporterTests
         );
 
         //               "attributes": [
+        var attributes = logRecord
+            .GetProperty("attributes")
+            .EnumerateArray()
+            .ToDictionary(x => x.GetProperty("key").ToString());
+
         //                 {
         //                   "key": "exception.type",
         //                   "value": { "stringValue": "InvalidOperationException" }
         //                 },
+        Assert.Equal(
+            "InvalidOperationException",
+            resourceAttributes["exception.type"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //                 {
         //                   "key": "exception.message",
         //                   "value": { "stringValue": "Simulated exception for testing" }
         //                 },
+        Assert.Equal(
+            "Simulated exception for testing",
+            resourceAttributes["exception.message"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //                 {
         //                   "key": "exception.stacktrace",
         //                   "value": {
         //                     "stringValue": "System.InvalidOperationException: Simulated exception for testing\r\n   at Program.<Main>$(String[] args) in C:\\Code\\essential-opentelemetry\\examples\\OtlpFileCollector\\Example.OtlpFile\\Program.cs:line 87"
         //                   }
         //                 },
+        Assert.StartsWith(
+            "System.InvalidOperationException: Simulated exception for testing\r\n   at ",
+            resourceAttributes["exception.stacktrace"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //                 { "key": "OrderId", "value": { "stringValue": "ORD-789" } },
+        Assert.Equal(
+            "ORD-789",
+            resourceAttributes["OrderId"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
         //                 { "key": "Amount", "value": { "stringValue": "150.00" } }
+        Assert.Equal(
+            "150.00",
+            resourceAttributes["Amount"].GetProperty("value").GetProperty("stringValue").GetString()
+        );
+
         //               ],
         //               "eventName": "OperationError"
+        Assert.Equal("OperationError", logRecord.GetProperty("eventName").GetString());
+
         //             }
         //           ]
     }
