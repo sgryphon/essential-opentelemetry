@@ -9,6 +9,9 @@
   <Folder Name="/examples/WebConsole/">
     <Project Path="examples/WebConsole/WebConsole.csproj" />
   </Folder>
+  <Folder Name="/examples/OtlpFileCollector/">
+    <Project Path="examples/OtlpFileCollector/Example.OtlpFile/Example.OtlpFile.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Essential.OpenTelemetry.Exporter.ColoredConsole/Essential.OpenTelemetry.Exporter.ColoredConsole.csproj" />
     <Project Path="src/Essential.OpenTelemetry.Exporter.OtlpFile/Essential.OpenTelemetry.Exporter.OtlpFile.csproj" />

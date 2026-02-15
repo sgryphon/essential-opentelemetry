@@ -1,0 +1,27 @@
+services:
+  # Aspire Dashboard - provides UI for viewing OpenTelemetry data
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
+    environment:
+      - DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS=true
+      - DASHBOARD_OTLP_ENDPOINT_URL=http://+:18889
+    ports:
+      - "18888:18888"  # Dashboard UI
+      - "18889:18889"  # OTLP receiver
+
+  # OpenTelemetry Collector - receives JSONL logs and forwards to Aspire
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    command: ["--config=/etc/otel-collector-config.yml"]
+    depends_on:
+      - aspire-dashboard
+    ports:
+      - "14317:4317"  # Dashboard UI
+      - "14318:4318"  # OTLP receiver
+    volumes:
+      - ./otel-collector-config.yml:/etc/otel-collector-config.yml:ro
+      - ./data:/data
+
+networks:
+  default:
+    enable_ipv6: true
