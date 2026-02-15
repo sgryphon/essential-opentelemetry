@@ -167,6 +167,11 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
             }
         }
 
+        // Add scope attributes if present
+        // When IncludeScopes is enabled, scope values are added as regular attributes,
+        // matching the OpenTelemetry Collector file exporter behavior.
+        sdkLogRecord.ForEachScope(ProcessScope, protoLogRecord);
+
         // Add exception attributes if present
         if (sdkLogRecord.Exception != null)
         {
@@ -263,6 +268,23 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         }
 
         return keyValue;
+    }
+
+    private static void ProcessScope(
+        SdkLogs.LogRecordScope scope,
+        ProtoLogs.LogRecord protoLogRecord
+    )
+    {
+        foreach (var attribute in scope)
+        {
+            // Skip the format string scope entries (e.g. "{OriginalFormat}" from BeginScope)
+            if (attribute.Key == "{OriginalFormat}")
+            {
+                continue;
+            }
+
+            protoLogRecord.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
+        }
     }
 
     private static string GetBody(SdkLogs.LogRecord sdkLogRecord)
