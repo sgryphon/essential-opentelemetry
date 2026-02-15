@@ -2,26 +2,50 @@
 // This example outputs logs in OTLP file format that can be consumed by the OTel Collector
 using System.Diagnostics;
 using System.Net;
+using System.Reflection;
 using Essential.OpenTelemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using OpenTelemetry.Resources;
 
-const string ServiceName = "Example.OtlpFile";
+var assembly = Assembly.GetExecutingAssembly();
+var assemblyName = assembly!.GetName();
+var versionAttribute = assembly
+    .GetCustomAttributes(false)
+    .OfType<AssemblyInformationalVersionAttribute>()
+    .FirstOrDefault();
+var serviceName = assemblyName.Name!;
+var serviceVersion =
+    versionAttribute?.InformationalVersion ?? assemblyName.Version?.ToString() ?? string.Empty;
 
-var activitySource = new ActivitySource(ServiceName);
+var activitySource = new ActivitySource(serviceName);
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Logging.ClearProviders();
 builder
     .Services.AddOpenTelemetry()
+    .ConfigureResource(resource =>
+        resource
+            .AddService(serviceName, serviceVersion)
+            .AddAttributes(
+                new KeyValuePair<string, object>[]
+                {
+                    new("host.name", Environment.MachineName),
+                    new(
+                        "deployment.environment.name",
+                        builder.Environment.EnvironmentName.ToLowerInvariant()
+                    ),
+                }
+            )
+    )
     .WithLogging(logging =>
     {
         logging.AddOtlpFileExporter();
     })
     .WithTracing(tracing =>
     {
-        tracing.AddSource(ServiceName);
+        tracing.AddSource(serviceName);
     });
 
 var host = builder.Build();
