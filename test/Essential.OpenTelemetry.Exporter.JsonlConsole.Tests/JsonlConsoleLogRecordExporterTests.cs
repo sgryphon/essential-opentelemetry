@@ -120,7 +120,7 @@ public class JsonlConsoleLogRecordExporterTests
         Console.WriteLine("OUTPUT: {0}", mockOutput.Lines[0]);
 
         // Event Name
-        Assert.Equal("TestEvent", logRecord.GetProperty("eventName").ToString());
+        Assert.Equal("TestEvent", logRecord.GetProperty("eventName").GetString());
 
         // Event ID should be in attributes
         var attributes = logRecord
