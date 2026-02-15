@@ -14,14 +14,7 @@ internal static partial class OtlpJsonSerializer
     /// <param name="output">The stream to write the JSON output to.</param>
     internal static void SerializeTracesData(ProtoTrace.TracesData tracesData, Stream output)
     {
-        using (var writer = new Utf8JsonWriter(output, options: default))
-        {
-            WriteTracesData(writer, tracesData);
-            writer.Flush();
-        }
-
-        output.Write(NewLineBytes, 0, NewLineBytes.Length);
-        output.Flush();
+        SerializeToStream(output, writer => WriteTracesData(writer, tracesData));
     }
 
     private static void WriteTracesData(Utf8JsonWriter writer, ProtoTrace.TracesData tracesData)
@@ -109,28 +102,15 @@ internal static partial class OtlpJsonSerializer
         // attributes(10), dropped_attributes_count(11), events(12), dropped_events_count(13),
         // links(14), dropped_links_count(15), status(16)
 
-        if (!span.TraceId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("traceId", ByteStringToHexLower(span.TraceId));
-        }
-
-        if (!span.SpanId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("spanId", ByteStringToHexLower(span.SpanId));
-        }
+        WriteHexBytesField(writer, "traceId", span.TraceId);
+        WriteHexBytesField(writer, "spanId", span.SpanId);
 
         if (!string.IsNullOrEmpty(span.TraceState))
         {
             writer.WriteString("traceState", span.TraceState);
         }
 
-        if (!span.ParentSpanId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("parentSpanId", ByteStringToHexLower(span.ParentSpanId));
-        }
+        WriteHexBytesField(writer, "parentSpanId", span.ParentSpanId);
 
         if (span.Flags != 0)
         {
@@ -149,39 +129,10 @@ internal static partial class OtlpJsonSerializer
             writer.WriteNumber("kind", (int)span.Kind);
         }
 
-        if (span.StartTimeUnixNano != 0)
-        {
-            // fixed64 → string in JSON per protobuf convention
-            writer.WriteString(
-                "startTimeUnixNano",
-                span.StartTimeUnixNano.ToString(CultureInfo.InvariantCulture)
-            );
-        }
+        WriteTimestamp(writer, "startTimeUnixNano", span.StartTimeUnixNano);
+        WriteTimestamp(writer, "endTimeUnixNano", span.EndTimeUnixNano);
 
-        if (span.EndTimeUnixNano != 0)
-        {
-            // fixed64 → string in JSON per protobuf convention
-            writer.WriteString(
-                "endTimeUnixNano",
-                span.EndTimeUnixNano.ToString(CultureInfo.InvariantCulture)
-            );
-        }
-
-        if (span.Attributes.Count > 0)
-        {
-            writer.WriteStartArray("attributes");
-            foreach (var attr in span.Attributes)
-            {
-                WriteKeyValue(writer, attr);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        if (span.DroppedAttributesCount != 0)
-        {
-            writer.WriteNumber("droppedAttributesCount", span.DroppedAttributesCount);
-        }
+        WriteAttributes(writer, span.Attributes, span.DroppedAttributesCount);
 
         if (span.Events.Count > 0)
         {
@@ -228,35 +179,14 @@ internal static partial class OtlpJsonSerializer
     {
         writer.WriteStartObject();
 
-        if (evt.TimeUnixNano != 0)
-        {
-            // fixed64 → string in JSON per protobuf convention
-            writer.WriteString(
-                "timeUnixNano",
-                evt.TimeUnixNano.ToString(CultureInfo.InvariantCulture)
-            );
-        }
+        WriteTimestamp(writer, "timeUnixNano", evt.TimeUnixNano);
 
         if (!string.IsNullOrEmpty(evt.Name))
         {
             writer.WriteString("name", evt.Name);
         }
 
-        if (evt.Attributes.Count > 0)
-        {
-            writer.WriteStartArray("attributes");
-            foreach (var attr in evt.Attributes)
-            {
-                WriteKeyValue(writer, attr);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        if (evt.DroppedAttributesCount != 0)
-        {
-            writer.WriteNumber("droppedAttributesCount", evt.DroppedAttributesCount);
-        }
+        WriteAttributes(writer, evt.Attributes, evt.DroppedAttributesCount);
 
         writer.WriteEndObject();
     }
@@ -265,38 +195,15 @@ internal static partial class OtlpJsonSerializer
     {
         writer.WriteStartObject();
 
-        if (!link.TraceId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("traceId", ByteStringToHexLower(link.TraceId));
-        }
-
-        if (!link.SpanId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("spanId", ByteStringToHexLower(link.SpanId));
-        }
+        WriteHexBytesField(writer, "traceId", link.TraceId);
+        WriteHexBytesField(writer, "spanId", link.SpanId);
 
         if (!string.IsNullOrEmpty(link.TraceState))
         {
             writer.WriteString("traceState", link.TraceState);
         }
 
-        if (link.Attributes.Count > 0)
-        {
-            writer.WriteStartArray("attributes");
-            foreach (var attr in link.Attributes)
-            {
-                WriteKeyValue(writer, attr);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        if (link.DroppedAttributesCount != 0)
-        {
-            writer.WriteNumber("droppedAttributesCount", link.DroppedAttributesCount);
-        }
+        WriteAttributes(writer, link.Attributes, link.DroppedAttributesCount);
 
         if (link.Flags != 0)
         {

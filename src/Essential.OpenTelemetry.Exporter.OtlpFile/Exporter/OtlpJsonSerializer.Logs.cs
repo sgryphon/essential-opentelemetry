@@ -14,14 +14,7 @@ internal static partial class OtlpJsonSerializer
     /// <param name="output">The stream to write the JSON output to.</param>
     internal static void SerializeLogsData(ProtoLogs.LogsData logsData, Stream output)
     {
-        using (var writer = new Utf8JsonWriter(output, options: default))
-        {
-            WriteLogsData(writer, logsData);
-            writer.Flush();
-        }
-
-        output.Write(NewLineBytes, 0, NewLineBytes.Length);
-        output.Flush();
+        SerializeToStream(output, writer => WriteLogsData(writer, logsData));
     }
 
     private static void WriteLogsData(Utf8JsonWriter writer, ProtoLogs.LogsData logsData)
@@ -97,14 +90,7 @@ internal static partial class OtlpJsonSerializer
         // Proto field order: time_unix_nano(1), severity_number(2), severity_text(3),
         // body(5), attributes(6), dropped_attributes_count(7), flags(8),
         // trace_id(9), span_id(10), observed_time_unix_nano(11), event_name(12)
-        if (logRecord.TimeUnixNano != 0)
-        {
-            // fixed64 → string in JSON per protobuf convention
-            writer.WriteString(
-                "timeUnixNano",
-                logRecord.TimeUnixNano.ToString(CultureInfo.InvariantCulture)
-            );
-        }
+        WriteTimestamp(writer, "timeUnixNano", logRecord.TimeUnixNano);
 
         if (logRecord.SeverityNumber != ProtoLogs.SeverityNumber.Unspecified)
         {
@@ -123,21 +109,7 @@ internal static partial class OtlpJsonSerializer
             WriteAnyValue(writer, logRecord.Body);
         }
 
-        if (logRecord.Attributes.Count > 0)
-        {
-            writer.WriteStartArray("attributes");
-            foreach (var attr in logRecord.Attributes)
-            {
-                WriteKeyValue(writer, attr);
-            }
-
-            writer.WriteEndArray();
-        }
-
-        if (logRecord.DroppedAttributesCount != 0)
-        {
-            writer.WriteNumber("droppedAttributesCount", logRecord.DroppedAttributesCount);
-        }
+        WriteAttributes(writer, logRecord.Attributes, logRecord.DroppedAttributesCount);
 
         if (logRecord.Flags != 0)
         {
@@ -145,26 +117,9 @@ internal static partial class OtlpJsonSerializer
             writer.WriteNumber("flags", logRecord.Flags);
         }
 
-        if (!logRecord.TraceId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("traceId", ByteStringToHexLower(logRecord.TraceId));
-        }
-
-        if (!logRecord.SpanId.IsEmpty)
-        {
-            // bytes → lowercase hex per OTLP JSON Protobuf Encoding
-            writer.WriteString("spanId", ByteStringToHexLower(logRecord.SpanId));
-        }
-
-        if (logRecord.ObservedTimeUnixNano != 0)
-        {
-            // fixed64 → string in JSON per protobuf convention
-            writer.WriteString(
-                "observedTimeUnixNano",
-                logRecord.ObservedTimeUnixNano.ToString(CultureInfo.InvariantCulture)
-            );
-        }
+        WriteHexBytesField(writer, "traceId", logRecord.TraceId);
+        WriteHexBytesField(writer, "spanId", logRecord.SpanId);
+        WriteTimestamp(writer, "observedTimeUnixNano", logRecord.ObservedTimeUnixNano);
 
         if (!string.IsNullOrEmpty(logRecord.EventName))
         {

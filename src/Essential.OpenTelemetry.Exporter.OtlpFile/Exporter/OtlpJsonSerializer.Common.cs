@@ -33,13 +33,41 @@ internal static partial class OtlpJsonSerializer
 {
     private static readonly byte[] NewLineBytes = new byte[] { (byte)'\n' };
 
-    private static void WriteResource(Utf8JsonWriter writer, ProtoResource.Resource resource)
+    /// <summary>
+    /// Serializes data to an output stream using a template pattern.
+    /// Creates a Utf8JsonWriter, invokes the write action, flushes, and writes the trailing newline.
+    /// </summary>
+    /// <param name="output">The stream to write to.</param>
+    /// <param name="writeAction">The action that writes the data using the writer.</param>
+    private static void SerializeToStream(Stream output, Action<Utf8JsonWriter> writeAction)
     {
-        writer.WriteStartObject();
-        if (resource.Attributes.Count > 0)
+        using (var writer = new Utf8JsonWriter(output, options: default))
+        {
+            writeAction(writer);
+            writer.Flush();
+        }
+
+        output.Write(NewLineBytes, 0, NewLineBytes.Length);
+        output.Flush();
+    }
+
+    /// <summary>
+    /// Conditionally writes an attributes array and optional dropped attributes count.
+    /// </summary>
+    /// <param name="writer">The JSON writer.</param>
+    /// <param name="attributes">The collection of KeyValue attributes to write.</param>
+    /// <param name="droppedCount">The count of dropped attributes.</param>
+    private static void WriteAttributes(
+        Utf8JsonWriter writer,
+        IEnumerable<ProtoCommon.KeyValue> attributes,
+        uint droppedCount = 0
+    )
+    {
+        var attributesList = attributes as IList<ProtoCommon.KeyValue> ?? attributes.ToList();
+        if (attributesList.Count > 0)
         {
             writer.WriteStartArray("attributes");
-            foreach (var attr in resource.Attributes)
+            foreach (var attr in attributesList)
             {
                 WriteKeyValue(writer, attr);
             }
@@ -47,6 +75,48 @@ internal static partial class OtlpJsonSerializer
             writer.WriteEndArray();
         }
 
+        if (droppedCount != 0)
+        {
+            writer.WriteNumber("droppedAttributesCount", droppedCount);
+        }
+    }
+
+    /// <summary>
+    /// Conditionally writes a ByteString field as lowercase hex.
+    /// </summary>
+    /// <param name="writer">The JSON writer.</param>
+    /// <param name="fieldName">The field name to write.</param>
+    /// <param name="bytes">The ByteString value.</param>
+    private static void WriteHexBytesField(
+        Utf8JsonWriter writer,
+        string fieldName,
+        ByteString bytes
+    )
+    {
+        if (!bytes.IsEmpty)
+        {
+            writer.WriteString(fieldName, ByteStringToHexLower(bytes));
+        }
+    }
+
+    /// <summary>
+    /// Conditionally writes a ulong nanosecond timestamp as a string.
+    /// </summary>
+    /// <param name="writer">The JSON writer.</param>
+    /// <param name="fieldName">The field name to write.</param>
+    /// <param name="timestampNano">The timestamp in nanoseconds.</param>
+    private static void WriteTimestamp(Utf8JsonWriter writer, string fieldName, ulong timestampNano)
+    {
+        if (timestampNano != 0)
+        {
+            writer.WriteString(fieldName, timestampNano.ToString(CultureInfo.InvariantCulture));
+        }
+    }
+
+    private static void WriteResource(Utf8JsonWriter writer, ProtoResource.Resource resource)
+    {
+        writer.WriteStartObject();
+        WriteAttributes(writer, resource.Attributes);
         writer.WriteEndObject();
     }
 
