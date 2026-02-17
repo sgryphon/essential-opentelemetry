@@ -20,8 +20,7 @@ public class OtlpFileMetricExporterTests
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
             {
@@ -64,8 +63,7 @@ public class OtlpFileMetricExporterTests
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter", "count", "Test counter metric");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
             {
@@ -115,8 +113,7 @@ public class OtlpFileMetricExporterTests
             "Test gauge metric"
         );
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
             {
@@ -160,8 +157,7 @@ public class OtlpFileMetricExporterTests
             "Test histogram metric"
         );
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
             {
@@ -218,8 +214,7 @@ public class OtlpFileMetricExporterTests
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
             {
@@ -279,12 +274,9 @@ public class OtlpFileMetricExporterTests
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .SetResourceBuilder(
-                ResourceBuilder
-                    .CreateDefault()
-                    .AddService("test-service", serviceVersion: "1.0.0")
+                ResourceBuilder.CreateDefault().AddService("test-service", serviceVersion: "1.0.0")
             )
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
@@ -299,9 +291,7 @@ public class OtlpFileMetricExporterTests
 
         // Assert
         var doc = JsonDocument.Parse(mockOutput.Lines[0]);
-        var resource = doc
-            .RootElement.GetProperty("resourceMetrics")[0]
-            .GetProperty("resource");
+        var resource = doc.RootElement.GetProperty("resourceMetrics")[0].GetProperty("resource");
 
         var attributes = resource
             .GetProperty("attributes")
@@ -333,8 +323,7 @@ public class OtlpFileMetricExporterTests
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter(meterName)
             .AddOtlpFileExporter(configure =>
             {
@@ -375,8 +364,7 @@ public class OtlpFileMetricExporterTests
         var counter1 = meter1.CreateCounter<long>("counter1");
         var counter2 = meter2.CreateCounter<long>("counter2");
 
-        using var meterProvider = Sdk
-            .CreateMeterProviderBuilder()
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
             .AddMeter("Meter1")
             .AddMeter("Meter2")
             .AddOtlpFileExporter(configure =>

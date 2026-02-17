@@ -1,6 +1,7 @@
 ﻿// OtlpFile Exporter example for OpenTelemetry Collector verification
-// This example outputs logs in OTLP file format that can be consumed by the OTel Collector
+// This example outputs logs, traces, and metrics in OTLP file format that can be consumed by the OTel Collector
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Net;
 using System.Reflection;
 using Essential.OpenTelemetry;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 
 var assembly = Assembly.GetExecutingAssembly();
@@ -21,6 +23,7 @@ var serviceVersion =
     versionAttribute?.InformationalVersion ?? assemblyName.Version?.ToString() ?? string.Empty;
 
 var activitySource = new ActivitySource(serviceName);
+var meter = new Meter(serviceName, serviceVersion);
 
 var builder = Host.CreateApplicationBuilder(
     new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory }
@@ -61,6 +64,12 @@ builder
     .WithTracing(tracing =>
     {
         tracing.AddSource(serviceName);
+        tracing.AddOtlpFileExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddMeter(serviceName);
+        metrics.AddOtlpFileExporter();
     });
 
 // Configure logging options
@@ -73,11 +82,27 @@ builder.Services.Configure<OpenTelemetryLoggerOptions>(options =>
 var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
 
+// Create metrics
+var requestCounter = meter.CreateCounter<long>("requests", "count", "Number of requests");
+var requestDuration = meter.CreateHistogram<double>("request.duration", "ms", "Request duration");
+var activeConnections = meter.CreateObservableGauge<int>(
+    "active.connections",
+    () => Random.Shared.Next(10, 100),
+    "count",
+    "Number of active connections"
+);
+
 logger.DebugMessage();
 logger.CriticalSystemFailure("payment-service");
 
 // Structured logging with multiple attributes
 logger.UserLoggedIn("Alice", IPAddress.Parse("fdbe:4f24:c288:3b1b::4"), DateTimeOffset.UtcNow);
+
+// Record some metrics
+requestCounter.Add(10, new KeyValuePair<string, object?>("endpoint", "/api/users"));
+requestCounter.Add(5, new KeyValuePair<string, object?>("endpoint", "/api/orders"));
+requestDuration.Record(123.45, new KeyValuePair<string, object?>("endpoint", "/api/users"));
+requestDuration.Record(67.89, new KeyValuePair<string, object?>("endpoint", "/api/orders"));
 
 // Log within an activity to include trace context
 using (var activity = activitySource.StartActivity("OrderProcessing"))
@@ -93,6 +118,9 @@ using (var activity = activitySource.StartActivity("OrderProcessing"))
         }
     }
     logger.ResourceRunningLow("disk space");
+
+    // More metrics during processing
+    requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/api/process"));
 }
 
 // Exception logging example
@@ -105,5 +133,6 @@ catch (Exception ex)
     logger.OperationError(ex, "test-operation");
 }
 
-// Flush provider
+// Flush providers
 host.Services.GetRequiredService<LoggerProvider>().ForceFlush();
+host.Services.GetRequiredService<MeterProvider>().ForceFlush();

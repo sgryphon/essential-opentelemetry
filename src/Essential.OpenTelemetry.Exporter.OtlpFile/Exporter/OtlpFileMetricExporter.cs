@@ -238,10 +238,7 @@ public class OtlpFileMetricExporter : OtlpFileExporter<Metric>
         protoMetric.Histogram = histogram;
     }
 
-    private static void ConvertExponentialHistogram(
-        Metric metric,
-        ProtoMetrics.Metric protoMetric
-    )
+    private static void ConvertExponentialHistogram(Metric metric, ProtoMetrics.Metric protoMetric)
     {
         // ExponentialHistogram support is limited - use basic histogram data
         var exponentialHistogram = new ProtoMetrics.ExponentialHistogram
