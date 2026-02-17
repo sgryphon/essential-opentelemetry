@@ -37,6 +37,8 @@ public class OtlpFileLogRecordExporterTests
         Assert.Single(mockOutput.Lines);
         var jsonLine = mockOutput.Lines[0];
 
+        Console.WriteLine("OUTPUT: " + jsonLine);
+
         // Validate it's valid JSON
         var doc = JsonDocument.Parse(jsonLine);
         var root = doc.RootElement;

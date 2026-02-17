@@ -1,5 +1,5 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System.Text.Json;
+using OpenTelemetry.Proto.Trace.V1;
 using ProtoTrace = OpenTelemetry.Proto.Trace.V1;
 
 namespace Essential.OpenTelemetry.Exporter;
@@ -14,83 +14,102 @@ internal static partial class OtlpJsonSerializer
     /// <param name="output">The stream to write the JSON output to.</param>
     internal static void SerializeTracesData(ProtoTrace.TracesData tracesData, Stream output)
     {
-        SerializeToStream(output, writer => WriteTracesData(writer, tracesData));
+        // SerializeToStream(output, writer => WriteTracesData(writer, tracesData));
+        SerializeToStream(
+            output,
+            writer =>
+                WriteOtlpData<TracesData, ResourceSpans, ScopeSpans, Span>(
+                    writer,
+                    tracesData,
+                    "resourceSpans",
+                    data => data.ResourceSpans,
+                    resourceBlock => resourceBlock.Resource,
+                    resourceBlock => resourceBlock.SchemaUrl,
+                    "scopeSpans",
+                    resourceBlock => resourceBlock.ScopeSpans,
+                    scopeBlock => scopeBlock.Scope,
+                    scopeBlock => scopeBlock.SchemaUrl,
+                    "spans",
+                    scopeBlock => scopeBlock.Spans,
+                    WriteSpan
+                )
+        );
     }
 
-    private static void WriteTracesData(Utf8JsonWriter writer, ProtoTrace.TracesData tracesData)
-    {
-        // Extract out to WriteOtlpData<T, TResource, TScope, TItem> with names & accessors,
-        // e.g. T => RepeatedField<TResource>, TResource => (Resource, RepeatedField<TSpan>, schema)
-        writer.WriteStartObject();
-        if (tracesData.ResourceSpans.Count > 0)
-        {
-            writer.WriteStartArray("resourceSpans");
-            foreach (var rs in tracesData.ResourceSpans)
-            {
-                WriteResourceSpans(writer, rs);
-            }
+    // private static void WriteTracesData(Utf8JsonWriter writer, ProtoTrace.TracesData tracesData)
+    // {
+    //     // Extract out to WriteOtlpData<T, TResource, TScope, TItem> with names & accessors,
+    //     // e.g. T => RepeatedField<TResource>, TResource => (Resource, RepeatedField<TSpan>, schema)
+    //     writer.WriteStartObject();
+    //     if (tracesData.ResourceSpans.Count > 0)
+    //     {
+    //         writer.WriteStartArray("resourceSpans");
+    //         foreach (var rs in tracesData.ResourceSpans)
+    //         {
+    //             WriteResourceSpans(writer, rs);
+    //         }
 
-            writer.WriteEndArray();
-        }
+    //         writer.WriteEndArray();
+    //     }
 
-        writer.WriteEndObject();
-    }
+    //     writer.WriteEndObject();
+    // }
 
-    private static void WriteResourceSpans(
-        Utf8JsonWriter writer,
-        ProtoTrace.ResourceSpans resourceSpans
-    )
-    {
-        writer.WriteStartObject();
+    // private static void WriteResourceSpans(
+    //     Utf8JsonWriter writer,
+    //     ProtoTrace.ResourceSpans resourceSpans
+    // )
+    // {
+    //     writer.WriteStartObject();
 
-        WriteResource(writer, resourceSpans.Resource);
+    //     WriteResource(writer, resourceSpans.Resource);
 
-        if (resourceSpans.ScopeSpans.Count > 0)
-        {
-            writer.WriteStartArray("scopeSpans");
-            foreach (var ss in resourceSpans.ScopeSpans)
-            {
-                WriteScopeSpans(writer, ss);
-            }
+    //     if (resourceSpans.ScopeSpans.Count > 0)
+    //     {
+    //         writer.WriteStartArray("scopeSpans");
+    //         foreach (var ss in resourceSpans.ScopeSpans)
+    //         {
+    //             WriteScopeSpans(writer, ss);
+    //         }
 
-            writer.WriteEndArray();
-        }
+    //         writer.WriteEndArray();
+    //     }
 
-        if (!string.IsNullOrEmpty(resourceSpans.SchemaUrl))
-        {
-            writer.WriteString("schemaUrl", resourceSpans.SchemaUrl);
-        }
+    //     if (!string.IsNullOrEmpty(resourceSpans.SchemaUrl))
+    //     {
+    //         writer.WriteString("schemaUrl", resourceSpans.SchemaUrl);
+    //     }
 
-        writer.WriteEndObject();
-    }
+    //     writer.WriteEndObject();
+    // }
 
-    private static void WriteScopeSpans(Utf8JsonWriter writer, ProtoTrace.ScopeSpans scopeSpans)
-    {
-        writer.WriteStartObject();
-        if (scopeSpans.Scope != null)
-        {
-            writer.WritePropertyName("scope");
-            WriteInstrumentationScope(writer, scopeSpans.Scope);
-        }
+    // private static void WriteScopeSpans(Utf8JsonWriter writer, ProtoTrace.ScopeSpans scopeSpans)
+    // {
+    //     writer.WriteStartObject();
+    //     if (scopeSpans.Scope != null)
+    //     {
+    //         writer.WritePropertyName("scope");
+    //         WriteInstrumentationScope(writer, scopeSpans.Scope);
+    //     }
 
-        if (scopeSpans.Spans.Count > 0)
-        {
-            writer.WriteStartArray("spans");
-            foreach (var span in scopeSpans.Spans)
-            {
-                WriteSpan(writer, span);
-            }
+    //     if (scopeSpans.Spans.Count > 0)
+    //     {
+    //         writer.WriteStartArray("spans");
+    //         foreach (var span in scopeSpans.Spans)
+    //         {
+    //             WriteSpan(writer, span);
+    //         }
 
-            writer.WriteEndArray();
-        }
+    //         writer.WriteEndArray();
+    //     }
 
-        if (!string.IsNullOrEmpty(scopeSpans.SchemaUrl))
-        {
-            writer.WriteString("schemaUrl", scopeSpans.SchemaUrl);
-        }
+    //     if (!string.IsNullOrEmpty(scopeSpans.SchemaUrl))
+    //     {
+    //         writer.WriteString("schemaUrl", scopeSpans.SchemaUrl);
+    //     }
 
-        writer.WriteEndObject();
-    }
+    //     writer.WriteEndObject();
+    // }
 
     private static void WriteSpan(Utf8JsonWriter writer, ProtoTrace.Span span)
     {

@@ -1,6 +1,10 @@
 ﻿using System.Globalization;
 using System.Text.Json;
 using Google.Protobuf;
+using Google.Protobuf.Collections;
+using Microsoft.VisualBasic;
+using OpenTelemetry.Proto.Common.V1;
+using OpenTelemetry.Proto.Resource.V1;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
 using ProtoResource = OpenTelemetry.Proto.Resource.V1;
 
@@ -49,6 +53,81 @@ internal static partial class OtlpJsonSerializer
 
         output.Write(NewLineBytes, 0, NewLineBytes.Length);
         output.Flush();
+    }
+
+    private static void WriteOtlpData<TData, TResourceBlock, TScopeBlock, TItem>(
+        Utf8JsonWriter writer,
+        TData otlpData,
+        string resourcesArrayName,
+        Func<TData, RepeatedField<TResourceBlock>> resourceBlocksAccessor,
+        Func<TResourceBlock, Resource> resourceAccessor,
+        Func<TResourceBlock, string> resourceSchemaUrlAccessor,
+        string scopesArrayName,
+        Func<TResourceBlock, RepeatedField<TScopeBlock>> scopeBlocksAccessor,
+        Func<TScopeBlock, InstrumentationScope> scopeAccessor,
+        Func<TScopeBlock, string> scopeSchemaUrlAccessor,
+        string itemsArrayName,
+        Func<TScopeBlock, RepeatedField<TItem>> itemsAccessor,
+        Action<Utf8JsonWriter, TItem> writeItem
+    )
+    {
+        var resourceBlocks = resourceBlocksAccessor(otlpData);
+
+        writer.WriteStartObject();
+        if (resourceBlocks.Count > 0)
+        {
+            writer.WriteStartArray(resourcesArrayName);
+            foreach (var resourceBlock in resourceBlocks)
+            {
+                writer.WriteStartObject();
+
+                var resource = resourceAccessor(resourceBlock);
+                WriteResource(writer, resource);
+
+                var scopeBlocks = scopeBlocksAccessor(resourceBlock);
+
+                if (scopeBlocks.Count > 0)
+                {
+                    writer.WriteStartArray(scopesArrayName);
+                    foreach (var scopeBlock in scopeBlocks)
+                    {
+                        writer.WriteStartObject();
+
+                        var scope = scopeAccessor(scopeBlock);
+                        WriteInstrumentationScope(writer, scope);
+
+                        var items = itemsAccessor(scopeBlock);
+
+                        if (items.Count > 0)
+                        {
+                            writer.WriteStartArray(itemsArrayName);
+                            foreach (var item in items)
+                            {
+                                writeItem(writer, item);
+                            }
+
+                            writer.WriteEndArray();
+                        }
+
+                        var scopeSchemaUrl = scopeSchemaUrlAccessor(scopeBlock);
+                        WriteSchemaUrl(writer, scopeSchemaUrl);
+
+                        writer.WriteEndObject();
+                    }
+
+                    writer.WriteEndArray();
+                }
+
+                var resourceSchemaUrl = resourceSchemaUrlAccessor(resourceBlock);
+                WriteSchemaUrl(writer, resourceSchemaUrl);
+
+                writer.WriteEndObject();
+            }
+
+            writer.WriteEndArray();
+        }
+
+        writer.WriteEndObject();
     }
 
     /// <summary>
@@ -129,21 +208,34 @@ internal static partial class OtlpJsonSerializer
 
     private static void WriteInstrumentationScope(
         Utf8JsonWriter writer,
-        ProtoCommon.InstrumentationScope scope
+        ProtoCommon.InstrumentationScope? scope
     )
     {
-        writer.WriteStartObject();
-        if (!string.IsNullOrEmpty(scope.Name))
+        if (scope != null)
         {
-            writer.WriteString("name", scope.Name);
-        }
+            writer.WritePropertyName("scope");
 
-        if (!string.IsNullOrEmpty(scope.Version))
+            writer.WriteStartObject();
+            if (!string.IsNullOrEmpty(scope.Name))
+            {
+                writer.WriteString("name", scope.Name);
+            }
+
+            if (!string.IsNullOrEmpty(scope.Version))
+            {
+                writer.WriteString("version", scope.Version);
+            }
+
+            writer.WriteEndObject();
+        }
+    }
+
+    private static void WriteSchemaUrl(Utf8JsonWriter writer, string? schemaUrl)
+    {
+        if (!string.IsNullOrEmpty(schemaUrl))
         {
-            writer.WriteString("version", scope.Version);
+            writer.WriteString("schemaUrl", schemaUrl);
         }
-
-        writer.WriteEndObject();
     }
 
     private static void WriteKeyValue(Utf8JsonWriter writer, ProtoCommon.KeyValue kv)

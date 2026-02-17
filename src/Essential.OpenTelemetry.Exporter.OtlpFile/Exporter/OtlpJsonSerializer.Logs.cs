@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.Json;
+using OpenTelemetry.Proto.Logs.V1;
 using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
 
 namespace Essential.OpenTelemetry.Exporter;
@@ -14,71 +15,90 @@ internal static partial class OtlpJsonSerializer
     /// <param name="output">The stream to write the JSON output to.</param>
     internal static void SerializeLogsData(ProtoLogs.LogsData logsData, Stream output)
     {
-        SerializeToStream(output, writer => WriteLogsData(writer, logsData));
+        // SerializeToStream(output, writer => WriteLogsData(writer, logsData));
+        SerializeToStream(
+            output,
+            writer =>
+                WriteOtlpData<LogsData, ResourceLogs, ScopeLogs, LogRecord>(
+                    writer,
+                    logsData,
+                    "resourceLogs",
+                    data => data.ResourceLogs,
+                    resourceBlock => resourceBlock.Resource,
+                    resourceBlock => resourceBlock.SchemaUrl,
+                    "scopeLogs",
+                    resourceBlock => resourceBlock.ScopeLogs,
+                    scopeBlock => scopeBlock.Scope,
+                    scopeBlock => scopeBlock.SchemaUrl,
+                    "logRecords",
+                    scopeBlock => scopeBlock.LogRecords,
+                    WriteLogRecord
+                )
+        );
     }
 
-    private static void WriteLogsData(Utf8JsonWriter writer, ProtoLogs.LogsData logsData)
-    {
-        writer.WriteStartObject();
-        if (logsData.ResourceLogs.Count > 0)
-        {
-            writer.WriteStartArray("resourceLogs");
-            foreach (var rl in logsData.ResourceLogs)
-            {
-                WriteResourceLogs(writer, rl);
-            }
+    // private static void WriteLogsData(Utf8JsonWriter writer, ProtoLogs.LogsData logsData)
+    // {
+    //     writer.WriteStartObject();
+    //     if (logsData.ResourceLogs.Count > 0)
+    //     {
+    //         writer.WriteStartArray("resourceLogs");
+    //         foreach (var rl in logsData.ResourceLogs)
+    //         {
+    //             WriteResourceLogs(writer, rl);
+    //         }
 
-            writer.WriteEndArray();
-        }
+    //         writer.WriteEndArray();
+    //     }
 
-        writer.WriteEndObject();
-    }
+    //     writer.WriteEndObject();
+    // }
 
-    private static void WriteResourceLogs(
-        Utf8JsonWriter writer,
-        ProtoLogs.ResourceLogs resourceLogs
-    )
-    {
-        writer.WriteStartObject();
+    // private static void WriteResourceLogs(
+    //     Utf8JsonWriter writer,
+    //     ProtoLogs.ResourceLogs resourceLogs
+    // )
+    // {
+    //     writer.WriteStartObject();
 
-        WriteResource(writer, resourceLogs.Resource);
+    //     WriteResource(writer, resourceLogs.Resource);
 
-        if (resourceLogs.ScopeLogs.Count > 0)
-        {
-            writer.WriteStartArray("scopeLogs");
-            foreach (var sl in resourceLogs.ScopeLogs)
-            {
-                WriteScopeLogs(writer, sl);
-            }
+    //     if (resourceLogs.ScopeLogs.Count > 0)
+    //     {
+    //         writer.WriteStartArray("scopeLogs");
+    //         foreach (var sl in resourceLogs.ScopeLogs)
+    //         {
+    //             WriteScopeLogs(writer, sl);
+    //         }
 
-            writer.WriteEndArray();
-        }
+    //         writer.WriteEndArray();
+    //     }
 
-        writer.WriteEndObject();
-    }
+    //     writer.WriteEndObject();
+    // }
 
-    private static void WriteScopeLogs(Utf8JsonWriter writer, ProtoLogs.ScopeLogs scopeLogs)
-    {
-        writer.WriteStartObject();
-        if (scopeLogs.Scope != null)
-        {
-            writer.WritePropertyName("scope");
-            WriteInstrumentationScope(writer, scopeLogs.Scope);
-        }
+    // private static void WriteScopeLogs(Utf8JsonWriter writer, ProtoLogs.ScopeLogs scopeLogs)
+    // {
+    //     writer.WriteStartObject();
+    //     if (scopeLogs.Scope != null)
+    //     {
+    //         // writer.WritePropertyName("scope");
+    //         WriteInstrumentationScope(writer, scopeLogs.Scope);
+    //     }
 
-        if (scopeLogs.LogRecords.Count > 0)
-        {
-            writer.WriteStartArray("logRecords");
-            foreach (var lr in scopeLogs.LogRecords)
-            {
-                WriteLogRecord(writer, lr);
-            }
+    //     if (scopeLogs.LogRecords.Count > 0)
+    //     {
+    //         writer.WriteStartArray("logRecords");
+    //         foreach (var lr in scopeLogs.LogRecords)
+    //         {
+    //             WriteLogRecord(writer, lr);
+    //         }
 
-            writer.WriteEndArray();
-        }
+    //         writer.WriteEndArray();
+    //     }
 
-        writer.WriteEndObject();
-    }
+    //     writer.WriteEndObject();
+    // }
 
     private static void WriteLogRecord(Utf8JsonWriter writer, ProtoLogs.LogRecord logRecord)
     {
