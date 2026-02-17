@@ -37,69 +37,6 @@ internal static partial class OtlpJsonSerializer
         );
     }
 
-    // private static void WriteLogsData(Utf8JsonWriter writer, ProtoLogs.LogsData logsData)
-    // {
-    //     writer.WriteStartObject();
-    //     if (logsData.ResourceLogs.Count > 0)
-    //     {
-    //         writer.WriteStartArray("resourceLogs");
-    //         foreach (var rl in logsData.ResourceLogs)
-    //         {
-    //             WriteResourceLogs(writer, rl);
-    //         }
-
-    //         writer.WriteEndArray();
-    //     }
-
-    //     writer.WriteEndObject();
-    // }
-
-    // private static void WriteResourceLogs(
-    //     Utf8JsonWriter writer,
-    //     ProtoLogs.ResourceLogs resourceLogs
-    // )
-    // {
-    //     writer.WriteStartObject();
-
-    //     WriteResource(writer, resourceLogs.Resource);
-
-    //     if (resourceLogs.ScopeLogs.Count > 0)
-    //     {
-    //         writer.WriteStartArray("scopeLogs");
-    //         foreach (var sl in resourceLogs.ScopeLogs)
-    //         {
-    //             WriteScopeLogs(writer, sl);
-    //         }
-
-    //         writer.WriteEndArray();
-    //     }
-
-    //     writer.WriteEndObject();
-    // }
-
-    // private static void WriteScopeLogs(Utf8JsonWriter writer, ProtoLogs.ScopeLogs scopeLogs)
-    // {
-    //     writer.WriteStartObject();
-    //     if (scopeLogs.Scope != null)
-    //     {
-    //         // writer.WritePropertyName("scope");
-    //         WriteInstrumentationScope(writer, scopeLogs.Scope);
-    //     }
-
-    //     if (scopeLogs.LogRecords.Count > 0)
-    //     {
-    //         writer.WriteStartArray("logRecords");
-    //         foreach (var lr in scopeLogs.LogRecords)
-    //         {
-    //             WriteLogRecord(writer, lr);
-    //         }
-
-    //         writer.WriteEndArray();
-    //     }
-
-    //     writer.WriteEndObject();
-    // }
-
     private static void WriteLogRecord(Utf8JsonWriter writer, ProtoLogs.LogRecord logRecord)
     {
         writer.WriteStartObject();
