@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using Google.Protobuf;
 using OpenTelemetry;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
 using ProtoResource = OpenTelemetry.Proto.Resource.V1;
@@ -14,16 +13,13 @@ namespace Essential.OpenTelemetry.Exporter;
 public abstract class OtlpFileExporter<T> : BaseExporter<T>
     where T : class
 {
+    /// <summary>
+    /// The number of ticks representing the Unix epoch (January 1, 1970 00:00:00 UTC).
+    /// </summary>
 #if NETSTANDARD2_1_OR_GREATER
-    /// <summary>
-    /// The number of ticks representing the Unix epoch (January 1, 1970 00:00:00 UTC).
-    /// </summary>
-    protected static readonly long UnixEpochTicks = DateTimeOffset.UnixEpoch.Ticks;
+    private static readonly long UnixEpochTicks = DateTimeOffset.UnixEpoch.Ticks;
 #else
-    /// <summary>
-    /// The number of ticks representing the Unix epoch (January 1, 1970 00:00:00 UTC).
-    /// </summary>
-    protected static readonly long UnixEpochTicks = new DateTimeOffset(
+    private static readonly long UnixEpochTicks = new DateTimeOffset(
         1970,
         1,
         1,
@@ -33,6 +29,8 @@ public abstract class OtlpFileExporter<T> : BaseExporter<T>
         TimeSpan.Zero
     ).Ticks;
 #endif
+
+    private const long NanosecondsPerTick = 1_000_000 / TimeSpan.TicksPerMillisecond;
 
     /// <summary>
     /// Gets the configuration options for the exporter.
@@ -140,7 +138,6 @@ public abstract class OtlpFileExporter<T> : BaseExporter<T>
     protected static ulong DateTimeOffsetToUnixNano(DateTimeOffset dateTimeOffset)
     {
         var unixTicks = dateTimeOffset.ToUniversalTime().Ticks - UnixEpochTicks;
-        // Convert ticks to nanoseconds: 1 tick = 100 nanoseconds
-        return (ulong)unixTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
+        return (ulong)unixTicks * NanosecondsPerTick;
     }
 }

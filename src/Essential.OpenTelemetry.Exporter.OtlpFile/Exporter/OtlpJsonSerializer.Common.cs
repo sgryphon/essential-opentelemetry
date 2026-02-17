@@ -2,7 +2,6 @@
 using System.Text.Json;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
-using Microsoft.VisualBasic;
 using OpenTelemetry.Proto.Common.V1;
 using OpenTelemetry.Proto.Resource.V1;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;

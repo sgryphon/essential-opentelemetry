@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Reflection;
+﻿using System.Reflection;
 using Google.Protobuf;
 using OpenTelemetry;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;

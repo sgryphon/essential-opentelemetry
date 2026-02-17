@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Text.Json;
+﻿using System.Text.Json;
 using OpenTelemetry.Proto.Logs.V1;
 using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
 
