@@ -14,17 +14,17 @@ using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
 var assembly = Assembly.GetExecutingAssembly();
-var assemblyName = assembly!.GetName();
+var assemblyName = assembly.GetName();
 var versionAttribute = assembly
     .GetCustomAttributes(false)
     .OfType<AssemblyInformationalVersionAttribute>()
     .FirstOrDefault();
-var serviceName = assemblyName.Name!;
+var serviceName = assemblyName.Name ?? "Example.OtlpFile";
 var serviceVersion =
     versionAttribute?.InformationalVersion ?? assemblyName.Version?.ToString() ?? string.Empty;
 
 var activitySource = new ActivitySource(serviceName);
-var meter = new Meter(serviceName, serviceVersion);
+var meter = new Meter(serviceName);
 
 var builder = Host.CreateApplicationBuilder(
     new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory }
@@ -94,6 +94,11 @@ builder.Services.Configure<OpenTelemetryLoggerOptions>(options =>
 
 var host = builder.Build();
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
+
+// Initialise providers. In an application these will be initialised in
+// the background when run, here we need to do them manually.
+using var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
+using var meterProvider = host.Services.GetRequiredService<MeterProvider>();
 
 // Create metrics
 var requestCounter = meter.CreateCounter<long>("requests", "count", "Number of requests");
@@ -168,7 +173,5 @@ catch (Exception ex)
 }
 
 // Flush providers
-await Task.Delay(4000);
-host.Services.GetRequiredService<LoggerProvider>().ForceFlush();
-host.Services.GetRequiredService<TracerProvider>().ForceFlush();
-host.Services.GetRequiredService<MeterProvider>().ForceFlush();
+meterProvider.ForceFlush();
+tracerProvider.ForceFlush();

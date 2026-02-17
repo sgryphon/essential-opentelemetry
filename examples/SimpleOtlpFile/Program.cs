@@ -44,8 +44,8 @@ builder
 var host = builder.Build();
 
 var logger = host.Services.GetRequiredService<ILogger<Program>>();
-var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
-var meterProvider = host.Services.GetRequiredService<MeterProvider>();
+using var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
+using var meterProvider = host.Services.GetRequiredService<MeterProvider>();
 
 // Create a simple counter metric
 var requestCounter = meter.CreateCounter<int>("requests", "count", "Number of requests");
