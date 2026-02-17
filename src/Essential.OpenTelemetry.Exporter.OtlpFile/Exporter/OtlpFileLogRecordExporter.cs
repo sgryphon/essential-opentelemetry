@@ -1,11 +1,8 @@
-﻿using System.Globalization;
-using System.Reflection;
+﻿using System.Reflection;
 using Google.Protobuf;
 using OpenTelemetry;
-using OpenTelemetry.Resources;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
 using ProtoLogs = OpenTelemetry.Proto.Logs.V1;
-using ProtoResource = OpenTelemetry.Proto.Resource.V1;
 using SdkLogs = OpenTelemetry.Logs;
 
 namespace Essential.OpenTelemetry.Exporter;
@@ -16,42 +13,24 @@ namespace Essential.OpenTelemetry.Exporter;
 /// OpenTelemetry Collector File Exporter and OTLP JSON File Receiver.
 /// See <see cref="OtlpJsonSerializer"/> for serialization details.
 /// </summary>
-public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
+public class OtlpFileLogRecordExporter : OtlpFileExporter<SdkLogs.LogRecord>
 {
-#if NETSTANDARD2_1_OR_GREATER
-    private static readonly long UnixEpochTicks = DateTimeOffset.UnixEpoch.Ticks;
-#else
-    private static readonly long UnixEpochTicks = new DateTimeOffset(
-        1970,
-        1,
-        1,
-        0,
-        0,
-        0,
-        TimeSpan.Zero
-    ).Ticks;
-#endif
-
     private static readonly PropertyInfo? SeverityProperty = typeof(SdkLogs.LogRecord).GetProperty(
         "Severity",
         BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
     );
-
-    private readonly OtlpFileOptions options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OtlpFileLogRecordExporter"/> class.
     /// </summary>
     /// <param name="options">Configuration options for the exporter.</param>
     public OtlpFileLogRecordExporter(OtlpFileOptions options)
-    {
-        this.options = options ?? new OtlpFileOptions();
-    }
+        : base(options) { }
 
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<SdkLogs.LogRecord> batch)
     {
-        var console = this.options.Console;
+        var console = this.Options.Console;
 
         // Group log records by scope (category)
         var scopeGroups = new Dictionary<string, List<SdkLogs.LogRecord>>();
@@ -100,27 +79,9 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         return ExportResult.Success;
     }
 
-    private ProtoResource.Resource CreateProtoResource()
-    {
-        var protoResource = new ProtoResource.Resource();
-        var resource = this.ParentProvider?.GetResource();
-        if (resource != null)
-        {
-            foreach (var attribute in resource.Attributes)
-            {
-                protoResource.Attributes.Add(CreateKeyValue(attribute.Key, attribute.Value));
-            }
-        }
-
-        return protoResource;
-    }
-
     private static ProtoLogs.LogRecord ConvertToOtlpLogRecord(SdkLogs.LogRecord sdkLogRecord)
     {
-        // Convert DateTimeOffset to Unix nanoseconds
-        var unixTicks =
-            ((DateTimeOffset)sdkLogRecord.Timestamp).ToUniversalTime().Ticks - UnixEpochTicks;
-        var timestampUnixNano = (ulong)unixTicks * (1_000_000 / TimeSpan.TicksPerMillisecond);
+        var timestampUnixNano = DateTimeOffsetToUnixNano(sdkLogRecord.Timestamp);
 
         var protoLogRecord = new ProtoLogs.LogRecord
         {
@@ -209,65 +170,6 @@ public class OtlpFileLogRecordExporter : BaseExporter<SdkLogs.LogRecord>
         }
 
         return protoLogRecord;
-    }
-
-    private static ProtoCommon.KeyValue CreateKeyValue(string key, object? value)
-    {
-        var keyValue = new ProtoCommon.KeyValue { Key = key, Value = new ProtoCommon.AnyValue() };
-
-        switch (value)
-        {
-            case null:
-                keyValue.Value.StringValue = string.Empty;
-                break;
-            case string s:
-                keyValue.Value.StringValue = s;
-                break;
-            case bool b:
-                keyValue.Value.BoolValue = b;
-                break;
-            case byte by:
-                keyValue.Value.IntValue = by;
-                break;
-            case sbyte sb:
-                keyValue.Value.IntValue = sb;
-                break;
-            case short sh:
-                keyValue.Value.IntValue = sh;
-                break;
-            case ushort us:
-                keyValue.Value.IntValue = us;
-                break;
-            case int i:
-                keyValue.Value.IntValue = i;
-                break;
-            case uint ui:
-                keyValue.Value.IntValue = (long)ui;
-                break;
-            case long l:
-                keyValue.Value.IntValue = l;
-                break;
-            case ulong ul:
-                // Use string for ulong to avoid overflow
-                keyValue.Value.StringValue = ul.ToString(CultureInfo.InvariantCulture);
-                break;
-            case float f:
-                keyValue.Value.DoubleValue = f;
-                break;
-            case double d:
-                keyValue.Value.DoubleValue = d;
-                break;
-            case decimal dec:
-                // Use string for decimal to preserve precision
-                keyValue.Value.StringValue = dec.ToString(CultureInfo.InvariantCulture);
-                break;
-            default:
-                // For other types, convert to string
-                keyValue.Value.StringValue = value.ToString() ?? string.Empty;
-                break;
-        }
-
-        return keyValue;
     }
 
     private static void ProcessScope(
