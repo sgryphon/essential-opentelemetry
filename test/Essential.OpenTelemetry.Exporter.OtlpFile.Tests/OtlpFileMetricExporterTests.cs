@@ -49,8 +49,10 @@ public class OtlpFileMetricExporterTests
         var scopeMetrics = resourceMetrics[0].GetProperty("scopeMetrics");
         Assert.Equal(1, scopeMetrics.GetArrayLength());
 
-        var metrics = scopeMetrics[0].GetProperty("metrics");
-        var metric = metrics[0];
+        var metric = scopeMetrics[0]
+            .GetProperty("metrics")
+            .EnumerateArray()
+            .SingleOrDefault(metric => metric.GetProperty("name").GetString() == "test.counter");
         Assert.Equal("test.counter", metric.GetProperty("name").GetString());
     }
 
@@ -81,9 +83,10 @@ public class OtlpFileMetricExporterTests
         var metric = doc
             .RootElement.GetProperty("resourceMetrics")[0]
             .GetProperty("scopeMetrics")[0]
-            .GetProperty("metrics")[0];
+            .GetProperty("metrics")
+            .EnumerateArray()
+            .SingleOrDefault(metric => metric.GetProperty("name").GetString() == "test.counter");
 
-        Assert.Equal("test.counter", metric.GetProperty("name").GetString());
         Assert.Equal("Test counter metric", metric.GetProperty("description").GetString());
         Assert.Equal("count", metric.GetProperty("unit").GetString());
 
@@ -129,9 +132,10 @@ public class OtlpFileMetricExporterTests
         var metric = doc
             .RootElement.GetProperty("resourceMetrics")[0]
             .GetProperty("scopeMetrics")[0]
-            .GetProperty("metrics")[0];
+            .GetProperty("metrics")
+            .EnumerateArray()
+            .SingleOrDefault(metric => metric.GetProperty("name").GetString() == "test.gauge");
 
-        Assert.Equal("test.gauge", metric.GetProperty("name").GetString());
         Assert.Equal("Test gauge metric", metric.GetProperty("description").GetString());
         Assert.Equal("bytes", metric.GetProperty("unit").GetString());
 
@@ -176,9 +180,10 @@ public class OtlpFileMetricExporterTests
         var metric = doc
             .RootElement.GetProperty("resourceMetrics")[0]
             .GetProperty("scopeMetrics")[0]
-            .GetProperty("metrics")[0];
+            .GetProperty("metrics")
+            .EnumerateArray()
+            .SingleOrDefault(metric => metric.GetProperty("name").GetString() == "test.histogram");
 
-        Assert.Equal("test.histogram", metric.GetProperty("name").GetString());
         Assert.Equal("Test histogram metric", metric.GetProperty("description").GetString());
         Assert.Equal("ms", metric.GetProperty("unit").GetString());
 
