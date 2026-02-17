@@ -1,4 +1,4 @@
-using Google.Protobuf;
+﻿using Google.Protobuf;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
@@ -24,8 +24,6 @@ public class OtlpFileMetricExporter : OtlpFileExporter<Metric>
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<Metric> batch)
     {
-        var console = this.Options.Console;
-
         // Group metrics by instrumentation scope
         var scopeGroups = new Dictionary<string, List<Metric>>();
 
@@ -39,42 +37,40 @@ public class OtlpFileMetricExporter : OtlpFileExporter<Metric>
             scopeGroups[scopeName].Add(metric);
         }
 
-        lock (console.SyncRoot)
+        // Create OTLP MetricsData message
+        var metricsData = new ProtoMetrics.MetricsData();
+        var resourceMetrics = new ProtoMetrics.ResourceMetrics { Resource = CreateProtoResource() };
+
+        // Add scope metrics for each instrumentation scope
+        foreach (var scopeGroup in scopeGroups)
         {
-            // Create OTLP MetricsData message
-            var metricsData = new ProtoMetrics.MetricsData();
-            var resourceMetrics = new ProtoMetrics.ResourceMetrics
+            var scopeMetrics = new ProtoMetrics.ScopeMetrics
             {
-                Resource = CreateProtoResource(),
+                Scope = new ProtoCommon.InstrumentationScope
+                {
+                    Name = scopeGroup.Key,
+                    Version = scopeGroup.Value.FirstOrDefault()?.MeterVersion ?? string.Empty,
+                },
             };
 
-            // Add scope metrics for each instrumentation scope
-            foreach (var scopeGroup in scopeGroups)
+            // Convert each Metric to OTLP proto Metric
+            foreach (var metric in scopeGroup.Value)
             {
-                var scopeMetrics = new ProtoMetrics.ScopeMetrics
+                var protoMetrics = ConvertToOtlpMetrics(metric);
+                foreach (var protoMetric in protoMetrics)
                 {
-                    Scope = new ProtoCommon.InstrumentationScope
-                    {
-                        Name = scopeGroup.Key,
-                        Version = scopeGroup.Value.FirstOrDefault()?.MeterVersion ?? string.Empty,
-                    },
-                };
-
-                // Convert each Metric to OTLP proto Metric
-                foreach (var metric in scopeGroup.Value)
-                {
-                    var protoMetrics = ConvertToOtlpMetrics(metric);
-                    foreach (var protoMetric in protoMetrics)
-                    {
-                        scopeMetrics.Metrics.Add(protoMetric);
-                    }
+                    scopeMetrics.Metrics.Add(protoMetric);
                 }
-
-                resourceMetrics.ScopeMetrics.Add(scopeMetrics);
             }
 
-            metricsData.ResourceMetrics.Add(resourceMetrics);
+            resourceMetrics.ScopeMetrics.Add(scopeMetrics);
+        }
 
+        metricsData.ResourceMetrics.Add(resourceMetrics);
+
+        var console = this.Options.Console;
+        lock (console.SyncRoot)
+        {
             // Serialize directly to output stream in OTLP JSON Protobuf Encoding
             var stream = console.OpenStandardOutput();
             OtlpJsonSerializer.SerializeMetricsData(metricsData, stream);

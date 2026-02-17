@@ -30,8 +30,6 @@ public class OtlpFileLogRecordExporter : OtlpFileExporter<SdkLogs.LogRecord>
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<SdkLogs.LogRecord> batch)
     {
-        var console = this.Options.Console;
-
         // Group log records by scope (category)
         var scopeGroups = new Dictionary<string, List<SdkLogs.LogRecord>>();
 
@@ -45,32 +43,33 @@ public class OtlpFileLogRecordExporter : OtlpFileExporter<SdkLogs.LogRecord>
             scopeGroups[categoryName].Add(sdkLogRecord);
         }
 
-        lock (console.SyncRoot)
+        // Create OTLP LogsData message
+        var logsData = new ProtoLogs.LogsData();
+        var resourceLogs = new ProtoLogs.ResourceLogs { Resource = CreateProtoResource() };
+
+        // Add scope logs for each category
+        foreach (var scopeGroup in scopeGroups)
         {
-            // Create OTLP LogsData message
-            var logsData = new ProtoLogs.LogsData();
-            var resourceLogs = new ProtoLogs.ResourceLogs { Resource = CreateProtoResource() };
-
-            // Add scope logs for each category
-            foreach (var scopeGroup in scopeGroups)
+            var scopeLogs = new ProtoLogs.ScopeLogs
             {
-                var scopeLogs = new ProtoLogs.ScopeLogs
-                {
-                    Scope = new ProtoCommon.InstrumentationScope { Name = scopeGroup.Key },
-                };
+                Scope = new ProtoCommon.InstrumentationScope { Name = scopeGroup.Key },
+            };
 
-                // Convert each SDK LogRecord to OTLP proto LogRecord
-                foreach (var sdkLogRecord in scopeGroup.Value)
-                {
-                    var protoLogRecord = ConvertToOtlpLogRecord(sdkLogRecord);
-                    scopeLogs.LogRecords.Add(protoLogRecord);
-                }
-
-                resourceLogs.ScopeLogs.Add(scopeLogs);
+            // Convert each SDK LogRecord to OTLP proto LogRecord
+            foreach (var sdkLogRecord in scopeGroup.Value)
+            {
+                var protoLogRecord = ConvertToOtlpLogRecord(sdkLogRecord);
+                scopeLogs.LogRecords.Add(protoLogRecord);
             }
 
-            logsData.ResourceLogs.Add(resourceLogs);
+            resourceLogs.ScopeLogs.Add(scopeLogs);
+        }
 
+        logsData.ResourceLogs.Add(resourceLogs);
+
+        var console = this.Options.Console;
+        lock (console.SyncRoot)
+        {
             // Serialize directly to output stream in OTLP JSON Protobuf Encoding
             var stream = console.OpenStandardOutput();
             OtlpJsonSerializer.SerializeLogsData(logsData, stream);
