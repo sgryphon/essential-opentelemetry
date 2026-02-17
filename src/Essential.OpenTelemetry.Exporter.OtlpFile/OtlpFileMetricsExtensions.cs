@@ -1,4 +1,4 @@
-using Essential.OpenTelemetry.Exporter;
+﻿using Essential.OpenTelemetry.Exporter;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using OpenTelemetry;
@@ -11,8 +11,8 @@ namespace Essential.OpenTelemetry;
 /// </summary>
 public static class OtlpFileMetricsExtensions
 {
-    private const int DefaultExportIntervalMilliseconds = 10000;
-    private const int DefaultExportTimeoutMilliseconds = Timeout.Infinite;
+    private const int DefaultExportIntervalMilliseconds = 60_000;
+    private const int DefaultExportTimeoutMilliseconds = 30_000;
 
     /// <summary>
     /// Adds OTLP File exporter to the MeterProvider.
@@ -44,30 +44,7 @@ public static class OtlpFileMetricsExtensions
         this MeterProviderBuilder builder,
         string? name,
         Action<OtlpFileOptions>? configure
-    )
-    {
-        if (builder == null)
-            throw new ArgumentNullException(nameof(builder));
-
-        name ??= Options.DefaultName;
-
-        if (configure != null)
-        {
-            builder.ConfigureServices(services => services.Configure(name, configure));
-        }
-
-        return builder.AddReader(sp =>
-        {
-            var options = sp.GetRequiredService<IOptionsMonitor<OtlpFileOptions>>().Get(name);
-
-            var exporter = new OtlpFileMetricExporter(options);
-            return new PeriodicExportingMetricReader(
-                exporter,
-                DefaultExportIntervalMilliseconds,
-                DefaultExportTimeoutMilliseconds
-            );
-        });
-    }
+    ) => AddOtlpFileExporter(builder, name, configure, configurePeriodicReader: null);
 
     /// <summary>
     /// Adds OTLP File exporter to the MeterProvider with configurable export interval.
@@ -80,27 +57,62 @@ public static class OtlpFileMetricsExtensions
         this MeterProviderBuilder builder,
         Action<OtlpFileOptions> configure,
         int exportIntervalMilliseconds
+    ) =>
+        AddOtlpFileExporter(
+            builder,
+            name: null,
+            configure,
+            periodicReaderOptions =>
+                periodicReaderOptions.ExportIntervalMilliseconds = exportIntervalMilliseconds
+        );
+
+    /// <summary>
+    /// Adds OTLP File exporter to the MeterProvider.
+    /// </summary>
+    /// <param name="builder"><see cref="MeterProviderBuilder"/> builder to use.</param>
+    /// <param name="name">Optional name which is used when retrieving options.</param>
+    /// <param name="configureExporter">Optional callback action for configuring <see cref="OtlpFileOptions"/>.</param>
+    /// <param name="configurePeriodicReader">Optional callback action for configuring <see cref="PeriodicExportingMetricReaderOptions"/>.</param>
+    /// <returns>The instance of <see cref="MeterProviderBuilder"/> to chain the calls.</returns>
+    public static MeterProviderBuilder AddOtlpFileExporter(
+        this MeterProviderBuilder builder,
+        string? name,
+        Action<OtlpFileOptions>? configureExporter,
+        Action<PeriodicExportingMetricReaderOptions>? configurePeriodicReader
     )
     {
         if (builder == null)
             throw new ArgumentNullException(nameof(builder));
 
-        var name = Options.DefaultName;
+        name ??= Options.DefaultName;
 
-        if (configure != null)
+        if (configureExporter != null)
         {
-            builder.ConfigureServices(services => services.Configure(name, configure));
+            builder.ConfigureServices(services => services.Configure(name, configureExporter));
+        }
+
+        if (configurePeriodicReader != null)
+        {
+            builder.ConfigureServices(services =>
+                services.Configure(name, configurePeriodicReader)
+            );
         }
 
         return builder.AddReader(sp =>
         {
-            var options = sp.GetRequiredService<IOptionsMonitor<OtlpFileOptions>>().Get(name);
+            var exporterOptions = sp.GetRequiredService<IOptionsMonitor<OtlpFileOptions>>()
+                .Get(name);
+            var periodicReaderOptions = sp.GetRequiredService<
+                IOptionsMonitor<PeriodicExportingMetricReaderOptions>
+            >()
+                .Get(name);
 
-            var exporter = new OtlpFileMetricExporter(options);
+            var exporter = new OtlpFileMetricExporter(exporterOptions);
             return new PeriodicExportingMetricReader(
                 exporter,
-                exportIntervalMilliseconds,
-                DefaultExportTimeoutMilliseconds
+                periodicReaderOptions.ExportIntervalMilliseconds
+                    ?? DefaultExportIntervalMilliseconds,
+                periodicReaderOptions.ExportTimeoutMilliseconds ?? DefaultExportTimeoutMilliseconds
             );
         });
     }
