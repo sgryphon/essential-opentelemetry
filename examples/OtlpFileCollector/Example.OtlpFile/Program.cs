@@ -11,6 +11,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var assembly = Assembly.GetExecutingAssembly();
 var assemblyName = assembly!.GetName();
@@ -64,12 +65,24 @@ builder
     .WithTracing(tracing =>
     {
         tracing.AddSource(serviceName);
+        // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
+        // logging.AddOtlpExporter(otlpOptions =>
+        // {
+        //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
+        // });
+        // tracing.AddConsoleExporter();
         tracing.AddOtlpFileExporter();
     })
     .WithMetrics(metrics =>
     {
         metrics.AddMeter(serviceName);
-        metrics.AddOtlpFileExporter();
+        // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
+        // logging.AddOtlpExporter(otlpOptions =>
+        // {
+        //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
+        // });
+        // metrics.AddConsoleExporter();
+        metrics.AddOtlpFileExporter(configure => { }, 3000);
     });
 
 // Configure logging options
@@ -108,16 +121,37 @@ requestDuration.Record(67.89, new KeyValuePair<string, object?>("endpoint", "/ap
 using (var activity = activitySource.StartActivity("OrderProcessing"))
 {
     activity?.SetTag("order.id", "ORD-789");
-    activity?.SetTag("order.amount", 150.00);
+    activity?.AddBaggage("Baggage1", "One");
 
     using (logger.BeginScope("Request {RequestId}", "REQ-123"))
     {
         using (logger.BeginScope("Inner Scope"))
         {
             logger.ProcessingOrder("ORD-789", 150);
+
+            var eventTags = new ActivityTagsCollection() { { "ActivityTag", 150 } };
+            activity?.AddEvent(new ActivityEvent("ActivityEvent", tags: eventTags));
         }
     }
-    logger.ResourceRunningLow("disk space");
+    using (var innerActivity = activitySource.StartActivity("InnerActivity"))
+    {
+        var linkTags = new ActivityTagsCollection() { { "LinkTag", "LINK" } };
+        innerActivity?.AddLink(new ActivityLink(activity!.Context, linkTags));
+
+        logger.ResourceRunningLow("disk space");
+
+        try
+        {
+            throw new InvalidOperationException("Simulated activity exception for testing");
+        }
+        catch (Exception ex)
+        {
+            var exceptionTags = new TagList() { { "LinkTag", "LINK" } };
+            innerActivity?.AddException(ex, tags: exceptionTags);
+        }
+
+        innerActivity?.SetStatus(ActivityStatusCode.Error, "Status error");
+    }
 
     // More metrics during processing
     requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/api/process"));
@@ -126,7 +160,7 @@ using (var activity = activitySource.StartActivity("OrderProcessing"))
 // Exception logging example
 try
 {
-    throw new InvalidOperationException("Simulated exception for testing");
+    throw new InvalidOperationException("Simulated log exception for testing");
 }
 catch (Exception ex)
 {
@@ -134,5 +168,7 @@ catch (Exception ex)
 }
 
 // Flush providers
+await Task.Delay(4000);
 host.Services.GetRequiredService<LoggerProvider>().ForceFlush();
+host.Services.GetRequiredService<TracerProvider>().ForceFlush();
 host.Services.GetRequiredService<MeterProvider>().ForceFlush();
