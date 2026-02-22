@@ -16,7 +16,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(BasicMetricExportTest)}";
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
@@ -63,7 +63,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(CounterMetricExportTest)}";
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter", "count", "Test counter metric");
 
@@ -109,7 +109,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(GaugeMetricExportTest)}";
         var meter = new Meter(meterName);
         var gauge = meter.CreateObservableGauge<double>(
             "test.gauge",
@@ -155,7 +155,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(HistogramMetricExportTest)}";
         var meter = new Meter(meterName);
         var histogram = meter.CreateHistogram<double>(
             "test.histogram",
@@ -217,7 +217,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(MetricWithAttributesTest)}";
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
@@ -277,7 +277,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(MetricWithResourceAttributesTest)}";
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
@@ -326,7 +326,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meterName = "TestMeter";
+        var meterName = $"TestMeter.{nameof(MetricTimestampsTest)}";
         var meter = new Meter(meterName);
         var counter = meter.CreateCounter<long>("test.counter");
 
@@ -366,14 +366,14 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
     {
         // Arrange
         var mockOutput = new MockConsole();
-        var meter1 = new Meter("Meter1");
-        var meter2 = new Meter("Meter2");
+        var meter1 = new Meter($"Meter1.{nameof(MultipleMetersTest)}");
+        var meter2 = new Meter($"Meter2.{nameof(MultipleMetersTest)}");
         var counter1 = meter1.CreateCounter<long>("counter1");
         var counter2 = meter2.CreateCounter<long>("counter2");
 
         using var meterProvider = Sdk.CreateMeterProviderBuilder()
-            .AddMeter("Meter1")
-            .AddMeter("Meter2")
+            .AddMeter($"Meter1.{nameof(MultipleMetersTest)}")
+            .AddMeter($"Meter2.{nameof(MultipleMetersTest)}")
             .AddOtlpFileExporter(configure =>
             {
                 configure.Console = mockOutput;
@@ -400,8 +400,8 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
             )
             .ToList();
 
-        Assert.Contains("Meter1", scopes);
-        Assert.Contains("Meter2", scopes);
+        Assert.Contains($"Meter1.{nameof(MultipleMetersTest)}", scopes);
+        Assert.Contains($"Meter2.{nameof(MultipleMetersTest)}", scopes);
     }
 
     [Fact]
