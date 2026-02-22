@@ -322,7 +322,7 @@ public class OtlpFileLogRecordExporterTests
     }
 
     [Fact]
-    public void CheckExportAgainstCollector()
+    public void CheckLogsExportAgainstCollector()
     {
         // Arrange
         var mockOutput = new MockConsole();
@@ -358,7 +358,7 @@ public class OtlpFileLogRecordExporterTests
         };
         ActivitySource.AddActivityListener(activityListener);
 
-        var logger = loggerFactory.CreateLogger<OtlpFileLogRecordExporterTests>();
+        var logger = loggerFactory.CreateLogger("Test.OtlpFile.Logger");
 
         using var activity = activitySource.StartActivity("TestOperation");
 
@@ -487,8 +487,8 @@ public class OtlpFileLogRecordExporterTests
 
         //         {
         //           "scope": { "name": "Program" },
-        Assert.EndsWith(
-            "OtlpFileLogRecordExporterTests",
+        Assert.Equal(
+            "Test.OtlpFile.Logger",
             scopeLogs[0].GetProperty("scope").GetProperty("name").GetString()
         );
 
