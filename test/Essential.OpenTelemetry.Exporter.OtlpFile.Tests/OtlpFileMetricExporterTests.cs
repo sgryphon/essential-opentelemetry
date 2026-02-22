@@ -33,10 +33,12 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
         meterProvider?.ForceFlush();
 
         // Assert
-        Assert.Single(mockOutput.Lines);
-        var jsonLine = mockOutput.Lines[0];
+        foreach (var (line, index) in mockOutput.Lines.Select((l, i) => (l, i)))
+        {
+            Console.WriteLine("OUTPUT {0}: {1}", index, line);
+        }
 
-        Console.WriteLine("OUTPUT: " + jsonLine);
+        var jsonLine = mockOutput.Lines.Last();
 
         // Validate it's valid JSON
         var doc = JsonDocument.Parse(jsonLine);
@@ -383,19 +385,23 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
         counter2.Add(20);
         meterProvider?.ForceFlush();
 
-        // Assert
-        Assert.Single(mockOutput.Lines);
-        var doc = JsonDocument.Parse(mockOutput.Lines[0]);
+        // Assert — one JSONL line per metric (not batched)
+        Assert.Equal(2, mockOutput.Lines.Count);
 
-        var scopeMetrics = doc
-            .RootElement.GetProperty("resourceMetrics")[0]
-            .GetProperty("scopeMetrics");
-        Assert.Equal(2, scopeMetrics.GetArrayLength());
+        var scopes = mockOutput
+            .Lines.Select(line =>
+                JsonDocument
+                    .Parse(line)
+                    .RootElement.GetProperty("resourceMetrics")[0]
+                    .GetProperty("scopeMetrics")[0]
+                    .GetProperty("scope")
+                    .GetProperty("name")
+                    .GetString()
+            )
+            .ToList();
 
-        var scope1 = scopeMetrics[0].GetProperty("scope").GetProperty("name").GetString();
-        var scope2 = scopeMetrics[1].GetProperty("scope").GetProperty("name").GetString();
-        Assert.Contains("Meter1", new[] { scope1, scope2 });
-        Assert.Contains("Meter2", new[] { scope1, scope2 });
+        Assert.Contains("Meter1", scopes);
+        Assert.Contains("Meter2", scopes);
     }
 
     [Fact]
