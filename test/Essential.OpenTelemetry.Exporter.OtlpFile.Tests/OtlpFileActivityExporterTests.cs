@@ -750,7 +750,7 @@ public class OtlpFileActivityExporterTests
         // -----------------------------------------------------------------------
         // Outer Span finishes second
 
-        var outerLine = mockOutput.Lines[0];
+        var outerLine = mockOutput.Lines[1];
         var outerSpanDoc = JsonDocument.Parse(outerLine);
         var outerResourceSpans = outerSpanDoc.RootElement.GetProperty("resourceSpans");
 
