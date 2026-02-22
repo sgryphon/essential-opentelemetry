@@ -9,7 +9,15 @@
 
 .EXAMPLE
     .\Build-Nuget.ps1 -Verbose
-    Build and package with Release configuration
+    Build and package all projects with Release configuration
+
+.EXAMPLE
+    .\Build-Nuget.ps1 -Project ColoredConsole
+    Build and package only the ColoredConsole exporter
+
+.EXAMPLE
+    .\Build-Nuget.ps1 -Project OtlpFile -OtlpFileVersion 0.1.2-alpha.1
+    Build and package the OtlpFile exporter with a specific version override
 
 .EXAMPLE
     .\Build-Nuget.ps1 -Configuration Debug -SkipTests
@@ -22,7 +30,13 @@ param(
     # Skip running tests before packaging.
     [switch]$SkipTests,
     # Name of the base folder to create packages in
-    $PackFolder = "pack"
+    $PackFolder = "pack",
+    # Which project(s) to pack (All, ColoredConsole, OtlpFile). Default is All.
+    [ValidateSet("All", "ColoredConsole", "OtlpFile")]
+    [string]$Project = "All",
+    # Override the version for the OtlpFile package (e.g. "0.1.2-alpha.1").
+    # If not specified, the GitVersion-generated version is used.
+    [string]$OtlpFileVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -68,21 +82,52 @@ if (Test-Path $packDir) {
 }
 New-Item -ItemType Directory -Path $packDir | Out-Null
 
-# Pack the project
-Write-Verbose "Creating NuGet package..."
-$projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.ColoredConsole'
-dotnet pack $projectPath `
-    -c $Configuration `
-    --no-build `
-    -p:AssemblyVersion=$($v.AssemblySemVer) `
-    -p:FileVersion=$($v.AssemblySemFileVer) `
-    -p:Version=$($v.SemVer)+$($v.ShortSha) `
-    -p:PackageVersion=$($v.FullSemVer) `
-    --output $packDir
+# Pack the ColoredConsole project
+if ($Project -eq "All" -or $Project -eq "ColoredConsole") {
+    Write-Verbose "Creating ColoredConsole NuGet package..."
+    $projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.ColoredConsole'
+    dotnet pack $projectPath `
+        -c $Configuration `
+        --no-build `
+        -p:AssemblyVersion=$($v.AssemblySemVer) `
+        -p:FileVersion=$($v.AssemblySemFileVer) `
+        -p:Version=$($v.SemVer)+$($v.ShortSha) `
+        -p:PackageVersion=$($v.FullSemVer) `
+        --output $packDir
+    if (!$?) { throw 'ColoredConsole pack failed' }
+}
 
-if (!$?) { throw 'Pack failed' }
+# Pack the OtlpFile project
+if ($Project -eq "All" -or $Project -eq "OtlpFile") {
+    Write-Verbose "Creating OtlpFile NuGet package..."
+    $projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.OtlpFile'
 
-Write-Host "Package created successfully in $packDir" -ForegroundColor Green
+    # Resolve version: use override if supplied, otherwise use GitVersion
+    if ($OtlpFileVersion -ne "") {
+        Write-Host "Using OtlpFile version override: $OtlpFileVersion" -ForegroundColor Yellow
+        $otlpPackageVersion = $OtlpFileVersion
+        $otlpAssemblySemVer = $v.AssemblySemVer
+        $otlpAssemblySemFileVer = $v.AssemblySemFileVer
+        $otlpVersion = $OtlpFileVersion
+    } else {
+        $otlpPackageVersion = $v.FullSemVer
+        $otlpAssemblySemVer = $v.AssemblySemVer
+        $otlpAssemblySemFileVer = $v.AssemblySemFileVer
+        $otlpVersion = "$($v.SemVer)+$($v.ShortSha)"
+    }
+
+    dotnet pack $projectPath `
+        -c $Configuration `
+        --no-build `
+        -p:AssemblyVersion=$otlpAssemblySemVer `
+        -p:FileVersion=$otlpAssemblySemFileVer `
+        -p:Version=$otlpVersion `
+        -p:PackageVersion=$otlpPackageVersion `
+        --output $packDir
+    if (!$?) { throw 'OtlpFile pack failed' }
+}
+
+Write-Host "Package(s) created successfully in $packDir" -ForegroundColor Green
 Write-Verbose "To publish to NuGet.org, run:"
 Write-Verbose '  $nugetKey = "YOUR_API_KEY"'
 Write-Verbose '  dotnet nuget push pack/*.nupkg --api-key $nugetKey --source https://api.nuget.org/v3/index.json'
