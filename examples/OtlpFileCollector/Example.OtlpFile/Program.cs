@@ -1,6 +1,7 @@
 ﻿// OtlpFile Exporter example for OpenTelemetry Collector verification
-// This example outputs logs in OTLP file format that can be consumed by the OTel Collector
+// This example outputs logs, traces, and metrics in OTLP file format that can be consumed by the OTel Collector
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using System.Net;
 using System.Reflection;
 using Essential.OpenTelemetry;
@@ -8,19 +9,26 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 var assembly = Assembly.GetExecutingAssembly();
-var assemblyName = assembly!.GetName();
+var assemblyName = assembly.GetName();
 var versionAttribute = assembly
     .GetCustomAttributes(false)
     .OfType<AssemblyInformationalVersionAttribute>()
     .FirstOrDefault();
-var serviceName = assemblyName.Name!;
+var serviceName = assemblyName.Name ?? "Example.OtlpFile";
 var serviceVersion =
     versionAttribute?.InformationalVersion ?? assemblyName.Version?.ToString() ?? string.Empty;
 
-var activitySource = new ActivitySource(serviceName);
+var loggerName = $"{serviceName}.Logger";
+var sourceName = $"{serviceName}.Source";
+var meterName = $"{serviceName}.Meter";
+
+var activitySource = new ActivitySource(sourceName);
+var meter = new Meter(meterName);
 
 var builder = Host.CreateApplicationBuilder(
     new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory }
@@ -60,7 +68,25 @@ builder
     })
     .WithTracing(tracing =>
     {
-        tracing.AddSource(serviceName);
+        tracing.AddSource(sourceName);
+        // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
+        // tracing.AddOtlpExporter(otlpOptions =>
+        // {
+        //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
+        // });
+        // tracing.AddConsoleExporter();
+        tracing.AddOtlpFileExporter();
+    })
+    .WithMetrics(metrics =>
+    {
+        metrics.AddMeter(meterName);
+        // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
+        // metrics.AddOtlpExporter(otlpOptions =>
+        // {
+        //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
+        // });
+        // metrics.AddConsoleExporter();
+        metrics.AddOtlpFileExporter(configure => { }, 3000);
     });
 
 // Configure logging options
@@ -71,7 +97,23 @@ builder.Services.Configure<OpenTelemetryLoggerOptions>(options =>
 });
 
 var host = builder.Build();
-var logger = host.Services.GetRequiredService<ILogger<Program>>();
+using var loggerProvider = host.Services.GetRequiredService<ILoggerProvider>();
+var logger = loggerProvider.CreateLogger(loggerName);
+
+// Initialise providers. In an application these will be initialised in
+// the background when run, here we need to do them manually.
+using var tracerProvider = host.Services.GetRequiredService<TracerProvider>();
+using var meterProvider = host.Services.GetRequiredService<MeterProvider>();
+
+// Create metrics
+var requestCounter = meter.CreateCounter<long>("requests", "count", "Number of requests");
+var requestDuration = meter.CreateHistogram<double>("request.duration", "ms", "Request duration");
+var activeConnections = meter.CreateObservableGauge<int>(
+    "active.connections",
+    () => Random.Shared.Next(10, 100),
+    "count",
+    "Number of active connections"
+);
 
 logger.DebugMessage();
 logger.CriticalSystemFailure("payment-service");
@@ -79,31 +121,62 @@ logger.CriticalSystemFailure("payment-service");
 // Structured logging with multiple attributes
 logger.UserLoggedIn("Alice", IPAddress.Parse("fdbe:4f24:c288:3b1b::4"), DateTimeOffset.UtcNow);
 
+// Record some metrics
+requestCounter.Add(10, new KeyValuePair<string, object?>("endpoint", "/api/users"));
+requestCounter.Add(5, new KeyValuePair<string, object?>("endpoint", "/api/orders"));
+requestDuration.Record(123.45, new KeyValuePair<string, object?>("endpoint", "/api/users"));
+requestDuration.Record(67.89, new KeyValuePair<string, object?>("endpoint", "/api/orders"));
+
 // Log within an activity to include trace context
 using (var activity = activitySource.StartActivity("OrderProcessing"))
 {
     activity?.SetTag("order.id", "ORD-789");
-    activity?.SetTag("order.amount", 150.00);
+    activity?.AddBaggage("Baggage1", "One");
 
     using (logger.BeginScope("Request {RequestId}", "REQ-123"))
     {
         using (logger.BeginScope("Inner Scope"))
         {
             logger.ProcessingOrder("ORD-789", 150);
+
+            var eventTags = new ActivityTagsCollection() { { "ActivityTag", 150 } };
+            activity?.AddEvent(new ActivityEvent("ActivityEvent", tags: eventTags));
         }
     }
-    logger.ResourceRunningLow("disk space");
+    using (var innerActivity = activitySource.StartActivity("InnerActivity"))
+    {
+        var linkTags = new ActivityTagsCollection() { { "LinkTag", "LINK" } };
+        innerActivity?.AddLink(new ActivityLink(activity!.Context, linkTags));
+
+        logger.ResourceRunningLow("disk space");
+
+        try
+        {
+            throw new InvalidOperationException("Simulated activity exception for testing");
+        }
+        catch (Exception ex)
+        {
+            var exceptionTags = new TagList() { { "LinkTag", "LINK" } };
+            innerActivity?.AddException(ex, tags: exceptionTags);
+        }
+
+        innerActivity?.SetStatus(ActivityStatusCode.Error, "Status error");
+    }
+
+    // More metrics during processing
+    requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/api/process"));
 }
 
 // Exception logging example
 try
 {
-    throw new InvalidOperationException("Simulated exception for testing");
+    throw new InvalidOperationException("Simulated log exception for testing");
 }
 catch (Exception ex)
 {
     logger.OperationError(ex, "test-operation");
 }
 
-// Flush provider
-host.Services.GetRequiredService<LoggerProvider>().ForceFlush();
+// Flush providers
+meterProvider.ForceFlush();
+tracerProvider.ForceFlush();

@@ -36,13 +36,31 @@ exporters:
       insecure: true
 
   # OTLP file exporter - writes telemetry to files
-  file:
-    path: /data/output/telemetry.jsonl
+  # Add this to the pipeline, then send example logs to OTLP receiver,
+  # To see how the Collector generates files.
+  file_traces:
+    path: /data/output/traces.jsonl
+    create_directory: true
+    flush_interval: 5s
+  file_metrics:
+    path: /data/output/metrics.jsonl
+    create_directory: true
+    flush_interval: 5s
+  file_logs:
+    path: /data/output/logs.jsonl
     create_directory: true
     flush_interval: 5s
 
 service:
   pipelines:
+    traces:
+      receivers: [otlpjsonfile, otlp]
+      processors: [batch]
+      exporters: [debug, otlp_grpc]
+    metrics:
+      receivers: [otlpjsonfile, otlp]
+      processors: [batch]
+      exporters: [debug, otlp_grpc]
     logs:
       receivers: [otlpjsonfile, otlp]
       processors: [batch]

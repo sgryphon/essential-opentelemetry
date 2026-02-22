@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Google.Protobuf;
 using OpenTelemetry;
 using ProtoCommon = OpenTelemetry.Proto.Common.V1;
@@ -24,8 +24,6 @@ public class OtlpFileActivityExporter : OtlpFileExporter<Activity>
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<Activity> batch)
     {
-        var console = this.Options.Console;
-
         // Group activities by instrumentation scope
         var scopeGroups = new Dictionary<string, List<Activity>>();
 
@@ -39,37 +37,37 @@ public class OtlpFileActivityExporter : OtlpFileExporter<Activity>
             scopeGroups[scopeName].Add(activity);
         }
 
-        lock (console.SyncRoot)
+        // Create OTLP TracesData message
+        var tracesData = new ProtoTrace.TracesData();
+        var resourceSpans = new ProtoTrace.ResourceSpans { Resource = CreateProtoResource() };
+
+        // Add scope spans for each instrumentation scope
+        foreach (var scopeGroup in scopeGroups)
         {
-            // Create OTLP TracesData message
-            var tracesData = new ProtoTrace.TracesData();
-            var resourceSpans = new ProtoTrace.ResourceSpans { Resource = CreateProtoResource() };
-
-            // Add scope spans for each instrumentation scope
-            foreach (var scopeGroup in scopeGroups)
+            var scopeSpans = new ProtoTrace.ScopeSpans
             {
-                var scopeSpans = new ProtoTrace.ScopeSpans
+                Scope = new ProtoCommon.InstrumentationScope
                 {
-                    Scope = new ProtoCommon.InstrumentationScope
-                    {
-                        Name = scopeGroup.Key,
-                        Version =
-                            scopeGroup.Value.FirstOrDefault()?.Source?.Version ?? string.Empty,
-                    },
-                };
+                    Name = scopeGroup.Key,
+                    Version = scopeGroup.Value.FirstOrDefault()?.Source?.Version ?? string.Empty,
+                },
+            };
 
-                // Convert each Activity to OTLP proto Span
-                foreach (var activity in scopeGroup.Value)
-                {
-                    var protoSpan = ConvertToOtlpSpan(activity);
-                    scopeSpans.Spans.Add(protoSpan);
-                }
-
-                resourceSpans.ScopeSpans.Add(scopeSpans);
+            // Convert each Activity to OTLP proto Span
+            foreach (var activity in scopeGroup.Value)
+            {
+                var protoSpan = ConvertToOtlpSpan(activity);
+                scopeSpans.Spans.Add(protoSpan);
             }
 
-            tracesData.ResourceSpans.Add(resourceSpans);
+            resourceSpans.ScopeSpans.Add(scopeSpans);
+        }
 
+        tracesData.ResourceSpans.Add(resourceSpans);
+
+        var console = this.Options.Console;
+        lock (console.SyncRoot)
+        {
             // Serialize directly to output stream in OTLP JSON Protobuf Encoding
             var stream = console.OpenStandardOutput();
             OtlpJsonSerializer.SerializeTracesData(tracesData, stream);
