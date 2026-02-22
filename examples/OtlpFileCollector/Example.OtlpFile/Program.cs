@@ -23,8 +23,12 @@ var serviceName = assemblyName.Name ?? "Example.OtlpFile";
 var serviceVersion =
     versionAttribute?.InformationalVersion ?? assemblyName.Version?.ToString() ?? string.Empty;
 
-var activitySource = new ActivitySource(serviceName);
-var meter = new Meter(serviceName);
+var loggerName = $"{serviceName}.Logger";
+var sourceName = $"{serviceName}.Source";
+var meterName = $"{serviceName}.Meter";
+
+var activitySource = new ActivitySource(sourceName);
+var meter = new Meter(meterName);
 
 var builder = Host.CreateApplicationBuilder(
     new HostApplicationBuilderSettings { Args = args, ContentRootPath = AppContext.BaseDirectory }
@@ -64,9 +68,9 @@ builder
     })
     .WithTracing(tracing =>
     {
-        tracing.AddSource(serviceName);
+        tracing.AddSource(sourceName);
         // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
-        // logging.AddOtlpExporter(otlpOptions =>
+        // tracing.AddOtlpExporter(otlpOptions =>
         // {
         //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
         // });
@@ -75,9 +79,9 @@ builder
     })
     .WithMetrics(metrics =>
     {
-        metrics.AddMeter(serviceName);
+        metrics.AddMeter(meterName);
         // Enable OTLP export for comparison, to either 14317 (collector) or 18889 (Aspire)
-        // logging.AddOtlpExporter(otlpOptions =>
+        // metrics.AddOtlpExporter(otlpOptions =>
         // {
         //     otlpOptions.Endpoint = new Uri("http://127.0.0.1:14317");
         // });
@@ -93,7 +97,8 @@ builder.Services.Configure<OpenTelemetryLoggerOptions>(options =>
 });
 
 var host = builder.Build();
-var logger = host.Services.GetRequiredService<ILogger<Program>>();
+using var loggerProvider = host.Services.GetRequiredService<ILoggerProvider>();
+var logger = loggerProvider.CreateLogger(loggerName);
 
 // Initialise providers. In an application these will be initialised in
 // the background when run, here we need to do them manually.
