@@ -9,7 +9,7 @@ using Xunit;
 namespace Essential.OpenTelemetry.Exporter.OtlpFile.Tests;
 
 [Collection("OtlpFileTests")]
-public class OtlpFileMetricExporterTests
+public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
 {
     [Fact]
     public void BasicMetricExportTest()
@@ -397,5 +397,841 @@ public class OtlpFileMetricExporterTests
 
         Assert.Contains("Meter1", new[] { scope1, scope2 });
         Assert.Contains("Meter2", new[] { scope1, scope2 });
+    }
+
+    [Fact]
+    public async Task CheckMetricExporterAgainstCollector()
+    {
+        // Arrange
+        var mockOutput = new MockConsole();
+        var meterName = "Test.OtlpFile.Meter";
+        var meter = new Meter(meterName);
+        var counter = meter.CreateCounter<long>("test.counter");
+
+        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+            .SetResourceBuilder(
+                ResourceBuilder
+                    .CreateDefault()
+                    .AddService("test-service-name", serviceVersion: "v1.2.3-test")
+                    .AddAttributes(
+                        new KeyValuePair<string, object>[]
+                        {
+                            new("host.name", "test-host"),
+                            new("deployment.environment.name", "test"),
+                        }
+                    )
+            )
+            .AddMeter(meterName)
+            .AddOtlpFileExporter(configure =>
+            {
+                configure.Console = mockOutput;
+            })
+            .Build();
+
+        var requestCounter = meter.CreateCounter<long>("requests", "count", "Number of requests");
+        var requestDuration = meter.CreateHistogram<double>(
+            "request.duration",
+            "ms",
+            "Request duration"
+        );
+        var currentObservedValue = 1;
+        var activeConnections = meter.CreateObservableGauge<int>(
+            "active.connections",
+            ObserveValue,
+            "count",
+            "Number of active connections"
+        );
+
+        // Act
+        int ObserveValue() // values for the gauge above
+        {
+            return ++currentObservedValue;
+        }
+
+        requestCounter.Add(10, new KeyValuePair<string, object?>("endpoint", "/api/counter1"));
+        await Task.Delay(100, tc.Current.CancellationToken);
+        requestCounter.Add(5, new KeyValuePair<string, object?>("endpoint", "/api/counter2"));
+        await Task.Delay(100, tc.Current.CancellationToken);
+        requestDuration.Record(
+            123.45,
+            new KeyValuePair<string, object?>("endpoint", "/api/duration1"),
+            new KeyValuePair<string, object?>("result", "success")
+        );
+        await Task.Delay(100, tc.Current.CancellationToken);
+        requestDuration.Record(
+            67.89,
+            new KeyValuePair<string, object?>("endpoint", "/api/duration1"),
+            new KeyValuePair<string, object?>("result", "success")
+        );
+        await Task.Delay(100, tc.Current.CancellationToken);
+
+        requestCounter.Add(1, new KeyValuePair<string, object?>("endpoint", "/api/counter1"));
+
+        meterProvider?.ForceFlush();
+
+        // Assert
+
+        // ---------------------------------------------------------------
+        // Validate resource and scope in the first line
+        var firstLine = mockOutput.Lines[0];
+
+        Console.WriteLine("OUTPUT 0: " + firstLine);
+
+        // Validate it's valid JSON
+        var firstLineDoc = JsonDocument.Parse(firstLine);
+
+        // {
+        //   "resourceMetrics": [
+        var firstResourceMetrics = firstLineDoc.RootElement.GetProperty("resourceMetrics");
+        Assert.Equal(1, firstResourceMetrics.GetArrayLength());
+
+        //     {
+        //       "resource": {
+        //         "attributes": [
+        var firstResourceAttributes = firstResourceMetrics[0]
+            .GetProperty("resource")
+            .GetProperty("attributes")
+            .EnumerateArray()
+            .ToDictionary(x => x.GetProperty("key").ToString());
+
+        //           { "key": "host.name", "value": { "stringValue": "TAR-VALON" } },
+        Assert.Equal(
+            "test-host",
+            firstResourceAttributes["host.name"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
+        //           {
+        //             "key": "deployment.environment.name",
+        //             "value": { "stringValue": "production" }
+        //           },
+        //           {
+        //             "key": "service.name",
+        //             "value": { "stringValue": "Example.OtlpFile" }
+        //           },
+        Assert.Equal(
+            "test-service-name",
+            firstResourceAttributes["service.name"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
+        //           {
+        //             "key": "service.version",
+        //             "value": {
+        //               "stringValue": "1.0.0+d40ee8c350d543a91f3bfabebe40e61b30c7508d"
+        //             }
+        //           },
+        //           {
+        //             "key": "service.instance.id",
+        //             "value": { "stringValue": "6eda2ce7-dabf-43a7-8610-af22295d530f" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.name",
+        //             "value": { "stringValue": "opentelemetry" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.language",
+        //             "value": { "stringValue": "dotnet" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.version",
+        //             "value": { "stringValue": "1.15.0" }
+        //           }
+        //         ]
+        //       },
+
+        //       "scopeMetrics": [
+        var firstScopeMetrics = firstResourceMetrics[0].GetProperty("scopeMetrics");
+        Assert.Equal(1, firstScopeMetrics.GetArrayLength());
+
+        //         {
+        //           "scope": { "name": "Example.OtlpFile" },
+        Assert.Equal(
+            "Test.OtlpFile.Meter",
+            firstScopeMetrics[0].GetProperty("scope").GetProperty("name").GetString()
+        );
+
+        // ---------------------------------------------------------------
+        // We output one JSONL line per metric (not batched), so each line should only have one;
+        // group them by metric name.
+
+        var rootElementsByMetricName = mockOutput
+            .Lines.Select(line => JsonDocument.Parse(line).RootElement)
+            .GroupBy(element =>
+                element
+                    .GetProperty("resourceMetrics")[0]
+                    .GetProperty("scopeMetrics")[0]
+                    .GetProperty("metrics")[0]
+                    .GetProperty("name")
+                    .GetString()
+            )
+            .Where(x => !string.IsNullOrEmpty(x.Key))
+            .ToDictionary(x => x.Key!, x => x);
+
+        foreach (var group in rootElementsByMetricName)
+        {
+            Console.WriteLine("METRIC {0}: count={1}", group.Key, group.Value.Count());
+        }
+
+        #region Initial collector output
+        // ---------------------------------------------------------------
+        // Initial line of Collector output
+        // We ignore the first batch of outputs, and just check the last batch,
+        // that totals are correct.
+        // See end of this test for the checks.
+
+        //           "metrics": [
+        //             {
+        //               "name": "requests",
+        //               "description": "Number of requests",
+        //               "unit": "count",
+        //               "sum": {
+        //                 "dataPoints": [
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/users" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771654168794218700",
+        //                     "timeUnixNano": "1771654169144782300",
+        //                     "asInt": "10"
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/orders" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771654168794218700",
+        //                     "timeUnixNano": "1771654169144782300",
+        //                     "asInt": "5"
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/process" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771654168794218700",
+        //                     "timeUnixNano": "1771654169144782300",
+        //                     "asInt": "1"
+        //                   }
+        //                 ],
+        //                 "aggregationTemporality": 2,
+        //                 "isMonotonic": true
+        //               }
+        //             },
+        //             {
+        //               "name": "request.duration",
+        //               "description": "Request duration",
+        //               "unit": "ms",
+        //               "histogram": {
+        //                 "dataPoints": [
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/users" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771654168802047200",
+        //                     "timeUnixNano": "1771654169145271000",
+        //                     "count": "1",
+        //                     "sum": 123.45,
+        //                     "bucketCounts": [
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "1",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0"
+        //                     ],
+        //                     "explicitBounds": [
+        //                       0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500,
+        //                       5000, 7500, 10000
+        //                     ],
+        //                     "min": 123.45,
+        //                     "max": 123.45
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/orders" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771654168802047200",
+        //                     "timeUnixNano": "1771654169145271000",
+        //                     "count": "1",
+        //                     "sum": 67.89,
+        //                     "bucketCounts": [
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "1",
+
+        // ------------------------------------------------------------------------
+        // Second line of Collector output
+
+        // {
+        //   "resourceMetrics": [
+        //     {
+        //       "resource": {
+        //         "attributes": [
+        //           { "key": "host.name", "value": { "stringValue": "TAR-VALON" } },
+        //           {
+        //             "key": "deployment.environment.name",
+        //             "value": { "stringValue": "production" }
+        //           },
+        //           {
+        //             "key": "service.name",
+        //             "value": { "stringValue": "Example.OtlpFile" }
+        //           },
+        //           {
+        //             "key": "service.version",
+        //             "value": {
+        //               "stringValue": "1.0.0+d40ee8c350d543a91f3bfabebe40e61b30c7508d"
+        //             }
+        //           },
+        //           {
+        //             "key": "service.instance.id",
+        //             "value": { "stringValue": "e68381dc-e6fe-4ced-aa7c-f980d6a50f93" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.name",
+        //             "value": { "stringValue": "opentelemetry" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.language",
+        //             "value": { "stringValue": "dotnet" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.version",
+        //             "value": { "stringValue": "1.15.0" }
+        //           }
+        //         ]
+        //       },
+        //       "scopeMetrics": [
+        //         {
+        //           "scope": { "name": "Example.OtlpFile.Meter" },
+        //           "metrics": [
+        //             {
+        //               "name": "requests",
+        //               "description": "Number of requests",
+        //               "unit": "count",
+        //               "sum": {
+        //                 "dataPoints": [
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/users" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690455267200",
+        //                     "timeUnixNano": "1771717690768636800",
+        //                     "asInt": "10"
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/orders" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690455267200",
+        //                     "timeUnixNano": "1771717690768636800",
+        //                     "asInt": "5"
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/process" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690455267200",
+        //                     "timeUnixNano": "1771717690768636800",
+        //                     "asInt": "1"
+        //                   }
+        //                 ],
+        //                 "aggregationTemporality": 2,
+        //                 "isMonotonic": true
+        //               }
+        //             },
+        //             {
+        //               "name": "request.duration",
+        //               "description": "Request duration",
+        //               "unit": "ms",
+        //               "histogram": {
+        //                 "dataPoints": [
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/users" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690461528000",
+        //                     "timeUnixNano": "1771717690769129700",
+        //                     "count": "1",
+        //                     "sum": 123.45,
+        //                     "bucketCounts": [
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "1",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0"
+        //                     ],
+        //                     "explicitBounds": [
+        //                       0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500,
+        //                       5000, 7500, 10000
+        //                     ],
+        //                     "min": 123.45,
+        //                     "max": 123.45
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/orders" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690461528000",
+        //                     "timeUnixNano": "1771717690769129700",
+        //                     "count": "1",
+        //                     "sum": 67.89,
+        //                     "bucketCounts": [
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "1",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0"
+        //                     ],
+        //                     "explicitBounds": [
+        //                       0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500,
+        //                       5000, 7500, 10000
+        //                     ],
+        //                     "min": 67.89,
+        //                     "max": 67.89
+        //                   }
+        //                 ],
+        //                 "aggregationTemporality": 2
+        //               }
+        //             },
+        //             {
+        //               "name": "active.connections",
+        //               "description": "Number of active connections",
+        //               "unit": "count",
+        //               "gauge": {
+        //                 "dataPoints": [
+        //                   {
+        //                     "startTimeUnixNano": "1771717690462259100",
+        //                     "timeUnixNano": "1771717690769133100",
+        //                     "asInt": "28"
+        //                   }
+        //                 ]
+        //               }
+        //             }
+        //           ]
+        //         }
+        //       ]
+        //     },
+        #endregion
+
+        // ------------------------------------------------------------------------
+        // Last section of output
+        // Check these values, e.g. that totals are correct.
+
+        //     {
+        //       "resource": {
+        //         "attributes": [
+        //           { "key": "host.name", "value": { "stringValue": "TAR-VALON" } },
+        //           {
+        //             "key": "deployment.environment.name",
+        //             "value": { "stringValue": "production" }
+        //           },
+        //           {
+        //             "key": "service.name",
+        //             "value": { "stringValue": "Example.OtlpFile" }
+        //           },
+        //           {
+        //             "key": "service.version",
+        //             "value": {
+        //               "stringValue": "1.0.0+d40ee8c350d543a91f3bfabebe40e61b30c7508d"
+        //             }
+        //           },
+        //           {
+        //             "key": "service.instance.id",
+        //             "value": { "stringValue": "e68381dc-e6fe-4ced-aa7c-f980d6a50f93" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.name",
+        //             "value": { "stringValue": "opentelemetry" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.language",
+        //             "value": { "stringValue": "dotnet" }
+        //           },
+        //           {
+        //             "key": "telemetry.sdk.version",
+        //             "value": { "stringValue": "1.15.0" }
+        //           }
+        //         ]
+        //       },
+        //       "scopeMetrics": [
+        //         {
+        //           "scope": { "name": "Example.OtlpFile.Meter" },
+        //           "metrics": [
+        //             {
+
+        // ------------------------------------------------------------------------
+        // Counter metric
+
+        //               "name": "requests",
+        var requestMetric = rootElementsByMetricName["requests"].Last();
+
+        //               "description": "Number of requests",
+        Assert.Equal("Number of requests", requestMetric.GetProperty("description").GetString());
+
+        //               "unit": "count",
+        Assert.Equal("count", requestMetric.GetProperty("unit").GetString());
+
+        //               "sum": {
+        //                 "dataPoints": [
+        var requestDataPoints = requestMetric.GetProperty("sum").GetProperty("dataPoints");
+
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/users" }
+        //                       }
+        Assert.Equal(
+            "endpoint",
+            requestDataPoints[0].GetProperty("attributes")[0].GetProperty("key").GetString()
+        );
+
+        // Output all the values
+        foreach (
+            var (dataPoint, index) in requestDataPoints.EnumerateArray().Select((x, i) => (x, i))
+        )
+        {
+            Console.WriteLine(
+                "request data point {0} {1}: int={2}",
+                index,
+                dataPoint
+                    .GetProperty("attributes")[0]
+                    .GetProperty("value")
+                    .GetProperty("stringValue")
+                    .GetString(),
+                dataPoint.GetProperty("asInt").GetString()
+            );
+        }
+
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690455267200",
+        //                     "timeUnixNano": "1771717691164720600",
+        //                     "asInt": "10"
+        var requestSum = requestDataPoints
+            .EnumerateArray()
+            .GroupBy(dataPoint =>
+                dataPoint
+                    .GetProperty("attributes")[0]
+                    .GetProperty("value")
+                    .GetProperty("stringValue")
+                    .GetString()
+            )
+            .ToDictionary(
+                group => group.Key!,
+                group =>
+                    group.Sum(dataPoint => int.Parse(dataPoint.GetProperty("asInt").GetString()!))
+            );
+        Assert.Equal(11, requestSum["api/counter1"]);
+        Assert.Equal(5, requestSum["api/counter2"]);
+
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/orders" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690455267200",
+        //                     "timeUnixNano": "1771717691164720600",
+        //                     "asInt": "5"
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/process" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690455267200",
+        //                     "timeUnixNano": "1771717691164720600",
+        //                     "asInt": "1"
+        //                   }
+        //                 ],
+        //                 "aggregationTemporality": 2,
+        Assert.Equal(
+            2,
+            requestMetric.GetProperty("sum").GetProperty("aggregationTemporality").GetInt32()
+        );
+
+        //                 "isMonotonic": true
+        Assert.True(requestMetric.GetProperty("sum").GetProperty("isMonotonic").GetBoolean());
+
+        // ------------------------------------------------------------------------
+        // Histogram metric
+
+        //               }
+        //             },
+        //             {
+        //               "name": "request.duration",
+        var durationMetric = rootElementsByMetricName["request.duration"].Last();
+
+        //               "description": "Request duration",
+        Assert.Equal("Request duration", durationMetric.GetProperty("description").GetString());
+
+        //               "unit": "ms",
+        Assert.Equal("ms", durationMetric.GetProperty("unit").GetString());
+
+        //               "histogram": {
+        //                 "dataPoints": [
+        var durationDataPoints = requestMetric.GetProperty("histogram").GetProperty("dataPoints");
+
+        foreach (
+            var (dataPoint, index) in durationDataPoints.EnumerateArray().Select((x, i) => (x, i))
+        )
+        {
+            Console.WriteLine(
+                "duration data point {0}: count={1} sum={2}",
+                index,
+                dataPoint.GetProperty("count").GetString(),
+                dataPoint.GetProperty("sum").GetInt32()
+            );
+        }
+
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/users" }
+        var histogramAttributes = durationDataPoints[0]
+            .GetProperty("attributes")
+            .EnumerateArray()
+            .ToDictionary(x => x.GetProperty("key").ToString());
+
+        Assert.Equal(
+            "/api/duration1",
+            histogramAttributes["endpoint"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
+        Assert.Equal(
+            "success",
+            histogramAttributes["result"]
+                .GetProperty("value")
+                .GetProperty("stringValue")
+                .GetString()
+        );
+
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690461528000",
+        //                     "timeUnixNano": "1771717691164723900",
+        //                     "count": "1",
+        //                     "sum": 123.45,
+        //                     "bucketCounts": [
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "1",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0"
+        //                     ],
+        //                     "explicitBounds": [
+        //                       0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500,
+        //                       5000, 7500, 10000
+        //                     ],
+        Assert.Equal(15, durationDataPoints[0].GetProperty("explicitBounds").GetArrayLength());
+
+        Assert.Equal(0, durationDataPoints[0].GetProperty("explicitBounds")[0].GetInt32());
+        Assert.Equal(5, durationDataPoints[0].GetProperty("explicitBounds")[1].GetInt32());
+        Assert.Equal(10000, durationDataPoints[0].GetProperty("explicitBounds")[14].GetInt32());
+
+        //                     "min": 123.45,
+        //                     "max": 123.45
+        //                   },
+        //                   {
+        //                     "attributes": [
+        //                       {
+        //                         "key": "endpoint",
+        //                         "value": { "stringValue": "/api/orders" }
+        //                       }
+        //                     ],
+        //                     "startTimeUnixNano": "1771717690461528000",
+        //                     "timeUnixNano": "1771717691164723900",
+        //                     "count": "1",
+        var histogramCount = durationDataPoints
+            .EnumerateArray()
+            .Sum(dataPoint => int.Parse(dataPoint.GetProperty("count").GetString()!));
+        Assert.Equal(2, histogramCount);
+
+        //                     "sum": 67.89,
+        var histogramSum = durationDataPoints
+            .EnumerateArray()
+            .Sum(dataPoint => dataPoint.GetProperty("sum").GetDouble()!);
+        Assert.Equal(123.45 + 67.89, histogramSum);
+
+        //                     "bucketCounts": [
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "1",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0",
+        //                       "0"
+        //                     ],
+        var bucket5Count = durationDataPoints
+            .EnumerateArray()
+            .Sum(dataPoint => int.Parse(dataPoint.GetProperty("bucketCounts")[5].GetString()!));
+        Assert.Equal(1, bucket5Count);
+        var bucket7Count = durationDataPoints
+            .EnumerateArray()
+            .Sum(dataPoint => int.Parse(dataPoint.GetProperty("bucketCounts")[7].GetString()!));
+        Assert.Equal(1, bucket5Count);
+
+        //                     "explicitBounds": [
+        //                       0, 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 2500,
+        //                       5000, 7500, 10000
+        //                     ],
+        //                     "min": 67.89,
+        //                     "max": 67.89
+        var histogramMin = durationDataPoints
+            .EnumerateArray()
+            .Min(dataPoint => dataPoint.GetProperty("min").GetDouble()!);
+        Assert.Equal(67.89, histogramMin);
+        var histogramMax = durationDataPoints
+            .EnumerateArray()
+            .Max(dataPoint => dataPoint.GetProperty("max").GetDouble()!);
+        Assert.Equal(123.45, histogramMax);
+
+        //                   }
+        //                 ],
+        //                 "aggregationTemporality": 2
+        Assert.Equal(
+            2,
+            durationMetric.GetProperty("histogram").GetProperty("aggregationTemporality").GetInt32()
+        );
+
+        //               }
+        //             },
+
+        // ------------------------------------------------------------------------
+        // Observable Gauge metric
+
+        //             {
+        //               "name": "active.connections",
+        var connectionsMetric = rootElementsByMetricName["active.connections"].Last();
+
+        //               "description": "Number of active connections",
+        Assert.Equal(
+            "Number of active connections",
+            connectionsMetric.GetProperty("description").GetString()
+        );
+
+        //               "unit": "count",
+        Assert.Equal("count", connectionsMetric.GetProperty("unit").GetString());
+
+        //               "gauge": {
+        //                 "dataPoints": [
+        //                   {
+        //                     "startTimeUnixNano": "1771717690462259100",
+        //                     "timeUnixNano": "1771717691164724400",
+        //                     "asInt": "38"
+        Assert.Equal(
+            $"currentObservedValue",
+            connectionsMetric
+                .GetProperty("gauge")
+                .GetProperty("dataPoints")[0]
+                .GetProperty("asInt")
+                .GetString()
+        );
+        //                   }
+        //                 ]
+        //               }
+        //             }
+        //           ]
+        //         }
+        //       ]
+        //     }
+        //   ]
+        // }
     }
 }
