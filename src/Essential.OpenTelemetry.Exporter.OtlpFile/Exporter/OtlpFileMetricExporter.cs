@@ -24,56 +24,41 @@ public class OtlpFileMetricExporter : OtlpFileExporter<Metric>
     /// <inheritdoc/>
     public override ExportResult Export(in Batch<Metric> batch)
     {
-        // Group metrics by instrumentation scope
-        var scopeGroups = new Dictionary<string, List<Metric>>();
+        var console = this.Options.Console;
+        var resource = CreateProtoResource();
 
+        // Output one JSONL line per metric (unbatched, unlike the Collector file exporter)
         foreach (var metric in batch)
         {
             var scopeName = metric.MeterName ?? string.Empty;
-            if (!scopeGroups.ContainsKey(scopeName))
-            {
-                scopeGroups[scopeName] = new List<Metric>();
-            }
-            scopeGroups[scopeName].Add(metric);
-        }
+            var scopeVersion = metric.MeterVersion ?? string.Empty;
 
-        // Create OTLP MetricsData message
-        var metricsData = new ProtoMetrics.MetricsData();
-        var resourceMetrics = new ProtoMetrics.ResourceMetrics { Resource = CreateProtoResource() };
+            var metricsData = new ProtoMetrics.MetricsData();
+            var resourceMetrics = new ProtoMetrics.ResourceMetrics { Resource = resource };
 
-        // Add scope metrics for each instrumentation scope
-        foreach (var scopeGroup in scopeGroups)
-        {
             var scopeMetrics = new ProtoMetrics.ScopeMetrics
             {
                 Scope = new ProtoCommon.InstrumentationScope
                 {
-                    Name = scopeGroup.Key,
-                    Version = scopeGroup.Value.FirstOrDefault()?.MeterVersion ?? string.Empty,
+                    Name = scopeName,
+                    Version = scopeVersion,
                 },
             };
 
-            // Convert each Metric to OTLP proto Metric
-            foreach (var metric in scopeGroup.Value)
+            foreach (var protoMetric in ConvertToOtlpMetrics(metric))
             {
-                var protoMetrics = ConvertToOtlpMetrics(metric);
-                foreach (var protoMetric in protoMetrics)
-                {
-                    scopeMetrics.Metrics.Add(protoMetric);
-                }
+                scopeMetrics.Metrics.Add(protoMetric);
             }
 
             resourceMetrics.ScopeMetrics.Add(scopeMetrics);
-        }
+            metricsData.ResourceMetrics.Add(resourceMetrics);
 
-        metricsData.ResourceMetrics.Add(resourceMetrics);
-
-        var console = this.Options.Console;
-        lock (console.SyncRoot)
-        {
-            // Serialize directly to output stream in OTLP JSON Protobuf Encoding
-            var stream = console.OpenStandardOutput();
-            OtlpJsonSerializer.SerializeMetricsData(metricsData, stream);
+            lock (console.SyncRoot)
+            {
+                // Serialize directly to output stream in OTLP JSON Protobuf Encoding
+                var stream = console.OpenStandardOutput();
+                OtlpJsonSerializer.SerializeMetricsData(metricsData, stream);
+            }
         }
 
         return ExportResult.Success;

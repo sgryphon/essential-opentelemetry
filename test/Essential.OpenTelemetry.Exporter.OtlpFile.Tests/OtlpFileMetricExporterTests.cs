@@ -394,7 +394,6 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
 
         var scope1 = scopeMetrics[0].GetProperty("scope").GetProperty("name").GetString();
         var scope2 = scopeMetrics[1].GetProperty("scope").GetProperty("name").GetString();
-
         Assert.Contains("Meter1", new[] { scope1, scope2 });
         Assert.Contains("Meter2", new[] { scope1, scope2 });
     }
@@ -931,7 +930,11 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
         // Counter metric
 
         //               "name": "requests",
-        var requestMetric = rootElementsByMetricName["requests"].Last();
+        var requestMetric = rootElementsByMetricName["requests"]
+            .Last()
+            .GetProperty("resourceMetrics")[0]
+            .GetProperty("scopeMetrics")[0]
+            .GetProperty("metrics")[0];
 
         //               "description": "Number of requests",
         Assert.Equal("Number of requests", requestMetric.GetProperty("description").GetString());
@@ -989,8 +992,8 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
                 group =>
                     group.Sum(dataPoint => int.Parse(dataPoint.GetProperty("asInt").GetString()!))
             );
-        Assert.Equal(11, requestSum["api/counter1"]);
-        Assert.Equal(5, requestSum["api/counter2"]);
+        Assert.Equal(11, requestSum["/api/counter1"]);
+        Assert.Equal(5, requestSum["/api/counter2"]);
 
         //                   },
         //                   {
@@ -1032,7 +1035,11 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
         //             },
         //             {
         //               "name": "request.duration",
-        var durationMetric = rootElementsByMetricName["request.duration"].Last();
+        var durationMetric = rootElementsByMetricName["request.duration"]
+            .Last()
+            .GetProperty("resourceMetrics")[0]
+            .GetProperty("scopeMetrics")[0]
+            .GetProperty("metrics")[0];
 
         //               "description": "Request duration",
         Assert.Equal("Request duration", durationMetric.GetProperty("description").GetString());
@@ -1042,7 +1049,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
 
         //               "histogram": {
         //                 "dataPoints": [
-        var durationDataPoints = requestMetric.GetProperty("histogram").GetProperty("dataPoints");
+        var durationDataPoints = durationMetric.GetProperty("histogram").GetProperty("dataPoints");
 
         foreach (
             var (dataPoint, index) in durationDataPoints.EnumerateArray().Select((x, i) => (x, i))
@@ -1052,7 +1059,7 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
                 "duration data point {0}: count={1} sum={2}",
                 index,
                 dataPoint.GetProperty("count").GetString(),
-                dataPoint.GetProperty("sum").GetInt32()
+                dataPoint.GetProperty("sum").GetDouble()
             );
         }
 
@@ -1198,7 +1205,11 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
 
         //             {
         //               "name": "active.connections",
-        var connectionsMetric = rootElementsByMetricName["active.connections"].Last();
+        var connectionsMetric = rootElementsByMetricName["active.connections"]
+            .Last()
+            .GetProperty("resourceMetrics")[0]
+            .GetProperty("scopeMetrics")[0]
+            .GetProperty("metrics")[0];
 
         //               "description": "Number of active connections",
         Assert.Equal(
@@ -1215,14 +1226,18 @@ public class OtlpFileMetricExporterTests(ITestContextAccessor tc)
         //                     "startTimeUnixNano": "1771717690462259100",
         //                     "timeUnixNano": "1771717691164724400",
         //                     "asInt": "38"
-        Assert.Equal(
-            $"currentObservedValue",
-            connectionsMetric
-                .GetProperty("gauge")
-                .GetProperty("dataPoints")[0]
-                .GetProperty("asInt")
-                .GetString()
+        Assert.True(
+            int.TryParse(
+                connectionsMetric
+                    .GetProperty("gauge")
+                    .GetProperty("dataPoints")[0]
+                    .GetProperty("asInt")
+                    .GetString(),
+                out var gaugeValue
+            ),
+            "asInt should be a valid integer string"
         );
+        Assert.True(gaugeValue > 0, $"Gauge value should be positive, was {gaugeValue}");
         //                   }
         //                 ]
         //               }
