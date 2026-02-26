@@ -61,8 +61,6 @@ if ($gitVersionExitCode -ne 0) {
     $v = ($json | ConvertFrom-Json)
 }
 
-Write-Host "Building version $($v.SemVer)+$($v.ShortSha) (NuGet $($v.FullSemVer))" -ForegroundColor Green
-
 # Determine version values based on whether PackageVersion is specified
 if ($PackageVersion -ne "") {
     Write-Host "Using package version override: $PackageVersion" -ForegroundColor Yellow
@@ -74,7 +72,7 @@ if ($PackageVersion -ne "") {
         $minor = $matches[2]
         $patch = $matches[3]
         
-        $packageVersion = $PackageVersion
+        $nugetVersion = $PackageVersion
         $assemblyVersion = "$major.$minor.0.0"
         $fileVersion = "$major.$minor.$patch.0"
         $version = "$PackageVersion+$($v.ShortSha)"
@@ -86,11 +84,13 @@ if ($PackageVersion -ne "") {
 }
 else {
     # Use GitVersion InformationalVersion (includes short Sha)
-    $packageVersion = $v.InformationalVersion
+    $nugetVersion = $v.SemVer
     $assemblyVersion = $v.AssemblySemVer
     $fileVersion = $v.AssemblySemFileVer
     $version = $v.InformationalVersion
 }
+
+Write-Host "Building version $version (Assembly $assemblyVersion, NuGet $nugetVersion)" -ForegroundColor Green
 
 # Build solution
 Write-Verbose "Building solution..."
@@ -122,7 +122,7 @@ if ($Project -eq "All" -or $Project -eq "ColoredConsole") {
         -p:AssemblyVersion=$assemblyVersion `
         -p:FileVersion=$fileVersion `
         -p:Version=$version `
-        -p:PackageVersion=$packageVersion `
+        -p:PackageVersion=$nugetVersion `
         --output $packDir
     if (!$?) { throw 'ColoredConsole pack failed' }
 }
@@ -138,7 +138,7 @@ if ($Project -eq "All" -or $Project -eq "OtlpFile") {
         -p:AssemblyVersion=$assemblyVersion `
         -p:FileVersion=$fileVersion `
         -p:Version=$version `
-        -p:PackageVersion=$packageVersion `
+        -p:PackageVersion=$nugetVersion `
         --output $packDir
     if (!$?) { throw 'OtlpFile pack failed' }
 }
