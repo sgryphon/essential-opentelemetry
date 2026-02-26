@@ -16,7 +16,7 @@
     Build and package only the ColoredConsole exporter
 
 .EXAMPLE
-    .\Build-Nuget.ps1 -Project OtlpFile -OtlpFileVersion 0.1.2-alpha.1
+    .\Build-Nuget.ps1 -Project OtlpFile -PackageVersion 0.1.2-alpha.1
     Build and package the OtlpFile exporter with a specific version override
 
 .EXAMPLE
@@ -34,9 +34,10 @@ param(
     # Which project(s) to pack (All, ColoredConsole, OtlpFile). Default is All.
     [ValidateSet("All", "ColoredConsole", "OtlpFile")]
     [string]$Project = "All",
-    # Override the version for the OtlpFile package (e.g. "0.1.2-alpha.1").
-    # If not specified, the GitVersion-generated version is used.
-    [string]$OtlpFileVersion = ""
+    # Override the version for packages. If not specified, the GitVersion-generated version is used.
+    # When set, PackageVersion is set to this value, FileVersion to "major.minor.patch.0",
+    # AssemblyVersion to "major.minor.0.0", and Version (InformationalVersion) to "$PackageVersion+$ShortSha"
+    [string]$PackageVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -61,6 +62,35 @@ if ($gitVersionExitCode -ne 0) {
 }
 
 Write-Host "Building version $($v.SemVer)+$($v.ShortSha) (NuGet $($v.FullSemVer))" -ForegroundColor Green
+
+# Determine version values based on whether PackageVersion is specified
+if ($PackageVersion -ne "") {
+    Write-Host "Using package version override: $PackageVersion" -ForegroundColor Yellow
+    
+    # Parse major.minor.patch from PackageVersion (e.g., "1.2.3-beta.1" -> major=1, minor=2, patch=3)
+    if ($PackageVersion -match '^(\d+)\.(\d+)\.(\d+)')
+    {
+        $major = $matches[1]
+        $minor = $matches[2]
+        $patch = $matches[3]
+        
+        $packageVersion = $PackageVersion
+        $assemblyVersion = "$major.$minor.0.0"
+        $fileVersion = "$major.$minor.$patch.0"
+        $version = "$PackageVersion+$($v.ShortSha)"
+    }
+    else
+    {
+        throw "PackageVersion '$PackageVersion' does not match expected format 'major.minor.patch[...]"
+    }
+}
+else {
+    # Use GitVersion InformationalVersion (includes short Sha)
+    $packageVersion = $v.InformationalVersion
+    $assemblyVersion = $v.AssemblySemVer
+    $fileVersion = $v.AssemblySemFileVer
+    $version = $v.InformationalVersion
+}
 
 # Build solution
 Write-Verbose "Building solution..."
@@ -89,10 +119,10 @@ if ($Project -eq "All" -or $Project -eq "ColoredConsole") {
     dotnet pack $projectPath `
         -c $Configuration `
         --no-build `
-        -p:AssemblyVersion=$($v.AssemblySemVer) `
-        -p:FileVersion=$($v.AssemblySemFileVer) `
-        -p:Version=$($v.SemVer)+$($v.ShortSha) `
-        -p:PackageVersion=$($v.FullSemVer) `
+        -p:AssemblyVersion=$assemblyVersion `
+        -p:FileVersion=$fileVersion `
+        -p:Version=$version `
+        -p:PackageVersion=$packageVersion `
         --output $packDir
     if (!$?) { throw 'ColoredConsole pack failed' }
 }
@@ -102,27 +132,13 @@ if ($Project -eq "All" -or $Project -eq "OtlpFile") {
     Write-Verbose "Creating OtlpFile NuGet package..."
     $projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.OtlpFile'
 
-    # Resolve version: use override if supplied, otherwise use GitVersion
-    if ($OtlpFileVersion -ne "") {
-        Write-Host "Using OtlpFile version override: $OtlpFileVersion" -ForegroundColor Yellow
-        $otlpPackageVersion = $OtlpFileVersion
-        $otlpAssemblySemVer = $v.AssemblySemVer
-        $otlpAssemblySemFileVer = $v.AssemblySemFileVer
-        $otlpVersion = $OtlpFileVersion
-    } else {
-        $otlpPackageVersion = $v.FullSemVer
-        $otlpAssemblySemVer = $v.AssemblySemVer
-        $otlpAssemblySemFileVer = $v.AssemblySemFileVer
-        $otlpVersion = "$($v.SemVer)+$($v.ShortSha)"
-    }
-
     dotnet pack $projectPath `
         -c $Configuration `
         --no-build `
-        -p:AssemblyVersion=$otlpAssemblySemVer `
-        -p:FileVersion=$otlpAssemblySemFileVer `
-        -p:Version=$otlpVersion `
-        -p:PackageVersion=$otlpPackageVersion `
+        -p:AssemblyVersion=$assemblyVersion `
+        -p:FileVersion=$fileVersion `
+        -p:Version=$version `
+        -p:PackageVersion=$packageVersion `
         --output $packDir
     if (!$?) { throw 'OtlpFile pack failed' }
 }
