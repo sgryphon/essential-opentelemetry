@@ -1,6 +1,6 @@
 # Essential OpenTelemetry OTLP File Exporter
 
-OTLP File exporter for OpenTelemetry .NET that outputs OpenTelemetry log signals to stdout (console) in JSONL format compatible with the [OpenTelemetry Protocol File Exporter specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/file-exporter.md) and the OpenTelemetry Collector JSON File Receiver.
+OTLP File exporter for OpenTelemetry .NET that outputs OpenTelemetry signals to stdout (console) in JSONL format compatible with the [OpenTelemetry Protocol File Exporter specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/file-exporter.md) and the OpenTelemetry Collector JSON File Receiver.
 
 This exporter is part of the [Essential .NET OpenTelemetry](https://github.com/sgryphon/essential-opentelemetry) project, which provides guidance, additional exporters, and extensions for .NET OpenTelemetry implementations.
 
@@ -8,7 +8,7 @@ NOTE: This alpha version only supports console output. Future versions will incl
 
 ## Features
 
-- Outputs logs in OTLP protobuf JSON format (one JSON object per line)
+- Outputs logs, spans, and traces in OTLP protobuf JSON format (one JSON object per line)
 - Compatible with OpenTelemetry Collector file exporter/receiver
 - Supports structured logging with semantic attributes
 
@@ -44,7 +44,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Clear default logging
 builder.Logging.ClearProviders();
 
-// Add OpenTelemetry with Colored Console exporter
+// Add OpenTelemetry with OTLP File exporter
 builder
     .Services.AddOpenTelemetry()
     .WithLogging(logging =>
@@ -76,7 +76,7 @@ app.Run();
 
 ### Output Format
 
-The exporter outputs one JSON object per line in OTLP protobuf JSON format:
+The exporter outputs one JSON object per line in OTLP protobuf JSON format. The example is here is formatted for readability, but is output as a single line (JSONL) by the exporter.
 
 ```json
 {
@@ -91,12 +91,11 @@ The exporter outputs one JSON object per line in OTLP protobuf JSON format:
               "timeUnixNano": "1771035371041000000",
               "observedTimeUnixNano": "1771035371041000000",
               "severityNumber": 9,
-              "severityText": "Info",
+              "severityText": "Information",
               "body": { "stringValue": "Hello from Alice" },
               "attributes": [
                 { "key": "Name", "value": { "stringValue": "Alice" } }
-              ],
-              "droppedAttributesCount": 0
+              ]
             }
           ]
         }

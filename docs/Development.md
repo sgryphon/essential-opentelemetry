@@ -75,15 +75,14 @@ Use the `Build-Nuget.ps1` script to create NuGet packages locally:
 # Build and test all projects (default Release configuration)
 .\Build-Nuget.ps1
 
-# Build only the ColoredConsole exporter
+# Build only the ColoredConsole exporter, with the default GitVersion
 .\Build-Nuget.ps1 -Project ColoredConsole
 
 # Build only the OtlpFile exporter
 .\Build-Nuget.ps1 -Project OtlpFile
 
 # Build OtlpFile with a specific version override (e.g. alpha release)
-.\Build-Nuget.ps1 -Project OtlpFile -OtlpFileVersion 0.1.2-alpha.1
-
+.\Build-Nuget.ps1 -Project OtlpFile -PackageVersion 0.1.2
 # Build without tests
 .\Build-Nuget.ps1 -SkipTests
 

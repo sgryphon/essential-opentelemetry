@@ -34,7 +34,7 @@ param(
     # Which project(s) to pack (All, ColoredConsole, OtlpFile). Default is All.
     [ValidateSet("All", "ColoredConsole", "OtlpFile")]
     [string]$Project = "All",
-    # Override the version for packages. If not specified, the GitVersion-generated version is used.
+    # Override the version for all packages. If not specified, the GitVersion-generated version is used.
     # When set, PackageVersion is set to this value, FileVersion to "major.minor.patch.0",
     # AssemblyVersion to "major.minor.0.0", and Version (InformationalVersion) to "$PackageVersion+$ShortSha"
     [string]$PackageVersion = ""
