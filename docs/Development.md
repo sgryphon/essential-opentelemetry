@@ -72,9 +72,17 @@ For more details see:
 Use the `Build-Nuget.ps1` script to create NuGet packages locally:
 
 ```powershell
-# Build and test (default Release configuration)
+# Build and test all projects (default Release configuration)
 .\Build-Nuget.ps1
 
+# Build only the ColoredConsole exporter, with the default GitVersion
+.\Build-Nuget.ps1 -Project ColoredConsole
+
+# Build only the OtlpFile exporter
+.\Build-Nuget.ps1 -Project OtlpFile
+
+# Build OtlpFile with a specific version override (e.g. alpha release)
+.\Build-Nuget.ps1 -Project OtlpFile -PackageVersion 0.1.2
 # Build without tests
 .\Build-Nuget.ps1 -SkipTests
 
@@ -89,6 +97,7 @@ After building the package locally, publish it to NuGet.org:
 ```powershell
 $nugetKey = "YOUR_API_KEY"
 dotnet nuget push pack/Essential.OpenTelemetry.Exporter.ColoredConsole.1.0.0.nupkg --api-key $nugetKey --source https://api.nuget.org/v3/index.json
+dotnet nuget push pack/Essential.OpenTelemetry.Exporter.OtlpFile.0.1.2-alpha.1.nupkg --api-key $nugetKey --source https://api.nuget.org/v3/index.json
 ```
 
 For more details see:

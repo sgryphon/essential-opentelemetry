@@ -6,10 +6,10 @@ This exporter is part of the [Essential .NET OpenTelemetry](https://github.com/s
 
 ## Features
 
-- **Color-coded output**: Different colors for different log levels, trace events, and metrics
-- **Structured logging support**: Displays structured log data in a readable format
-- **OpenTelemetry standard compliance**: Works seamlessly with the OpenTelemetry SDK
-- **Multi-framework support**: Compatible with currently supported .NET versions
+- Color-coded output: Different colors for different log levels, trace events, and metrics
+- Structured logging support: Displays structured log data in a readable format
+- OpenTelemetry standard compliance: Works seamlessly with the OpenTelemetry SDK
+- Multi-framework support: Compatible with currently supported .NET versions
 
 ## Installation
 
@@ -84,7 +84,7 @@ builder.Services.AddOpenTelemetry()
 
 See the full project for a working example.
 
-## Copyright
+## License
 
 Essential.OpenTelemetry ColoredConsole Exporter - Color-coded formatting for OpenTelemetry logs, traces, and metrics.
 Copyright (C) 2026 Gryphon Technology Pty Ltd

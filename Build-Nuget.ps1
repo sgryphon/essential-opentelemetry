@@ -9,7 +9,15 @@
 
 .EXAMPLE
     .\Build-Nuget.ps1 -Verbose
-    Build and package with Release configuration
+    Build and package all projects with Release configuration
+
+.EXAMPLE
+    .\Build-Nuget.ps1 -Project ColoredConsole
+    Build and package only the ColoredConsole exporter
+
+.EXAMPLE
+    .\Build-Nuget.ps1 -Project OtlpFile -PackageVersion 0.1.2-alpha.1
+    Build and package the OtlpFile exporter with a specific version override
 
 .EXAMPLE
     .\Build-Nuget.ps1 -Configuration Debug -SkipTests
@@ -22,7 +30,14 @@ param(
     # Skip running tests before packaging.
     [switch]$SkipTests,
     # Name of the base folder to create packages in
-    $PackFolder = "pack"
+    $PackFolder = "pack",
+    # Which project(s) to pack (All, ColoredConsole, OtlpFile). Default is All.
+    [ValidateSet("All", "ColoredConsole", "OtlpFile")]
+    [string]$Project = "All",
+    # Override the version for all packages. If not specified, the GitVersion-generated version is used.
+    # When set, PackageVersion is set to this value, FileVersion to "major.minor.patch.0",
+    # AssemblyVersion to "major.minor.0.0", and Version (InformationalVersion) to "$PackageVersion+$ShortSha"
+    [string]$PackageVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -46,7 +61,36 @@ if ($gitVersionExitCode -ne 0) {
     $v = ($json | ConvertFrom-Json)
 }
 
-Write-Host "Building version $($v.SemVer)+$($v.ShortSha) (NuGet $($v.FullSemVer))" -ForegroundColor Green
+# Determine version values based on whether PackageVersion is specified
+if ($PackageVersion -ne "") {
+    Write-Host "Using package version override: $PackageVersion" -ForegroundColor Yellow
+    
+    # Parse major.minor.patch from PackageVersion (e.g., "1.2.3-beta.1" -> major=1, minor=2, patch=3)
+    if ($PackageVersion -match '^(\d+)\.(\d+)\.(\d+)')
+    {
+        $major = $matches[1]
+        $minor = $matches[2]
+        $patch = $matches[3]
+        
+        $nugetVersion = $PackageVersion
+        $assemblyVersion = "$major.$minor.0.0"
+        $fileVersion = "$major.$minor.$patch.0"
+        $version = "$PackageVersion+$($v.ShortSha)"
+    }
+    else
+    {
+        throw "PackageVersion '$PackageVersion' does not match expected format 'major.minor.patch[...]"
+    }
+}
+else {
+    # Use GitVersion InformationalVersion (includes short Sha)
+    $nugetVersion = $v.SemVer
+    $assemblyVersion = $v.AssemblySemVer
+    $fileVersion = $v.AssemblySemFileVer
+    $version = $v.InformationalVersion
+}
+
+Write-Host "Building version $version (Assembly $assemblyVersion, NuGet $nugetVersion)" -ForegroundColor Green
 
 # Build solution
 Write-Verbose "Building solution..."
@@ -68,21 +112,38 @@ if (Test-Path $packDir) {
 }
 New-Item -ItemType Directory -Path $packDir | Out-Null
 
-# Pack the project
-Write-Verbose "Creating NuGet package..."
-$projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.ColoredConsole'
-dotnet pack $projectPath `
-    -c $Configuration `
-    --no-build `
-    -p:AssemblyVersion=$($v.AssemblySemVer) `
-    -p:FileVersion=$($v.AssemblySemFileVer) `
-    -p:Version=$($v.SemVer)+$($v.ShortSha) `
-    -p:PackageVersion=$($v.FullSemVer) `
-    --output $packDir
+# Pack the ColoredConsole project
+if ($Project -eq "All" -or $Project -eq "ColoredConsole") {
+    Write-Verbose "Creating ColoredConsole NuGet package..."
+    $projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.ColoredConsole'
+    dotnet pack $projectPath `
+        -c $Configuration `
+        --no-build `
+        -p:AssemblyVersion=$assemblyVersion `
+        -p:FileVersion=$fileVersion `
+        -p:Version=$version `
+        -p:PackageVersion=$nugetVersion `
+        --output $packDir
+    if (!$?) { throw 'ColoredConsole pack failed' }
+}
 
-if (!$?) { throw 'Pack failed' }
+# Pack the OtlpFile project
+if ($Project -eq "All" -or $Project -eq "OtlpFile") {
+    Write-Verbose "Creating OtlpFile NuGet package..."
+    $projectPath = Join-Path $PSScriptRoot 'src/Essential.OpenTelemetry.Exporter.OtlpFile'
 
-Write-Host "Package created successfully in $packDir" -ForegroundColor Green
+    dotnet pack $projectPath `
+        -c $Configuration `
+        --no-build `
+        -p:AssemblyVersion=$assemblyVersion `
+        -p:FileVersion=$fileVersion `
+        -p:Version=$version `
+        -p:PackageVersion=$nugetVersion `
+        --output $packDir
+    if (!$?) { throw 'OtlpFile pack failed' }
+}
+
+Write-Host "Package(s) created successfully in $packDir" -ForegroundColor Green
 Write-Verbose "To publish to NuGet.org, run:"
 Write-Verbose '  $nugetKey = "YOUR_API_KEY"'
 Write-Verbose '  dotnet nuget push pack/*.nupkg --api-key $nugetKey --source https://api.nuget.org/v3/index.json'
